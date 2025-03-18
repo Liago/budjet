@@ -1,0 +1,91 @@
+# Finance Tracker Backend
+
+NestJS backend for the Finance Tracker application.
+
+## Features
+
+- User authentication with JWT
+- User profile management
+- Category management
+- Transaction tracking with filtering and pagination
+- Tag management for additional transaction categorization
+- Financial reporting with monthly and annual summaries
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Set up environment variables:
+   - Create a `.env` file based on `.env.example`
+   - Configure your database connection string
+
+3. Run database migrations:
+   ```bash
+   npx prisma migrate dev
+   ```
+
+4. Generate Prisma client:
+   ```bash
+   npx prisma generate
+   ```
+
+5. Start the development server:
+   ```bash
+   npm run start:dev
+   ```
+
+## API Documentation
+
+The API documentation is available at `/api/docs` when the server is running.
+
+### Main Endpoints
+
+- **Authentication**
+  - `POST /api/auth/register` - Register a new user
+  - `POST /api/auth/login` - Login and get JWT token
+
+- **Users**
+  - `GET /api/users/me` - Get current user profile
+  - `PATCH /api/users/me` - Update current user profile
+
+- **Categories**
+  - `GET /api/categories` - Get all categories
+  - `POST /api/categories` - Create a new category
+  - `GET /api/categories/:id` - Get a specific category
+  - `PATCH /api/categories/:id` - Update a category
+  - `DELETE /api/categories/:id` - Delete a category
+
+- **Transactions**
+  - `GET /api/transactions` - Get all transactions with filtering and pagination
+  - `POST /api/transactions` - Create a new transaction
+  - `GET /api/transactions/:id` - Get a specific transaction
+  - `PATCH /api/transactions/:id` - Update a transaction
+  - `DELETE /api/transactions/:id` - Delete a transaction
+
+- **Tags**
+  - `GET /api/tags` - Get all tags
+  - `POST /api/tags` - Create a new tag
+  - `GET /api/tags/:id` - Get a specific tag
+  - `PATCH /api/tags/:id` - Update a tag
+  - `DELETE /api/tags/:id` - Delete a tag
+
+- **Reports**
+  - `GET /api/reports/monthly` - Get monthly financial report
+  - `GET /api/reports/annual` - Get annual financial report
+
+## Project Structure
+
+- `src/`
+  - `auth/` - Authentication module (JWT, Passport)
+  - `users/` - User management
+  - `transactions/` - Transaction CRUD operations
+  - `categories/` - Category management
+  - `tags/` - Tag management
+  - `reports/` - Financial reporting
+  - `common/` - Shared utilities, guards, and decorators
+  - `prisma/` - Prisma ORM service
+  - `app.module.ts` - Main application module
+  - `main.ts` - Application entry point 

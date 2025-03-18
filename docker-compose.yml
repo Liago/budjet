@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Backend API service
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: finance-tracker-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/finance_tracker
+      - JWT_SECRET=your_jwt_secret_key_here
+      - JWT_EXPIRES_IN=1d
+    depends_on:
+      - db
+    networks:
+      - finance-tracker-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # PostgreSQL Database
+  db:
+    image: postgres:14-alpine
+    container_name: finance-tracker-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=finance_tracker
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - finance-tracker-network
+
+  # Web Frontend (React)
+  web:
+    build:
+      context: ./frontend/web
+      dockerfile: Dockerfile
+    container_name: finance-tracker-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - finance-tracker-network
+
+networks:
+  finance-tracker-network:
+    driver: bridge
+
+volumes:
+  postgres-data: 
