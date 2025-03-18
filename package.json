@@ -1,5 +1,26 @@
 {
+  "name": "budjet",
+  "version": "0.0.0-development",
+  "description": "Budget tracking application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "semantic-release": "semantic-release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Liago/budjet.git"
+  },
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "tailwindcss": "^4.0.9"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^11.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/release-notes-generator": "^12.1.0",
+    "semantic-release": "^22.0.12"
   }
 }
