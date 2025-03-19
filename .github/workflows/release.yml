@@ -47,28 +47,30 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Debug env for Release
+      - name: Create temporary semantic-release config
         run: |
-          echo "Checking if secrets are available (no values shown):"
-          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then echo "NPM_TOKEN is set"; else echo "NPM_TOKEN is NOT set"; fi
-          if [ -n "${{ github.token }}" ]; then echo "GITHUB_TOKEN is set"; else echo "GITHUB_TOKEN is NOT set"; fi
-          echo "Git configuration:"
-          git config --get user.name || echo "Git user.name not set"
-          git config --get user.email || echo "Git user.email not set"
-
-      - name: Create .npmrc
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          cat .npmrc
+          echo '{
+            "branches": ["main"],
+            "plugins": [
+              "@semantic-release/commit-analyzer",
+              "@semantic-release/release-notes-generator",
+              "@semantic-release/changelog",
+              ["@semantic-release/git", {
+                "assets": ["package.json", "CHANGELOG.md"],
+                "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+              }],
+              "@semantic-release/github"
+            ]
+          }' > .releaserc.temp.json
+          cat .releaserc.temp.json
 
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v4
         with:
           semantic_version: 24.0.0
-          branches: |
-            [
-              'main'
-            ]
+          extends: .releaserc.temp.json
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
