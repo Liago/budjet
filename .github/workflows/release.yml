@@ -8,11 +8,16 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -44,14 +49,14 @@ jobs:
       - name: Debug env for Release
         run: |
           echo "Checking if secrets are available (no values shown):"
-          if [ -n "${{ secrets.GH_TOKEN }}" ]; then echo "GH_TOKEN is set"; else echo "GH_TOKEN is NOT set"; fi
           if [ -n "${{ secrets.NPM_TOKEN }}" ]; then echo "NPM_TOKEN is set"; else echo "NPM_TOKEN is NOT set"; fi
+          if [ -n "${{ github.token }}" ]; then echo "GITHUB_TOKEN is set"; else echo "GITHUB_TOKEN is NOT set"; fi
           echo "Git configuration:"
           git config --get user.name || echo "Git user.name not set"
           git config --get user.email || echo "Git user.email not set"
 
       - name: Release
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release --debug
