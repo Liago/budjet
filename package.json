@@ -1,6 +1,6 @@
 {
   "name": "budjet",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "description": "Budget tracking application",
   "main": "index.js",
   "scripts": {
