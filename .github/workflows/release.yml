@@ -17,7 +17,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "20"
+
+      - name: Debug
+        run: |
+          echo "Node.js version:"
+          node --version
+          echo "NPM version:"
+          npm --version
+          echo "Current directory:"
+          ls -la
+          echo "Package.json:"
+          cat package.json
 
       - name: Install dependencies
         run: npm ci
