@@ -23,6 +23,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "20"
+          cache: "npm"
 
       - name: Setup Git
         run: |
@@ -55,8 +56,19 @@ jobs:
           git config --get user.name || echo "Git user.name not set"
           git config --get user.email || echo "Git user.email not set"
 
-      - name: Release
+      - name: Create .npmrc
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          cat .npmrc
+
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          semantic_version: 24.0.0
+          branches: |
+            [
+              'main'
+            ]
         env:
           GITHUB_TOKEN: ${{ github.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release --debug
