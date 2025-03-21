@@ -52,7 +52,7 @@ export interface UpdateCategoryData {
 }
 
 // Transaction Types
-export type TransactionType = 'INCOME' | 'EXPENSE';
+export type TransactionType = "EXPENSE" | "INCOME";
 
 export interface Transaction {
   id: string;
@@ -60,13 +60,8 @@ export interface Transaction {
   description: string;
   date: string;
   type: TransactionType;
-  category: {
-    id: string;
-    name: string;
-    icon: string;
-    color: string;
-  };
-  tags: Tag[];
+  category: Category;
+  tags: string[];
   createdAt: string;
   updatedAt?: string;
 }
@@ -135,7 +130,7 @@ export interface DashboardStats {
 }
 
 // Recurrent Payment Types
-export type RecurrenceInterval = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type RecurrenceInterval = "daily" | "weekly" | "monthly" | "yearly";
 
 export interface RecurrentPayment {
   id: string;
@@ -184,4 +179,35 @@ export interface UpdateRecurrentPaymentData {
   startDate?: string;
   endDate?: string;
   isActive?: boolean;
-} 
+}
+
+// Savings Goal Types
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline?: string;
+  description: string;
+  isCompleted: boolean;
+  createdAt: string;
+}
+
+export interface CreateSavingsGoalData {
+  name: string;
+  targetAmount: number | string;
+  currentAmount?: number | string;
+  deadline?: string;
+  categoryId?: string;
+  description?: string;
+}
+
+export interface UpdateSavingsGoalData {
+  name?: string;
+  targetAmount?: number | string;
+  currentAmount?: number | string;
+  deadline?: string;
+  categoryId?: string;
+  description?: string;
+  isCompleted?: boolean;
+}
