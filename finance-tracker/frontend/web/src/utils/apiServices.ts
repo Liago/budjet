@@ -16,7 +16,10 @@ import {
   RecurrentPayment,
   CreateRecurrentPaymentData,
   UpdateRecurrentPaymentData,
+  CreateSavingsGoalData,
+  UpdateSavingsGoalData,
 } from "./types";
+import axios from "axios";
 
 // Auth Service
 export const authService = {
@@ -72,19 +75,18 @@ export const transactionService = {
 
 // Dashboard Service
 export const dashboardService = {
-  getStats: (startDate?: string, endDate?: string) =>
-    apiService.get<DashboardStats>("/dashboard/stats", { startDate, endDate }),
+  // Ottieni le statistiche del dashboard
+  getStats: async (startDate?: string, endDate?: string) => {
+    const params = { startDate, endDate };
+    const response = await apiService.get("/dashboard/stats", params);
+    return response;
+  },
 
-  // Nuovo endpoint per la trend analysis
-  getTrendData: (timeRange: string) =>
-    apiService.get<{
-      trends: {
-        period: string;
-        income: number;
-        expense: number;
-        balance: number;
-      }[];
-    }>("/dashboard/trends", { timeRange }),
+  // Ottieni i dati di trend
+  getTrendData: async (timeRange = "3m") => {
+    const response = await apiService.get(`/dashboard/trends`, { timeRange });
+    return response;
+  },
 
   // Nuovo endpoint per l'analisi predittiva
   getForecastData: (months: number = 6) =>
@@ -144,4 +146,39 @@ export const recurrentPaymentService = {
     ),
 
   delete: (id: string) => apiService.delete<void>(`/recurrent-payments/${id}`),
+};
+
+// SavingsGoals service methods
+export const savingsGoalsService = {
+  // Ottieni tutti gli obiettivi di risparmio dell'utente
+  getAll: async () => {
+    const response = await apiService.get("/savings-goals");
+    return response;
+  },
+
+  // Crea un nuovo obiettivo di risparmio
+  create: async (data: CreateSavingsGoalData) => {
+    const response = await apiService.post("/savings-goals", data);
+    return response;
+  },
+
+  // Aggiorna un obiettivo di risparmio esistente
+  update: async (id: string, data: UpdateSavingsGoalData) => {
+    const response = await apiService.patch(`/savings-goals/${id}`, data);
+    return response;
+  },
+
+  // Elimina un obiettivo di risparmio
+  delete: async (id: string) => {
+    const response = await apiService.delete(`/savings-goals/${id}`);
+    return response;
+  },
+
+  // Aggiungi un importo a un obiettivo di risparmio
+  addAmount: async (id: string, amount: number) => {
+    const response = await apiService.post(`/savings-goals/${id}/add-amount`, {
+      amount,
+    });
+    return response;
+  },
 };

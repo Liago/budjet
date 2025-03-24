@@ -16,7 +16,6 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Request as ExpressRequest } from "express";
-import { Public } from "../auth/decorators/public.decorator";
 
 @ApiTags("dashboard")
 @Controller("dashboard")
@@ -60,7 +59,7 @@ export class DashboardController {
   })
   async getTrendData(
     @Req() req: ExpressRequest,
-    @Query("timeRange") timeRange: string
+    @Query("timeRange") timeRange: string = "3m"
   ) {
     const userId = req.user["id"];
     return this.dashboardService.getTrendData(userId, timeRange);

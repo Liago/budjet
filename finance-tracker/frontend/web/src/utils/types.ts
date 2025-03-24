@@ -188,26 +188,25 @@ export interface SavingsGoal {
   targetAmount: number;
   currentAmount: number;
   deadline?: string;
-  description: string;
+  description?: string;
   isCompleted: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateSavingsGoalData {
   name: string;
-  targetAmount: number | string;
-  currentAmount?: number | string;
-  deadline?: string;
-  categoryId?: string;
+  targetAmount: number;
+  currentAmount?: number;
+  deadline?: Date;
   description?: string;
 }
 
 export interface UpdateSavingsGoalData {
   name?: string;
-  targetAmount?: number | string;
-  currentAmount?: number | string;
-  deadline?: string;
-  categoryId?: string;
+  targetAmount?: number;
+  currentAmount?: number;
+  deadline?: Date;
   description?: string;
   isCompleted?: boolean;
 }

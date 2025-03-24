@@ -16,11 +16,12 @@ import {
 } from "lucide-react";
 import { format, differenceInDays, parseISO, addDays } from "date-fns";
 import { it } from "date-fns/locale";
+import { savingsGoalsService } from "../../utils/apiServices";
 
 // UI Components
-import { Button } from "../../components/ui/button";
-import { Card, CardContent } from "../../components/ui/card";
-import { Progress } from "../../components/ui/progress";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Progress } from "../ui/progress";
 import {
   Dialog,
   DialogTrigger,
@@ -29,7 +30,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "../../components/ui/dialog";
+} from "../ui/dialog";
 import {
   Form,
   FormControl,
@@ -38,47 +39,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../../components/ui/form";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
-import { DatePicker } from "../../components/ui/date-picker";
+} from "../ui/form";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { DatePicker } from "../ui/date-picker";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
+import { useForm, ControllerRenderProps } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-
-// Mock service per gli obiettivi di risparmio (da sostituire in seguito con il servizio reale)
-const mockSavingsGoals: SavingsGoal[] = [
-  {
-    id: "1",
-    name: "Vacanza in Sardegna",
-    targetAmount: 1500,
-    currentAmount: 750,
-    deadline: addDays(new Date(), 60).toISOString(),
-    description: "Risparmi per la vacanza estiva in Sardegna",
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Nuovo laptop",
-    targetAmount: 1200,
-    currentAmount: 400,
-    deadline: addDays(new Date(), 120).toISOString(),
-    description: "Per sostituire il vecchio computer",
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    name: "Fondo emergenze",
-    targetAmount: 5000,
-    currentAmount: 3200,
-    description: "Fondo per spese impreviste",
-    isCompleted: false,
-    createdAt: new Date().toISOString(),
-  },
-];
 
 // Schema di validazione
 const savingsGoalSchema = z.object({
@@ -94,15 +62,37 @@ const savingsGoalSchema = z.object({
   description: z.string().optional(),
 });
 
+type FormSchemaType = z.infer<typeof savingsGoalSchema>;
+
 const SavingsGoals = () => {
-  const [goals, setGoals] = useState<SavingsGoal[]>(mockSavingsGoals);
+  const [goals, setGoals] = useState<SavingsGoal[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
   const { categories } = useAppSelector((state) => state.categories);
 
+  // Carica gli obiettivi dal backend
+  const loadGoals = async () => {
+    setIsLoading(true);
+    try {
+      const response = await savingsGoalsService.getAll();
+      setGoals(response as SavingsGoal[]);
+    } catch (error) {
+      console.error("Error loading savings goals:", error);
+      toast.error("Impossibile caricare gli obiettivi di risparmio");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Carica i dati all'avvio
+  useEffect(() => {
+    loadGoals();
+  }, []);
+
   // Form per aggiungere un nuovo obiettivo
-  const addForm = useForm<z.infer<typeof savingsGoalSchema>>({
+  const addForm = useForm<FormSchemaType>({
     resolver: zodResolver(savingsGoalSchema),
     defaultValues: {
       name: "",
@@ -113,7 +103,7 @@ const SavingsGoals = () => {
   });
 
   // Form per modificare un obiettivo esistente
-  const editForm = useForm<z.infer<typeof savingsGoalSchema>>({
+  const editForm = useForm<FormSchemaType>({
     resolver: zodResolver(savingsGoalSchema),
     defaultValues: {
       name: "",
@@ -122,6 +112,17 @@ const SavingsGoals = () => {
       description: "",
     },
   });
+
+  // Definisco il tipo per il campo del form
+  interface FieldProps {
+    field: {
+      value: any;
+      onChange: (value: any) => void;
+      onBlur: () => void;
+      name: string;
+      ref: React.Ref<any>;
+    };
+  }
 
   useEffect(() => {
     if (selectedGoal) {
@@ -137,56 +138,64 @@ const SavingsGoals = () => {
     }
   }, [selectedGoal, editForm]);
 
-  const handleAddGoal = (data: z.infer<typeof savingsGoalSchema>) => {
-    const newGoal: SavingsGoal = {
-      id: Date.now().toString(),
-      name: data.name,
-      targetAmount: data.targetAmount,
-      currentAmount: data.currentAmount || 0,
-      deadline: data.deadline?.toISOString(),
-      description: data.description,
-      isCompleted: false,
-      createdAt: new Date().toISOString(),
-    };
+  const handleAddGoal = async (data: FormSchemaType) => {
+    try {
+      const goalData: CreateSavingsGoalData = {
+        name: data.name,
+        targetAmount: data.targetAmount,
+        currentAmount: data.currentAmount || 0,
+        deadline: data.deadline,
+        description: data.description,
+      };
 
-    setGoals([...goals, newGoal]);
-    setIsAddDialogOpen(false);
-    addForm.reset();
-    toast.success("Obiettivo di risparmio creato con successo!");
-  };
-
-  const handleEditGoal = (data: z.infer<typeof savingsGoalSchema>) => {
-    if (!selectedGoal) return;
-
-    const updatedGoals = goals.map((goal) => {
-      if (goal.id === selectedGoal.id) {
-        return {
-          ...goal,
-          name: data.name,
-          targetAmount: data.targetAmount,
-          currentAmount: data.currentAmount || 0,
-          deadline: data.deadline?.toISOString(),
-          description: data.description,
-          updatedAt: new Date().toISOString(),
-        };
-      }
-      return goal;
-    });
-
-    setGoals(updatedGoals);
-    setIsEditDialogOpen(false);
-    setSelectedGoal(null);
-    toast.success("Obiettivo di risparmio aggiornato con successo!");
-  };
-
-  const handleDeleteGoal = (id: string) => {
-    if (confirm("Sei sicuro di voler eliminare questo obiettivo?")) {
-      setGoals(goals.filter((goal) => goal.id !== id));
-      toast.success("Obiettivo di risparmio eliminato con successo!");
+      await savingsGoalsService.create(goalData);
+      await loadGoals(); // Ricarica gli obiettivi aggiornati
+      setIsAddDialogOpen(false);
+      addForm.reset();
+      toast.success("Obiettivo di risparmio creato con successo!");
+    } catch (error) {
+      console.error("Error creating savings goal:", error);
+      toast.error("Impossibile creare l'obiettivo di risparmio");
     }
   };
 
-  const handleAddMoney = (goal: SavingsGoal) => {
+  const handleEditGoal = async (data: FormSchemaType) => {
+    if (!selectedGoal) return;
+
+    try {
+      const goalData: UpdateSavingsGoalData = {
+        name: data.name,
+        targetAmount: data.targetAmount,
+        currentAmount: data.currentAmount || 0,
+        deadline: data.deadline,
+        description: data.description,
+      };
+
+      await savingsGoalsService.update(selectedGoal.id, goalData);
+      await loadGoals(); // Ricarica gli obiettivi aggiornati
+      setIsEditDialogOpen(false);
+      setSelectedGoal(null);
+      toast.success("Obiettivo di risparmio aggiornato con successo!");
+    } catch (error) {
+      console.error("Error updating savings goal:", error);
+      toast.error("Impossibile aggiornare l'obiettivo di risparmio");
+    }
+  };
+
+  const handleDeleteGoal = async (id: string) => {
+    if (confirm("Sei sicuro di voler eliminare questo obiettivo?")) {
+      try {
+        await savingsGoalsService.delete(id);
+        await loadGoals(); // Ricarica gli obiettivi aggiornati
+        toast.success("Obiettivo di risparmio eliminato con successo!");
+      } catch (error) {
+        console.error("Error deleting savings goal:", error);
+        toast.error("Impossibile eliminare l'obiettivo di risparmio");
+      }
+    }
+  };
+
+  const handleAddMoney = async (goal: SavingsGoal) => {
     const amount = prompt("Quanto vuoi aggiungere ai risparmi? (€)");
     if (!amount) return;
 
@@ -196,23 +205,14 @@ const SavingsGoals = () => {
       return;
     }
 
-    const updatedGoals = goals.map((g) => {
-      if (g.id === goal.id) {
-        const newAmount = g.currentAmount + amountNumber;
-        const isCompleted = newAmount >= g.targetAmount;
-
-        return {
-          ...g,
-          currentAmount: newAmount,
-          isCompleted,
-          updatedAt: new Date().toISOString(),
-        };
-      }
-      return g;
-    });
-
-    setGoals(updatedGoals);
-    toast.success(`€${amountNumber.toFixed(2)} aggiunti al tuo obiettivo!`);
+    try {
+      await savingsGoalsService.addAmount(goal.id, amountNumber);
+      await loadGoals(); // Ricarica gli obiettivi aggiornati
+      toast.success(`€${amountNumber.toFixed(2)} aggiunti al tuo obiettivo!`);
+    } catch (error) {
+      console.error("Error adding money to savings goal:", error);
+      toast.error("Impossibile aggiungere fondi all'obiettivo di risparmio");
+    }
   };
 
   const getProgressPercentage = (current: number, target: number) => {
@@ -242,7 +242,14 @@ const SavingsGoals = () => {
         </Button>
       </div>
 
-      {goals.length === 0 ? (
+      {isLoading && (
+        <div className="text-center py-10">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-500">Caricamento obiettivi...</p>
+        </div>
+      )}
+
+      {!isLoading && goals.length === 0 ? (
         <div className="p-8 text-center">
           <PiggyBank className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-lg font-medium">
@@ -378,7 +385,11 @@ const SavingsGoals = () => {
               <FormField
                 control={addForm.control}
                 name="name"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "name">;
+                }) => (
                   <FormItem>
                     <FormLabel>Nome dell'obiettivo</FormLabel>
                     <FormControl>
@@ -395,7 +406,11 @@ const SavingsGoals = () => {
               <FormField
                 control={addForm.control}
                 name="targetAmount"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "targetAmount">;
+                }) => (
                   <FormItem>
                     <FormLabel>Importo obiettivo (€)</FormLabel>
                     <FormControl>
@@ -415,7 +430,11 @@ const SavingsGoals = () => {
               <FormField
                 control={addForm.control}
                 name="currentAmount"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "currentAmount">;
+                }) => (
                   <FormItem>
                     <FormLabel>Importo attuale (€)</FormLabel>
                     <FormControl>
@@ -438,7 +457,11 @@ const SavingsGoals = () => {
               <FormField
                 control={addForm.control}
                 name="deadline"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "deadline">;
+                }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Data obiettivo</FormLabel>
                     <FormControl>
@@ -459,7 +482,11 @@ const SavingsGoals = () => {
               <FormField
                 control={addForm.control}
                 name="description"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "description">;
+                }) => (
                   <FormItem>
                     <FormLabel>Descrizione</FormLabel>
                     <FormControl>
@@ -506,7 +533,11 @@ const SavingsGoals = () => {
               <FormField
                 control={editForm.control}
                 name="name"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "name">;
+                }) => (
                   <FormItem>
                     <FormLabel>Nome dell'obiettivo</FormLabel>
                     <FormControl>
@@ -523,7 +554,11 @@ const SavingsGoals = () => {
               <FormField
                 control={editForm.control}
                 name="targetAmount"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "targetAmount">;
+                }) => (
                   <FormItem>
                     <FormLabel>Importo obiettivo (€)</FormLabel>
                     <FormControl>
@@ -543,7 +578,11 @@ const SavingsGoals = () => {
               <FormField
                 control={editForm.control}
                 name="currentAmount"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "currentAmount">;
+                }) => (
                   <FormItem>
                     <FormLabel>Importo attuale (€)</FormLabel>
                     <FormControl>
@@ -563,7 +602,11 @@ const SavingsGoals = () => {
               <FormField
                 control={editForm.control}
                 name="deadline"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "deadline">;
+                }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Data obiettivo</FormLabel>
                     <FormControl>
@@ -581,7 +624,11 @@ const SavingsGoals = () => {
               <FormField
                 control={editForm.control}
                 name="description"
-                render={({ field }) => (
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<FormSchemaType, "description">;
+                }) => (
                   <FormItem>
                     <FormLabel>Descrizione</FormLabel>
                     <FormControl>

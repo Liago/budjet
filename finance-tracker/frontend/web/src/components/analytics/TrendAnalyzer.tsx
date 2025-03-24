@@ -69,6 +69,7 @@ interface CategoryTrend {
   previousAmount: number;
   change: number;
   percentChange: number;
+  transactionCount?: number;
 }
 
 interface SpendingAnomaly {
@@ -90,6 +91,8 @@ interface TrendData {
 
 interface TrendResponse {
   trends: TrendData[];
+  categoryTrends?: CategoryTrend[];
+  spendingAnomalies?: SpendingAnomaly[];
 }
 
 const TrendAnalyzer = () => {
@@ -145,9 +148,10 @@ const TrendAnalyzer = () => {
     try {
       // Chiama direttamente il servizio API con il periodo selezionato
       const response = await dashboardService.getTrendData(timeRange);
+      const data = response as TrendResponse;
 
       // Prepara i dati per il grafico
-      const formattedData = response.trends.map((trend) => ({
+      const formattedData = data.trends.map((trend) => ({
         name: trend.period,
         income: trend.income,
         expense: trend.expense,
@@ -155,9 +159,25 @@ const TrendAnalyzer = () => {
       }));
 
       setChartData(formattedData);
+
+      // Aggiorna i dati delle tendenze delle categorie
+      if (data.categoryTrends) {
+        setCategoryTrends(data.categoryTrends);
+      }
+
+      // Aggiorna le anomalie
+      if (data.spendingAnomalies) {
+        setAnomalies(data.spendingAnomalies);
+      }
     } catch (err) {
       console.error("Errore nel caricamento dei dati di trend:", err);
       setError("Impossibile caricare i dati di trend");
+
+      // Se l'API fallisce, usiamo i dati locali come fallback
+      if (rawTransactions.length > 0) {
+        prepareCategoryTrends();
+        findAnomalies();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -566,6 +586,12 @@ const TrendAnalyzer = () => {
               <h3 className="text-lg font-medium mb-4">
                 Tendenze per Categoria
               </h3>
+              <div className="mb-4 text-sm text-gray-500">
+                <p>
+                  Confronto tra il periodo attuale e quello precedente. Le
+                  percentuali indicano la variazione della spesa.
+                </p>
+              </div>
               <div className="space-y-4">
                 {categoryTrends.length > 0 ? (
                   categoryTrends.map((category) => (
@@ -579,27 +605,40 @@ const TrendAnalyzer = () => {
                           style={{ backgroundColor: category.color }}
                         ></div>
                         <span className="font-medium">{category.name}</span>
+                        <span className="text-xs text-gray-500">
+                          ({category.transactionCount || 0} transazioni)
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span>{formatCurrency(category.currentAmount)}</span>
-                        <div
-                          className={`flex items-center ${
-                            category.percentChange > 0
-                              ? "text-red-500"
-                              : category.percentChange < 0
-                              ? "text-green-500"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {category.percentChange > 0 ? (
-                            <ArrowUpRight className="h-4 w-4" />
-                          ) : category.percentChange < 0 ? (
-                            <ArrowDownRight className="h-4 w-4" />
-                          ) : null}
-                          <span>
-                            {Math.abs(category.percentChange).toFixed(1)}%
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium">
+                            {formatCurrency(category.currentAmount)}
                           </span>
+                          <div
+                            className={`flex items-center ${
+                              category.percentChange > 0
+                                ? "text-red-500"
+                                : category.percentChange < 0
+                                ? "text-green-500"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {category.percentChange > 0 ? (
+                              <ArrowUpRight className="h-4 w-4" />
+                            ) : category.percentChange < 0 ? (
+                              <ArrowDownRight className="h-4 w-4" />
+                            ) : null}
+                            <span>
+                              {Math.abs(category.percentChange).toFixed(1)}%
+                            </span>
+                          </div>
                         </div>
+                        {category.previousAmount > 0 && (
+                          <span className="text-xs text-gray-500">
+                            Periodo precedente:{" "}
+                            {formatCurrency(category.previousAmount)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))
@@ -620,6 +659,13 @@ const TrendAnalyzer = () => {
               <h3 className="text-lg font-medium mb-4">
                 Anomalie di Spesa Rilevate
               </h3>
+              <div className="mb-4 text-sm text-gray-500">
+                <p>
+                  Mesi in cui la spesa per una categoria si discosta
+                  significativamente dalla media. L'anomalia viene rilevata
+                  quando lo scostamento supera il 50%.
+                </p>
+              </div>
               {anomalies.length > 0 ? (
                 <div className="space-y-4">
                   {anomalies.map((anomaly, index) => (
@@ -639,8 +685,10 @@ const TrendAnalyzer = () => {
                           ></div>
                         </div>
                         <p className="text-sm text-gray-600 mt-1">
-                          Spesa: {formatCurrency(anomaly.amount)}, Media:{" "}
-                          {formatCurrency(anomaly.averageAmount)}
+                          Spesa: {formatCurrency(anomaly.amount)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Media mensile: {formatCurrency(anomaly.averageAmount)}
                           {anomaly.percentDeviation > 0
                             ? ` (${anomaly.percentDeviation.toFixed(
                                 1
