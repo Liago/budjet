@@ -44,7 +44,7 @@ Questo documento contiene una lista dettagliata di strumenti e componenti propos
 - Riassunti mensili, trimestrali e annuali automatizzati
 - Dashboard per la stampa o condivisione
 
-## 8. Analisi Comparativa
+## 8. Analisi Comparativa ✅
 
 - Confronto tra diversi periodi (mese su mese, anno su anno)
 - Benchmarking rispetto a obiettivi personalizzati
@@ -73,6 +73,16 @@ Questo documento contiene una lista dettagliata di strumenti e componenti propos
 - Simulazione dell'impatto di cambiamenti finanziari (nuovo lavoro, acquisto casa)
 - Calcolo del tempo necessario per raggiungere specifici obiettivi finanziari
 - "What-if" scenarios per pianificazione finanziaria
+
+## Componenti recentemente implementati
+
+### SavingsGoals ✅
+
+- Gestione completa degli obiettivi di risparmio personalizzati
+- Monitoraggio del progresso con barre di avanzamento visive
+- Possibilità di aggiungere risparmi a obiettivi esistenti
+- Notifiche di completamento quando si raggiunge l'obiettivo
+- Gestione delle scadenze con conteggio dei giorni rimanenti
 
 ---
 

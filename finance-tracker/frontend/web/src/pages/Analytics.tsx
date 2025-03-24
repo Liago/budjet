@@ -5,6 +5,7 @@ import { fetchCategories } from "../store/slices/categorySlice";
 import SavingsGoals from "../components/analytics/SavingsGoals";
 import TrendAnalyzer from "../components/analytics/TrendAnalyzer";
 import PredictiveAnalysis from "../components/analytics/PredictiveAnalysis";
+import BudgetVsSpendingAnalysis from "../components/analysis/BudgetVsSpendingAnalysis";
 import {
   Card,
   CardContent,
@@ -26,6 +27,15 @@ const Analytics = () => {
   const { user } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const transactions = useAppSelector((state) => state.transactions);
+
+  // Funzione di utilità per formattare la valuta
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("it-IT", {
+      style: "currency",
+      currency: "EUR",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
 
   useEffect(() => {
     // Calcola un periodo di un anno per le analisi
@@ -66,10 +76,19 @@ const Analytics = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4">
+          <TabsTrigger value="budget">Budget vs Spesa</TabsTrigger>
           <TabsTrigger value="savings">Risparmio e Obiettivi</TabsTrigger>
           <TabsTrigger value="trends">Trend Analyzer</TabsTrigger>
           <TabsTrigger value="prediction">Analisi Predittiva</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="budget" className="space-y-4">
+          <BudgetVsSpendingAnalysis
+            userId={user?.id || ""}
+            formatCurrency={formatCurrency}
+            timeRange="3m"
+          />
+        </TabsContent>
 
         <TabsContent value="savings" className="space-y-4">
           <Card>

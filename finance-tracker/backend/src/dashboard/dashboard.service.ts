@@ -253,6 +253,8 @@ export class DashboardService {
   // Helper per determinare il numero di mesi dal timeRange
   private getMonthsFromTimeRange(timeRange: string): number {
     switch (timeRange) {
+      case "1m":
+        return 1;
       case "3m":
         return 3;
       case "6m":
@@ -905,5 +907,273 @@ export class DashboardService {
       potentialMonthlySavings: totalPotentialSavings,
       yearlyProjection,
     };
+  }
+
+  async getBudgetAnalysis(userId: string, timeRange: string = "1m") {
+    try {
+      // Determine the period based on the parameter
+      const months = this.getMonthsFromTimeRange(timeRange);
+      const now = new Date();
+      const startDate = startOfMonth(subMonths(now, months));
+      const endDate = endOfMonth(now);
+
+      // Get all categories with budget
+      const categories = await this.prisma.category.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          name: true,
+          color: true,
+          icon: true,
+          budget: true,
+        },
+      });
+
+      const categoriesWithBudget = categories.filter(
+        (cat) => cat.budget && Number(cat.budget) > 0
+      );
+
+      // Calculate total budget from categories
+      const totalBudget = categoriesWithBudget.reduce(
+        (sum, category) => sum + Number(category.budget),
+        0
+      );
+
+      // Get all expense transactions within the date range
+      const transactions = await this.prisma.transaction.findMany({
+        where: {
+          userId,
+          type: "EXPENSE",
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+              budget: true,
+            },
+          },
+        },
+      });
+
+      // Get historical transactions for trend analysis (previous period)
+      const previousStartDate = startOfMonth(subMonths(startDate, months));
+      const previousEndDate = subDays(startDate, 1);
+
+      const previousTransactions = await this.prisma.transaction.findMany({
+        where: {
+          userId,
+          type: "EXPENSE",
+          date: {
+            gte: previousStartDate,
+            lte: previousEndDate,
+          },
+        },
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      // Group current transactions by category
+      const categorySpending = new Map();
+
+      // Initialize with all categories that have a budget
+      for (const category of categoriesWithBudget) {
+        categorySpending.set(category.id, {
+          categoryId: category.id,
+          categoryName: category.name,
+          categoryColor: category.color,
+          categoryIcon: category.icon,
+          budget: Number(category.budget),
+          amount: 0,
+          deviation: 0,
+          deviationPercentage: 0,
+          isOverBudget: false,
+          previousAmount: 0,
+        });
+      }
+
+      // Calculate current spending by category
+      for (const transaction of transactions) {
+        const categoryId = transaction.categoryId;
+        if (!categoryId) continue; // Skip uncategorized transactions
+
+        const amount = Number(transaction.amount);
+
+        if (categorySpending.has(categoryId)) {
+          categorySpending.get(categoryId).amount += amount;
+        } else if (
+          transaction.category?.budget &&
+          Number(transaction.category.budget) > 0
+        ) {
+          // If not initialized but has budget
+          categorySpending.set(categoryId, {
+            categoryId,
+            categoryName: transaction.category.name,
+            categoryColor: transaction.category.color,
+            budget: Number(transaction.category.budget),
+            amount,
+            deviation: 0,
+            deviationPercentage: 0,
+            isOverBudget: false,
+            previousAmount: 0,
+          });
+        }
+      }
+
+      // Calculate previous period spending by category
+      const previousCategorySpending = new Map();
+
+      for (const transaction of previousTransactions) {
+        const categoryId = transaction.categoryId;
+        if (!categoryId) continue;
+
+        const amount = Number(transaction.amount);
+
+        if (previousCategorySpending.has(categoryId)) {
+          previousCategorySpending.get(categoryId).amount += amount;
+        } else {
+          previousCategorySpending.set(categoryId, {
+            categoryId,
+            amount,
+            categoryName: transaction.category?.name || "Uncategorized",
+          });
+        }
+      }
+
+      // Calculate deviations and regular exceeding patterns
+      const categoryAnalysis = [];
+      let totalSpent = 0;
+
+      for (const [categoryId, data] of categorySpending.entries()) {
+        // Get the amount from the current period
+        const currentAmount = data.amount;
+        totalSpent += currentAmount;
+
+        // Calculate deviation from budget
+        const deviation = data.budget - currentAmount;
+        const deviationPercentage =
+          data.budget > 0
+            ? Math.round((Math.abs(deviation) / data.budget) * 100)
+            : 0;
+
+        // Check if spending exceeds budget
+        const isOverBudget = currentAmount > data.budget;
+
+        // Check if this is a regular pattern
+        let isRegularlyExceeding = false;
+        let suggestion = "";
+
+        // Get previous period data for this category
+        const previousData = previousCategorySpending.get(categoryId);
+        const previousAmount = previousData ? previousData.amount : 0;
+
+        // If consistently exceeding budget
+        if (isOverBudget && previousAmount > data.budget) {
+          isRegularlyExceeding = true;
+
+          // Calculate average overspending
+          const avgOverspending =
+            (currentAmount - data.budget + (previousAmount - data.budget)) / 2;
+          const recommendedBudget = Math.ceil(data.budget + avgOverspending);
+
+          suggestion = `Considera di aumentare il budget a ${recommendedBudget}€ o ridurre le spese di almeno ${Math.ceil(
+            currentAmount - data.budget
+          )}€ mensili`;
+        }
+
+        categoryAnalysis.push({
+          ...data,
+          deviation,
+          deviationPercentage,
+          isOverBudget,
+          isRegularlyExceeding,
+          suggestion,
+          previousAmount,
+          budgetPercentage: Math.round((currentAmount / data.budget) * 100),
+        });
+      }
+
+      // Calculate total metrics
+      const totalRemaining = totalBudget - totalSpent;
+      const totalDeviation = totalBudget - totalSpent;
+      const totalDeviationPercentage =
+        totalBudget > 0
+          ? Math.round((Math.abs(totalDeviation) / totalBudget) * 100)
+          : 0;
+
+      // Generate suggestions
+      const suggestions = [];
+
+      // Find categories consistently over budget
+      const consistentlyOverBudget = categoryAnalysis.filter(
+        (cat) => cat.isOverBudget && cat.isRegularlyExceeding
+      );
+
+      if (consistentlyOverBudget.length > 0) {
+        suggestions.push({
+          title: "Rivedi il budget delle categorie problematiche",
+          description: `Ci sono ${consistentlyOverBudget.length} categorie che superano regolarmente il budget. Considera di aumentare il budget allocato o ridurre le spese in queste aree.`,
+          potentialSaving: consistentlyOverBudget.reduce(
+            (sum, cat) => sum + (cat.amount - cat.budget),
+            0
+          ),
+        });
+      }
+
+      // Suggest redistribution of budget if there are significant underspending categories
+      const significantlyUnderBudget = categoryAnalysis.filter(
+        (cat) => !cat.isOverBudget && cat.deviation > cat.budget * 0.3
+      );
+
+      if (
+        significantlyUnderBudget.length > 0 &&
+        consistentlyOverBudget.length > 0
+      ) {
+        const potentialRedistribution = Math.min(
+          significantlyUnderBudget.reduce((sum, cat) => sum + cat.deviation, 0),
+          consistentlyOverBudget.reduce(
+            (sum, cat) => sum + Math.abs(cat.deviation),
+            0
+          )
+        );
+
+        if (potentialRedistribution > 0) {
+          suggestions.push({
+            title: "Redistribuisci il budget inutilizzato",
+            description:
+              "Alcune categorie sono significativamente sotto budget mentre altre lo superano. Considera di redistribuire il budget non utilizzato per coprire le aree in cui spendi di più.",
+            potentialSaving: potentialRedistribution,
+          });
+        }
+      }
+
+      return {
+        totalBudget,
+        totalSpent,
+        totalRemaining,
+        totalDeviation,
+        totalDeviationPercentage,
+        categoryAnalysis,
+        suggestions,
+        dateRange: {
+          startDate,
+          endDate,
+        },
+      };
+    } catch (error) {
+      console.error("Error in getBudgetAnalysis:", error);
+      throw new Error("Failed to analyze budget data");
+    }
   }
 }

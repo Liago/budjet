@@ -56,7 +56,7 @@ const Sidebar: React.FC = () => {
       icon: "cog",
     },
   ];
-  
+
   // Funzione per rendere l'icona
   const renderIcon = (iconName: string) => {
     // In una implementazione reale, qui andrebbero usate icone da una libreria come FontAwesome o Heroicons
@@ -65,13 +65,13 @@ const Sidebar: React.FC = () => {
 
   // Funzione per ottenere il nome completo o le iniziali dell'utente
   const getUserDisplayName = () => {
-    if (!user) return '';
+    if (!user) return "";
     return `${user.firstName} ${user.lastName}`;
   };
 
   // Funzione per ottenere le iniziali dell'utente
   const getUserInitials = () => {
-    if (!user) return '';
+    if (!user) return "";
     return user.firstName.charAt(0);
   };
 
@@ -90,7 +90,9 @@ const Sidebar: React.FC = () => {
             </span>
           </div>
           <div className="ml-3">
-            <p className="text-sm font-medium text-gray-700">{getUserDisplayName()}</p>
+            <p className="text-sm font-medium text-gray-700">
+              {getUserDisplayName()}
+            </p>
             <p className="text-xs text-gray-500">{user.email}</p>
           </div>
         </div>

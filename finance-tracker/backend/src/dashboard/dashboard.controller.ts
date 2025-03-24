@@ -91,4 +91,27 @@ export class DashboardController {
     const userId = req.user["id"];
     return this.dashboardService.getSavingSuggestions(userId);
   }
+
+  @Get("budget-analysis")
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Get budget vs spending analysis" })
+  @ApiQuery({
+    name: "timeRange",
+    required: false,
+    description: "Time range (1m, 3m, 6m, 12m)",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Returns budget vs spending analysis data",
+  })
+  async getBudgetAnalysis(
+    @Req() req: ExpressRequest,
+    @Query("timeRange") timeRange: string = "1m"
+  ) {
+    const userId = req.user["id"];
+    console.log(
+      `Analyzing budget for user ${userId} with timeRange: ${timeRange}`
+    );
+    return this.dashboardService.getBudgetAnalysis(userId, timeRange);
+  }
 }

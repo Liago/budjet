@@ -88,6 +88,15 @@ export const dashboardService = {
     return response;
   },
 
+  // Ottieni l'analisi budget vs spesa
+  getBudgetAnalysis: async (timeRange = "1m") => {
+    console.log("Chiamata getBudgetAnalysis con timeRange:", timeRange);
+    const response = await apiService.get(`/dashboard/budget-analysis`, {
+      timeRange,
+    });
+    return response;
+  },
+
   // Nuovo endpoint per l'analisi predittiva
   getForecastData: (months: number = 6) =>
     apiService.get<{
