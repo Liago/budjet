@@ -3,13 +3,15 @@ import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
 
 // Import reducers as they're created
 import authReducer from "./slices/authSlice";
-// import transactionReducer from './slices/transactionSlice';
+import transactionReducer from "./slices/transactionSlice";
+import categoryReducer from "./slices/categorySlice";
 
 export const store = configureStore({
   reducer: {
     // Add reducers as they are implemented
     auth: authReducer,
-    // transactions: transactionReducer,
+    transactions: transactionReducer,
+    categories: categoryReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

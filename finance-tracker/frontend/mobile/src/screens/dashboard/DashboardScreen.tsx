@@ -1,8 +1,12 @@
 import React from "react";
-import { View, ScrollView, SafeAreaView } from "react-native";
+import { View, ScrollView, TouchableOpacity, SafeAreaView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { ThemedView } from "../../components/ThemedView";
 import { ThemedText } from "../../components/ThemedText";
+import { TransactionChart } from "../../components/charts/TransactionChart";
+import { useChartData } from "../../hooks/useChartData";
 import { colors } from "../../theme/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 // Placeholder components that will be implemented next
 const BalanceCard = () => (
@@ -44,13 +48,44 @@ const RecentTransactions = () => (
 );
 
 export const DashboardScreen = () => {
+  const navigation = useNavigation();
+  const { monthlyData, categoryData } = useChartData();
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView className="flex-1 px-4 pt-4">
         <ThemedView className="flex-1">
-          <BalanceCard />
-          <MonthlySummary />
-          <RecentTransactions />
+          {/* Header */}
+          <View className="flex-row justify-between items-center mb-6">
+            <ThemedText className="text-2xl font-bold">Dashboard</ThemedText>
+            <TouchableOpacity
+              className="bg-primary p-2 rounded-full"
+              onPress={() => navigation.navigate("AddTransaction")}
+            >
+              <Ionicons name="add" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Monthly Overview Chart */}
+          <TransactionChart
+            data={monthlyData}
+            title="Andamento Mensile"
+            height={250}
+          />
+
+          {/* Expense Categories Chart */}
+          <TransactionChart
+            data={categoryData.expenses}
+            title="Spese per Categoria"
+            height={200}
+          />
+
+          {/* Income Categories Chart */}
+          <TransactionChart
+            data={categoryData.incomes}
+            title="Entrate per Categoria"
+            height={200}
+          />
         </ThemedView>
       </ScrollView>
     </SafeAreaView>

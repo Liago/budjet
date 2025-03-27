@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useNavigation } from "@react-navigation/native";
 import { MainTabParamList } from "../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme/colors";
@@ -11,17 +12,21 @@ import { CategoriesScreen } from "../screens/categories/CategoriesScreen";
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Custom add transaction button
-const AddTransactionButton = ({ onPress }: { onPress: () => void }) => (
-  <TouchableOpacity
-    style={styles.addButton}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    <View style={styles.addButtonInner}>
-      <Ionicons name="add" size={30} color="white" />
-    </View>
-  </TouchableOpacity>
-);
+const AddTransactionButton = () => {
+  const navigation = useNavigation();
+
+  return (
+    <TouchableOpacity
+      style={styles.addButton}
+      onPress={() => navigation.navigate("AddTransaction")}
+      activeOpacity={0.8}
+    >
+      <View style={styles.addButtonInner}>
+        <Ionicons name="add" size={30} color="white" />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const TabNavigator = () => {
   return (
@@ -56,14 +61,7 @@ const TabNavigator = () => {
         name="AddTransactionButton"
         component={DashboardScreen} // Placeholder, never actually navigates here
         options={{
-          tabBarButton: (props) => (
-            <AddTransactionButton
-              onPress={() => {
-                // Navigate to add transaction screen
-                // navigation.navigate('AddTransaction');
-              }}
-            />
-          ),
+          tabBarButton: () => <AddTransactionButton />,
           tabBarLabel: () => null,
         }}
       />

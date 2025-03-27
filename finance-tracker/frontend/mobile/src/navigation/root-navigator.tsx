@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { useAppSelector } from "../store";
 import TabNavigator from "./tab-navigator";
+import { AddTransactionScreen } from "../screens/transactions/AddTransactionScreen";
+import { CategorySelectionScreen } from "../screens/transactions/CategorySelectionScreen";
 
 // Sample placeholder components for auth screens
 // Will be replaced with actual screen components
@@ -39,7 +41,22 @@ const RootNavigator = () => {
           // Main app screens
           <>
             <Stack.Screen name="MainTabs" component={TabNavigator} />
-            {/* Other stacked screens will be added here */}
+            <Stack.Screen
+              name="AddTransaction"
+              component={AddTransactionScreen}
+              options={{
+                headerShown: true,
+                title: "Nuova Transazione",
+              }}
+            />
+            <Stack.Screen
+              name="CategorySelection"
+              component={CategorySelectionScreen}
+              options={{
+                headerShown: true,
+                title: "Seleziona Categoria",
+              }}
+            />
           </>
         )}
       </Stack.Navigator>

@@ -1,5 +1,6 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import { NavigatorScreenParams } from "@react-navigation/native";
 
 // Define the screens in the app
 export type RootStackParamList = {
@@ -9,17 +10,18 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
 
   // Main App Screens
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList>;
 
   // Transaction Screens
   TransactionDetails: { transactionId: string };
   AddTransaction: undefined;
-  EditTransaction: { transactionId: string };
+  EditTransaction: { id: string };
+  CategorySelection: { type: "income" | "expense" };
 
   // Category Screens
   Categories: undefined;
   AddCategory: undefined;
-  EditCategory: { categoryId: string };
+  EditCategory: { id: string };
 
   // Budget Screens
   Budgets: undefined;
@@ -46,8 +48,9 @@ export type MainTabParamList = {
   Home: undefined;
   Transactions: undefined;
   AddTransactionButton: undefined;
-  Reports: undefined;
+  Categories: undefined;
   More: undefined;
+  AddTransaction: undefined;
 };
 
 // Navigation props for each screen

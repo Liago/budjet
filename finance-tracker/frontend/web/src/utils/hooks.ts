@@ -1,8 +1,8 @@
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
-import { AppDispatch, RootState } from '../store';
-import { fetchUserProfile } from '../store/slices/authSlice';
-import { fetchCategories } from '../store/slices/categorySlice';
+import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { AppDispatch, RootState } from "../store";
+import { fetchUserProfile } from "../store/slices/authSlice";
+import { fetchCategories } from "../store/slices/categorySlice";
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch = () => useDispatch<AppDispatch>();
@@ -13,7 +13,9 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
  */
 export const useAuth = () => {
   const dispatch = useAppDispatch();
-  const { user, isAuthenticated, isLoading, error } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated, isLoading, error } = useAppSelector(
+    (state) => state.auth
+  );
 
   useEffect(() => {
     if (isAuthenticated && !user && !isLoading && !error) {
@@ -45,7 +47,10 @@ export const useCategories = () => {
   return { categories, isLoading };
 };
 
-export type ValidationRule<T> = (value: T) => string | null;
+export type ValidationRule<T> = (
+  value: any,
+  data?: Record<string, any>
+) => string | null;
 
 export interface FormErrors {
   [key: string]: string | null;
@@ -75,10 +80,10 @@ export const useFormValidation = () => {
     Object.keys(rules).forEach((key) => {
       const value = data[key];
       const rule = rules[key as keyof T];
-      
+
       // Applica la regola di validazione
-      const error = rule(value);
-      
+      const error = rule(value, data);
+
       // Se c'è un errore, imposta il campo corrispondente
       if (error) {
         newErrors[key] = error;
@@ -100,4 +105,4 @@ export const useFormValidation = () => {
   };
 
   return { errors, validate, clearErrors };
-}; 
+};
