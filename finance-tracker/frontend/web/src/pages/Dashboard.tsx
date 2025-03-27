@@ -10,6 +10,7 @@ import TopCategoriesChart from "../components/dashboard/TopCategoriesChart";
 import DailySpendingChart from "../components/dashboard/DailySpendingChart";
 import BudgetCategoryProgress from "../components/dashboard/BudgetCategoryProgress";
 import RecentTransactions from "../components/dashboard/RecentTransactions";
+import TopSpendingCategory from "../components/dashboard/TopSpendingCategory";
 import { fetchTransactions } from "../store/slices/transactionSlice";
 import { fetchCategories } from "../store/slices/categorySlice";
 import useDashboardDateRange from "../utils/hooks/useDashboardDateRange";
@@ -74,7 +75,7 @@ const Dashboard: React.FC = () => {
           endDateFormatted
         );
 
-        setDashboardData(data);
+        setDashboardData(data as DashboardStatsType);
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
         setDashboardError("Failed to load dashboard statistics");
@@ -137,7 +138,7 @@ const Dashboard: React.FC = () => {
     transactions.isLoading || categories.isLoading || isLoadingDashboard;
 
   return (
-    <div className="p-6">
+    <div className="p-3">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
       {/* Date Range Selector */}
@@ -373,18 +374,58 @@ const Dashboard: React.FC = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <DashboardStats
-            totalIncome={dashboardData?.totalIncome ?? 0}
-            totalExpense={dashboardData?.totalExpense ?? 0}
-            totalBudget={dashboardData?.totalBudget ?? 0}
-            budgetRemaining={dashboardData?.budgetRemaining ?? 0}
-            budgetPercentage={dashboardData?.budgetPercentage ?? 0}
-            formatAmount={formatAmount}
-          />
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Utilizziamo le card Stats normali */}
+            <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <DashboardStats
+                totalIncome={dashboardData?.totalIncome ?? 0}
+                totalExpense={dashboardData?.totalExpense ?? 0}
+                totalBudget={dashboardData?.totalBudget ?? 0}
+                budgetRemaining={dashboardData?.budgetRemaining ?? 0}
+                budgetPercentage={dashboardData?.budgetPercentage ?? 0}
+                formatAmount={formatAmount}
+              />
+            </div>
 
-          {/* Charts Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {/* First Row */}
+            {/* Top Spending Category Card */}
+            {dashboardData?.categories &&
+              dashboardData.categories.length > 0 && (
+                <div className="lg:col-span-1">
+                  {(() => {
+                    // Troviamo la categoria con la spesa maggiore
+                    const sortedCategories = [...dashboardData.categories]
+                      .filter((cat) => cat.amount > 0)
+                      .sort((a, b) => b.amount - a.amount);
+
+                    if (sortedCategories.length === 0) {
+                      return (
+                        <div className="bg-white overflow-hidden shadow rounded-lg p-6">
+                          <p className="text-gray-500">
+                            Nessuna categoria di spesa
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    const topCategory = sortedCategories[0];
+
+                    return (
+                      <TopSpendingCategory
+                        categoryName={topCategory.categoryName}
+                        categoryColor={topCategory.categoryColor}
+                        amount={topCategory.amount}
+                        percentage={topCategory.percentage}
+                        formatAmount={formatAmount}
+                      />
+                    );
+                  })()}
+                </div>
+              )}
+          </div>
+
+          {/* Charts Grid - 4 colonne per schermi medi e grandi */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* Prima riga di grafici */}
             <ExpensePieChart
               expensesByCategory={(dashboardData?.categories || []).map(
                 (cat) => ({
@@ -401,14 +442,6 @@ const Dashboard: React.FC = () => {
               monthlyData={monthlyData || []}
               formatAmount={formatAmount}
             />
-            <RecentTransactions
-              transactions={
-                dashboardData?.recentTransactions?.slice(0, 5) || []
-              }
-              formatAmount={formatAmount}
-            />
-
-            {/* Second Row */}
             <BalanceTrendChart
               balanceData={balanceData || []}
               formatAmount={formatAmount}
@@ -418,8 +451,16 @@ const Dashboard: React.FC = () => {
               formatAmount={formatAmount}
             />
 
-            {/* Split last column into two */}
-            <div className="flex flex-col gap-6">
+            {/* Seconda riga di grafici */}
+            <div className="md:col-span-2">
+              <RecentTransactions
+                transactions={
+                  dashboardData?.recentTransactions?.slice(0, 5) || []
+                }
+                formatAmount={formatAmount}
+              />
+            </div>
+            <div className="md:col-span-1">
               <TopCategoriesChart
                 topCategories={(dashboardData?.categories || [])
                   .slice(0, 5)
@@ -430,6 +471,8 @@ const Dashboard: React.FC = () => {
                   }))}
                 formatAmount={formatAmount}
               />
+            </div>
+            <div className="md:col-span-1">
               <BudgetCategoryProgress
                 budgetCategories={(dashboardData?.categories || [])
                   .filter((cat) => cat.budget && cat.budget > 0)

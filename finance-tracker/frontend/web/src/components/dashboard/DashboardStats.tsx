@@ -36,7 +36,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
   const balance = safeIncome - safeExpense;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+    <>
       {/* Income Card */}
       <Card className="overflow-hidden">
         <CardHeader className="pb-2 bg-gradient-to-r from-green-50 to-emerald-50">
@@ -269,19 +269,16 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className={balance >= 0 ? "text-purple-600" : "text-red-600"}
+              className="text-purple-600"
             >
-              <path d="M2 10h20" />
-              <path d="M6 14h2" />
-              <path d="M16 14h2" />
-              <path d="M10 14h4" />
               <rect width="20" height="14" x="2" y="5" rx="2" />
+              <path d="M2 10h20" />
             </svg>
             Questo periodo
           </p>
         </CardFooter>
       </Card>
-    </div>
+    </>
   );
 };
 
