@@ -1,0 +1,154 @@
+Type,Category,Date,Transaction,Note
+Expenses,Persona,2025-03-25T00:00:00.000Z,-18,Crema viso
+Expenses,Grocery,2025-03-25T00:00:00.000Z,−13,"#pescheria "
+Expenses,Grocery,2025-03-25T00:00:00.000Z,"−30,50","#fruttivendolo "
+Expenses,Grocery,2025-03-22T00:00:00.000Z,"−52,42","#conad "
+Expenses,Grocery,2025-03-20T00:00:00.000Z,"−21,24","#terraesole piada, stracchino e rucola"
+Expenses,Grocery,2025-03-19T00:00:00.000Z,"−17,50","#caffe "
+Expenses,Grocery,2025-03-18T00:00:00.000Z,−31,"#fruttivendolo "
+Expenses,Grocery,2025-03-18T00:00:00.000Z,−14,"#pescheria "
+Income,Salary,2025-03-17T00:00:00.000Z,2133, "Stipendio"
+Expenses,Grocery,2025-03-17T00:00:00.000Z,"−32,77","#saporifelici "
+Expenses,Bar,2025-03-16T00:00:00.000Z,−16,"#tinto "
+Expenses,Restaurant,2025-03-15T00:00:00.000Z,−33,Rosticceria pesce
+Expenses,Bar,2025-03-15T00:00:00.000Z,"−4,50",#pasticceria forno piastra
+Expenses,Grocery,2025-03-15T00:00:00.000Z,"−67,64","#conad "
+Expenses,Health,2025-03-14T00:00:00.000Z,"−17,71",Dental floss
+Expenses,Pets,2025-03-14T00:00:00.000Z,−10,Salviette Penny
+Expenses,Grocery,2025-03-14T00:00:00.000Z,"−16,85","#macelleria "
+Expenses,Restaurant,2025-03-13T00:00:00.000Z,"−22,60","#pizza "
+Expenses,Grocery,2025-03-11T00:00:00.000Z,−17,"#pescheria "
+Expenses,Grocery,2025-03-11T00:00:00.000Z,"−37,50","#fruttivendolo "
+Expenses,Bar,2025-03-11T00:00:00.000Z,"−13,40","Panificio dell’arco "
+Expenses,Health,2025-03-10T00:00:00.000Z,"−47,06","Spazzolini x2 elettrici "
+Expenses,Utilities,2025-03-10T00:00:00.000Z,"−166,67","#luce "
+Expenses,Utilities,2025-03-10T00:00:00.000Z,"−482,29","#gas "
+Expenses,Technolgy,2025-03-10T00:00:00.000Z,"−5,99",Varie
+Expenses,Car,2025-03-10T00:00:00.000Z,"−65,87",Leva graffi
+Expenses,Special,2025-03-10T00:00:00.000Z,"−9,09","Invio cartaceo contratto editoriale "
+Expenses,Home,2025-03-10T00:00:00.000Z,"−9,99",#swiffer
+Expenses,Bar,2025-03-09T00:00:00.000Z,−12,Vineria 400
+Expenses,Bar,2025-03-09T00:00:00.000Z,"−8,30","Panificio dell’arco "
+Expenses,Grocery,2025-03-09T00:00:00.000Z,"−24,33","#terraesole "
+Expenses,Grocery,2025-03-09T00:00:00.000Z,"−22,26","#macelleria pollo e fesa tacchino "
+Expenses,Grocery,2025-03-09T00:00:00.000Z,"−59,08","#conad "
+Expenses,Technolgy,2025-03-08T00:00:00.000Z,"−31,90",#tim
+Expenses,Health,2025-03-08T00:00:00.000Z,"−21,78","Farmacia Orlandi "
+Expenses,Technolgy,2025-03-06T00:00:00.000Z,"−9,99",#icloudstorage
+Expenses,Bar,2025-03-05T00:00:00.000Z,−28,"#satispay "
+Expenses,Home,2025-03-05T00:00:00.000Z,"−12,82",#spendibene
+Expenses,Bar,2025-03-05T00:00:00.000Z,"−11,90",Chiacchiere e frittelle da Pozzi
+Expenses,Health,2025-03-05T00:00:00.000Z,"−38,50",#ottica
+Expenses,Grocery,2025-03-04T00:00:00.000Z,−15,"#pescheria "
+Expenses,Grocery,2025-03-04T00:00:00.000Z,−35,"#fruttivendolo "
+Expenses,Persona,2025-03-03T00:00:00.000Z,−22,"Carta di identità "
+Income,Pension,2025-03-03T00:00:00.000Z,"367,28",
+Expenses,Technolgy,2025-03-02T00:00:00.000Z,−25,Replay
+Expenses,Restaurant,2025-03-01T00:00:00.000Z,−47,Imma
+Expenses,Bicycle,2025-03-01T00:00:00.000Z,−20,Parafanghi
+Expenses,Grocery,2025-03-01T00:00:00.000Z,"−78,10","#conad "
+Expenses,Grocery,2025-03-01T00:00:00.000Z,"−12,28","#macelleria "
+Expenses,Technolgy,2025-03-01T00:00:00.000Z,"−29,99",#nowtv
+Expenses,Grocery,2025-02-28T00:00:00.000Z,"−21,50","#caffe "
+Expenses,Technolgy,2025-02-28T00:00:00.000Z,"−12,08",#pec
+Expenses,Home,2025-02-28T00:00:00.000Z,−720,#mutuo
+Expenses,Taxes,2025-02-28T00:00:00.000Z,"−221,65",#inps
+Expenses,Technolgy,2025-02-28T00:00:00.000Z,"−25,95",#appleone
+Expenses,Grocery,2025-02-27T00:00:00.000Z,"−6,17","#saporifelici "
+Expenses,Car,2025-02-26T00:00:00.000Z,−25,"#benzina "
+Expenses,Pets,2025-02-25T00:00:00.000Z,"−51,98",Pipette x6
+Expenses,Grocery,2025-02-25T00:00:00.000Z,−34,"#fruttivendolo "
+Expenses,Grocery,2025-02-25T00:00:00.000Z,−13,"#pescheria "
+Expenses,Grocery,2025-02-24T00:00:00.000Z,"−13,50","Olio pasquinoni "
+Expenses,Pets,2025-02-24T00:00:00.000Z,"−121,79","#reico "
+Expenses,Restaurant,2025-02-22T00:00:00.000Z,−41,#rosticceria di pesce del borgo
+Expenses,Grocery,2025-02-22T00:00:00.000Z,"−55,93","#conad "
+Expenses,Technolgy,2025-02-22T00:00:00.000Z,"−10,99","#soundcloud "
+Expenses,Bar,2025-02-21T00:00:00.000Z,"−12,40",Biscotti Pasta Madre
+Expenses,Restaurant,2025-02-20T00:00:00.000Z,"−23,90","#pizza "
+Expenses,Persona,2025-02-20T00:00:00.000Z,−40,"Scarpe Adidas "
+Expenses,Grocery,2025-02-19T00:00:00.000Z,"−16,96","#macelleria "
+Expenses,Grocery,2025-02-18T00:00:00.000Z,"−24,50","#fruttivendolo "
+Expenses,Grocery,2025-02-18T00:00:00.000Z,−13,"#pescheria "
+Expenses,Grocery,2025-02-17T00:00:00.000Z,"−7,38","#saporifelici "
+Expenses,Grocery,2025-02-16T00:00:00.000Z,"−75,61","#conad "
+Expenses,Restaurant,2025-02-15T00:00:00.000Z,"−38,30","#pizza "
+Expenses,Pets,2025-02-15T00:00:00.000Z,"−38,59",#reico ultima rata
+Expenses,Technolgy,2025-02-14T00:00:00.000Z,"−5,99",Varie
+Expenses,Grocery,2025-02-14T00:00:00.000Z,"−9,35","#fruttivendolo "
+Income,Salary,2025-02-14T00:00:00.000Z,2133,
+Expenses,Bar,2025-02-12T00:00:00.000Z,−50,"Revolut "
+Expenses,Gifts,2025-02-11T00:00:00.000Z,"−8,34","Pietra viso "
+Expenses,Grocery,2025-02-11T00:00:00.000Z,"−23,80","#pescheria "
+Expenses,Grocery,2025-02-10T00:00:00.000Z,"−19,20","#caffe "
+Expenses,Grocery,2025-02-10T00:00:00.000Z,−38,"#fruttivendolo "
+Expenses,Grocery,2025-02-10T00:00:00.000Z,"−11,30","#macelleria "
+Expenses,Services,2025-02-10T00:00:00.000Z,"−1,039,23",#cartadicredito
+Expenses,Utilities,2025-02-10T00:00:00.000Z,"−119,66",#acqua
+Expenses,Bar,2025-02-09T00:00:00.000Z,−25,"#tinto "
+Expenses,Grocery,2025-02-09T00:00:00.000Z,"−68,17","#conad "
+Expenses,Bar,2025-02-08T00:00:00.000Z,−20,"#tinto "
+Expenses,Grocery,2025-02-08T00:00:00.000Z,"−68,17","#conad "
+Expenses,Restaurant,2025-02-08T00:00:00.000Z,"−24,60","#pizza "
+Expenses,Special,2025-02-08T00:00:00.000Z,"−7,98",#paccofacile
+Expenses,Cosmetics,2025-02-08T00:00:00.000Z,"−14,50",Shampoo da Serena
+Expenses,Hairdresser,2025-02-08T00:00:00.000Z,−23,
+Expenses,Bar,2025-02-08T00:00:00.000Z,"−3,60","Alise "
+Expenses,Technolgy,2025-02-08T00:00:00.000Z,"−31,90",#tim
+Expenses,Grocery,2025-02-07T00:00:00.000Z,"−11,80","#macelleria "
+Expenses,Grocery,2025-02-07T00:00:00.000Z,−13,"#pescheria "
+Expenses,Technolgy,2025-02-06T00:00:00.000Z,"−9,99",#icloudstorage
+Expenses,Grocery,2025-02-05T00:00:00.000Z,"−14,50",#adriano
+Expenses,Technolgy,2025-02-05T00:00:00.000Z,"−9,99",#iliad
+Expenses,Health,2025-02-05T00:00:00.000Z,"−38,50",#ottica
+Expenses,Home,2025-02-04T00:00:00.000Z,−25,"Prelevamento "
+Expenses,Home,2025-02-04T00:00:00.000Z,"−45,15",#condominio
+Expenses,Grocery,2025-02-04T00:00:00.000Z,−13,"#pescheria "
+Expenses,Grocery,2025-02-04T00:00:00.000Z,"−12,29","#conad "
+Expenses,Bar,2025-02-03T00:00:00.000Z,−10,"#satispay "
+Expenses,Technolgy,2025-02-03T00:00:00.000Z,"−21,96",#claude
+Expenses,Grocery,2025-02-03T00:00:00.000Z,−41,"#fruttivendolo "
+Income,Pension,2025-02-03T00:00:00.000Z,"367,28",
+Expenses,Events,2025-02-01T00:00:00.000Z,"−3,99",Noleggio film
+Expenses,Laundry,2025-02-01T00:00:00.000Z,−12,"Grucce Amazon "
+Expenses,Grocery,2025-02-01T00:00:00.000Z,"−13,05","#saporifelici "
+Expenses,Grocery,2025-02-01T00:00:00.000Z,"−57,22","#conad "
+Expenses,Pets,2025-02-01T00:00:00.000Z,"−103,97",#reico
+Expenses,Technolgy,2025-02-01T00:00:00.000Z,"−29,99",#nowtv
+Expenses,Car,2025-01-31T00:00:00.000Z,"−27,76",#telepass
+Expenses,Grocery,2025-01-30T00:00:00.000Z,"−46,19",#saporifelici
+Expenses,Technolgy,2025-01-30T00:00:00.000Z,"−25,95",#appleone
+Expenses,Taxes,2025-01-30T00:00:00.000Z,"−221,65",#inps
+Expenses,Restaurant,2025-01-29T00:00:00.000Z,"−24,90",#pizza
+Expenses,Bar,2025-01-28T00:00:00.000Z,−45,Aperitivo al teatro Galli
+Expenses,Grocery,2025-01-28T00:00:00.000Z,"−31,50",#fruttivendolo
+Expenses,Grocery,2025-01-28T00:00:00.000Z,−15,#pescheria
+Expenses,Home,2025-01-28T00:00:00.000Z,−720,#mutuo
+Expenses,Grocery,2025-01-27T00:00:00.000Z,"−16,06",#terraesole
+Expenses,Bar,2025-01-27T00:00:00.000Z,−15,#satispay
+Expenses,Gifts,2025-01-27T00:00:00.000Z,"−73,33","Antichità Galliera, regalo Natale"
+Expenses,Car,2025-01-26T00:00:00.000Z,−5,Autolavaggio
+Expenses,Car,2025-01-26T00:00:00.000Z,−20,#benzina
+Expenses,Grocery,2025-01-25T00:00:00.000Z,"−12,60",#macelleria
+Expenses,Bar,2025-01-25T00:00:00.000Z,"−10,20",#pasticceria
+Expenses,Grocery,2025-01-25T00:00:00.000Z,"−66,35",#CONAD
+Expenses,Bar,2025-01-24T00:00:00.000Z,−15,#tinto
+Expenses,Grocery,2025-01-23T00:00:00.000Z,"−20,50",#caffe
+Expenses,Music,2025-01-23T00:00:00.000Z,"−11,53",#soundcloud boost di prova
+Expenses,Technolgy,2025-01-22T00:00:00.000Z,"−5,99",Top11
+Expenses,Music,2025-01-22T00:00:00.000Z,"−10,99",#soundcloud
+Expenses,Grocery,2025-01-21T00:00:00.000Z,"−8,15",Forno piastra #piastra
+Expenses,Pets,2025-01-21T00:00:00.000Z,"−20,16",Terza rata pettorina
+Expenses,Gifts,2025-01-21T00:00:00.000Z,"−21,16","Ilmiolibro,it"
+Expenses,Grocery,2025-01-21T00:00:00.000Z,−15,"Pescheria #pescheria "
+Expenses,Grocery,2025-01-21T00:00:00.000Z,−40,"Fruttivendolo #fruttivendolo "
+Expenses,Taxes,2025-01-21T00:00:00.000Z,−238,IMU Ceriano anno 2021
+Expenses,Bar,2025-01-19T00:00:00.000Z,"−5,10","Caffè Cavour "
+Expenses,Grocery,2025-01-18T00:00:00.000Z,"−73,58","#conad "
+Expenses,Pets,2025-01-18T00:00:00.000Z,"−56,55","Terza rata reico e sacchetti cacca "
+Expenses,Health,2025-01-18T00:00:00.000Z,"−7,70",
+Income,Salary,2025-01-14T00:00:00.000Z,1983,
+Expenses,Utilities,2025-01-07T00:00:00.000Z,"−134,76",#luce
+Expenses,Utilities,2025-01-07T00:00:00.000Z,"−228,73",#gas
+Expenses,Technolgy,2025-01-06T00:00:00.000Z,"−9,99",#icloudstorage
+Income,Pension,2025-01-03T00:00:00.000Z,"367,28",
