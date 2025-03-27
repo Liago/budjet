@@ -1,50 +1,150 @@
-# Welcome to your Expo app 👋
+# Bud-Jet Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Bud-Jet è un'applicazione mobile per la gestione delle finanze personali, sviluppata con React Native e TypeScript. L'app permette agli utenti di tenere traccia delle proprie spese e entrate, analizzare i propri dati finanziari e gestire il proprio budget in modo efficace.
 
-## Get started
+## Tecnologie Utilizzate
 
-1. Install dependencies
+- React Native con TypeScript
+- Redux Toolkit per la gestione dello stato
+- Tailwind CSS per lo styling
+- Ionicons per le icone
+- React Native Chart Kit per i grafici
+- Expo Notifications per le notifiche
+- AsyncStorage per la persistenza dei dati
+- Expo File System per la gestione dei file
+- Expo Sharing per la condivisione dei file
 
-   ```bash
-   npm install
-   ```
+## Funzionalità Principali
 
-2. Start the app
+### 1. Dashboard
 
-   ```bash
-    npx expo start
-   ```
+- Visualizzazione del saldo corrente
+- Grafici interattivi per l'andamento mensile
+- Distribuzione delle spese per categoria
+- Distribuzione delle entrate per categoria
+- Accesso rapido alle funzionalità principali
 
-In the output, you'll find options to open the app in a
+### 2. Gestione Transazioni
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Aggiunta di nuove transazioni (spese ed entrate)
+- Categorizzazione delle transazioni
+- Selezione della data
+- Validazione dei dati inseriti
+- Filtri avanzati per la ricerca
+- Funzionalità di ricerca testuale
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 3. Gestione Categorie
 
-## Get a fresh project
+- Creazione di categorie personalizzate
+- Modifica delle categorie esistenti
+- Assegnazione di icone alle categorie
+- Visualizzazione delle categorie più utilizzate
 
-When you're ready, run:
+### 4. Statistiche Avanzate
 
-```bash
-npm run reset-project
+- Analisi dettagliata delle spese
+- Trend mensili e annuali
+- Calcolo del tasso di risparmio
+- Media delle transazioni
+- Top categorie di spesa
+- Visualizzazione dei dati tramite grafici
+
+### 5. Notifiche
+
+- Avvisi per il superamento del budget
+- Report mensili automatici
+- Promemoria per le bollette
+- Notifiche per gli obiettivi di risparmio
+- Personalizzazione delle notifiche
+
+### 6. Backup e Ripristino
+
+- Creazione di backup automatici
+- Ripristino dei dati da backup
+- Condivisione dei backup
+- Gestione di più backup
+- Validazione dei dati di backup
+
+### 7. Personalizzazione
+
+- Tema chiaro/scuro
+- Personalizzazione delle categorie
+- Impostazioni delle notifiche
+- Preferenze di visualizzazione
+
+## Struttura del Progetto
+
+```
+src/
+├── components/
+│   ├── charts/         # Componenti per i grafici
+│   ├── forms/          # Componenti per i form
+│   ├── stats/          # Componenti per le statistiche
+│   └── themed/         # Componenti con tema
+├── screens/
+│   ├── dashboard/      # Schermata principale
+│   ├── transactions/   # Gestione transazioni
+│   ├── categories/     # Gestione categorie
+│   ├── stats/          # Statistiche avanzate
+│   └── settings/       # Impostazioni e backup
+├── services/
+│   ├── api/           # Servizi API
+│   ├── backup/        # Servizio di backup
+│   └── notifications/ # Servizio notifiche
+├── store/
+│   └── slices/        # Redux slices
+├── hooks/             # Custom hooks
+├── navigation/        # Configurazione navigazione
+└── theme/            # Configurazione tema
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Installazione
 
-## Learn more
+1. Clona il repository:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+git clone https://github.com/yourusername/bud-jet.git
+cd bud-jet/frontend/mobile
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+2. Installa le dipendenze:
 
-## Join the community
+```bash
+npm install
+```
 
-Join our community of developers creating universal apps.
+3. Avvia l'applicazione:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm start
+```
+
+## Configurazione
+
+1. Crea un file `.env` nella root del progetto mobile con le seguenti variabili:
+
+```
+API_URL=your_api_url
+```
+
+2. Configura le notifiche push (opzionale):
+
+```bash
+expo push:configure
+```
+
+## Contribuire
+
+1. Fork il repository
+2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit le tue modifiche (`git commit -m 'Add some AmazingFeature'`)
+4. Push al branch (`git push origin feature/AmazingFeature`)
+5. Apri una Pull Request
+
+## Licenza
+
+Questo progetto è sotto licenza MIT. Vedi il file `LICENSE` per maggiori dettagli.
+
+## Supporto
+
+Per supporto, email support@budjet.com o apri un issue nel repository.
