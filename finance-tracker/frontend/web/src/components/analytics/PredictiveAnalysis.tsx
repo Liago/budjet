@@ -615,7 +615,7 @@ const PredictiveAnalysis = () => {
                         >
                           €
                           {numeral(forecastData?.averageIncome || 0).format(
-                            "0,0"
+                            "0"
                           )}
                           /mese
                         </Typography>
@@ -634,7 +634,7 @@ const PredictiveAnalysis = () => {
                         >
                           €
                           {numeral(forecastData?.averageExpense || 0).format(
-                            "0,0"
+                            "0"
                           )}
                           /mese
                         </Typography>
