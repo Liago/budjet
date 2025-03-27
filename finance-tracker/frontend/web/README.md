@@ -4,11 +4,69 @@ This is the web frontend for the Finance Tracker application, built with React, 
 
 ## Features
 
-- User authentication (login/register)
+### Core Features
+
+- User authentication (login/register) with JWT
 - Dashboard with financial overview and charts
 - Transaction management (add, edit, delete, filter, sort)
 - Category management (add, edit, delete, filter)
+- Budget tracking and management
+- Recurrent payments management
+- Financial analytics and insights
 - Responsive design for desktop and mobile
+
+### Transaction Management
+
+- Add, edit, and delete transactions
+- Bulk transaction operations
+- CSV import functionality
+- Advanced filtering and sorting
+- Pagination support
+- Transaction categorization
+- Date-based filtering
+
+### Category Management
+
+- Create and manage spending categories
+- Set category budgets
+- Track spending by category
+- Monthly spending analysis
+- Category-wise budget vs spending comparison
+
+### Budget Features
+
+- Set monthly budgets
+- Category-wise budget allocation
+- Budget vs actual spending tracking
+- Budget alerts and notifications
+- Budget progress visualization
+
+### Recurrent Payments
+
+- Schedule recurring transactions
+- Set payment intervals (daily, weekly, monthly, yearly)
+- Configure payment start and end dates
+- Enable/disable recurring payments
+- Track payment history
+
+### Analytics & Insights
+
+- Spending trends analysis
+- Category-wise spending breakdown
+- Budget vs spending analysis
+- Predictive analysis
+- Savings goals tracking
+- Interactive charts and visualizations
+
+### User Experience
+
+- Modern, responsive UI
+- Dark/light mode support
+- Mobile-friendly design
+- Toast notifications
+- Loading states and animations
+- Error handling and validation
+- Protected routes
 
 ## Tech Stack
 
@@ -18,6 +76,10 @@ This is the web frontend for the Finance Tracker application, built with React, 
 - **Styling:** Tailwind CSS
 - **HTTP Client:** Axios
 - **Charts:** Chart.js with react-chartjs-2
+- **UI Components:** Shadcn UI
+- **Date Handling:** date-fns
+- **Form Validation:** Custom hooks
+- **Notifications:** Sonner
 
 ## Getting Started
 
@@ -62,12 +124,16 @@ The build artifacts will be stored in the `dist/` directory.
 ```
 src/
 ├── components/     # Reusable UI components
-├── pages/          # Page components
-├── store/          # Redux store and slices
-│   └── slices/     # Redux slices for different features
-├── utils/          # Utility functions
-├── App.tsx         # Main application component with routing
-└── main.tsx        # Entry point
+│   ├── ui/        # Base UI components
+│   ├── layouts/   # Layout components
+│   └── features/  # Feature-specific components
+├── pages/         # Page components
+├── store/         # Redux store and slices
+│   └── slices/    # Redux slices for different features
+├── utils/         # Utility functions and hooks
+├── types/         # TypeScript type definitions
+├── App.tsx        # Main application component with routing
+└── main.tsx       # Entry point
 ```
 
 ## API Configuration
@@ -93,4 +159,8 @@ The application uses JWT for authentication. The token is stored in localStorage
 - Follow React best practices
 - Use functional components with hooks
 - Use Redux Toolkit for state management
-- Style components with Tailwind CSS 
+- Style components with Tailwind CSS
+- Follow the established project structure
+- Write clean, maintainable code
+- Include proper error handling
+- Add loading states for async operations
