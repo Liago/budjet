@@ -28,7 +28,7 @@ import RecurrentPaymentForm from "../components/recurrent-payments/RecurrentPaym
 // Utility per formattare gli importi con la virgola come separatore decimale e simbolo dell'euro
 const formatAmount = (amount: number | string): string => {
   // Assicuriamoci che amount sia un numero prima di chiamare toFixed
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
   return `€ ${numAmount.toFixed(2).replace(".", ",")}`;
 };
 
@@ -40,18 +40,22 @@ const RecurrentPayments = () => {
   useAuth(); // Make sure user is authenticated
 
   // Custom hooks
-  const { 
-    formData, 
-    errors, 
-    isModalOpen, 
-    handleInputChange, 
-    handleSelectChange, 
-    handleCheckboxChange, 
-    validateForm, 
-    normalizeFormData, 
-    openModal, 
-    closeModal, 
-    resetForm 
+  const {
+    formData,
+    errors,
+    isModalOpen,
+    selectedStartDate,
+    selectedEndDate,
+    handleInputChange,
+    handleSelectChange,
+    handleCheckboxChange,
+    handleStartDateChange,
+    handleEndDateChange,
+    validateForm,
+    normalizeFormData,
+    openModal,
+    closeModal,
+    resetForm,
   } = useRecurrentPaymentForm(categories);
 
   const {
@@ -59,7 +63,7 @@ const RecurrentPayments = () => {
     filterActive,
     filteredPayments,
     setSearchTerm,
-    setFilterActive
+    setFilterActive,
   } = useRecurrentPaymentFilters(recurrentPayments);
 
   // Fetch data on component mount
@@ -97,8 +101,8 @@ const RecurrentPayments = () => {
 
     if (validateForm(formData)) {
       const toastId = notificationService.loading(
-        currentRecurrentPayment 
-          ? "Aggiornamento pagamento ricorrente..." 
+        currentRecurrentPayment
+          ? "Aggiornamento pagamento ricorrente..."
           : "Creazione pagamento ricorrente..."
       );
 
@@ -112,14 +116,17 @@ const RecurrentPayments = () => {
         )
           .unwrap()
           .then(() => {
-            notificationService.success("Pagamento ricorrente aggiornato con successo", {
-              id: toastId as unknown as string,
-            });
+            notificationService.success(
+              "Pagamento ricorrente aggiornato con successo",
+              {
+                id: toastId as unknown as string,
+              }
+            );
             handleCloseModal();
           })
           .catch((error) => {
             notificationService.error(
-              "Errore durante l'aggiornamento del pagamento ricorrente", 
+              "Errore durante l'aggiornamento del pagamento ricorrente",
               {
                 id: toastId as unknown as string,
                 description: error.message || "Si è verificato un errore",
@@ -132,14 +139,17 @@ const RecurrentPayments = () => {
         dispatch(createRecurrentPayment(preparedData))
           .unwrap()
           .then(() => {
-            notificationService.success("Pagamento ricorrente creato con successo", {
-              id: toastId as unknown as string,
-            });
+            notificationService.success(
+              "Pagamento ricorrente creato con successo",
+              {
+                id: toastId as unknown as string,
+              }
+            );
             handleCloseModal();
           })
           .catch((error) => {
             notificationService.error(
-              "Errore durante la creazione del pagamento ricorrente", 
+              "Errore durante la creazione del pagamento ricorrente",
               {
                 id: toastId as unknown as string,
                 description: error.message || "Si è verificato un errore",
@@ -163,19 +173,22 @@ const RecurrentPayments = () => {
         duration: 10000,
       }
     );
-    
+
     if (confirmed) {
       const toastId = notificationService.loading("Eliminazione in corso...");
       dispatch(deleteRecurrentPayment(id))
         .unwrap()
         .then(() => {
-          notificationService.success("Pagamento ricorrente eliminato con successo", {
-            id: toastId as unknown as string,
-          });
+          notificationService.success(
+            "Pagamento ricorrente eliminato con successo",
+            {
+              id: toastId as unknown as string,
+            }
+          );
         })
         .catch((error) => {
           notificationService.error(
-            "Errore durante l'eliminazione del pagamento ricorrente", 
+            "Errore durante l'eliminazione del pagamento ricorrente",
             {
               id: toastId as unknown as string,
               description: error.message || "Si è verificato un errore",
@@ -189,30 +202,35 @@ const RecurrentPayments = () => {
     const isActivating = !payment.isActive;
     const status = isActivating ? "attivazione" : "disattivazione";
     const statusCompleted = isActivating ? "attivato" : "disattivato";
-    
-    const toastId = notificationService.loading(`${status.charAt(0).toUpperCase() + status.slice(1)} in corso...`);
-    
+
+    const toastId = notificationService.loading(
+      `${status.charAt(0).toUpperCase() + status.slice(1)} in corso...`
+    );
+
     dispatch(
       updateRecurrentPayment({
         id: payment.id,
         data: { isActive: !payment.isActive },
       })
     )
-    .unwrap()
-    .then(() => {
-      notificationService.success(`Pagamento ricorrente ${statusCompleted} con successo`, {
-        id: toastId as unknown as string,
+      .unwrap()
+      .then(() => {
+        notificationService.success(
+          `Pagamento ricorrente ${statusCompleted} con successo`,
+          {
+            id: toastId as unknown as string,
+          }
+        );
+      })
+      .catch((error) => {
+        notificationService.error(
+          `Errore durante la ${status} del pagamento ricorrente`,
+          {
+            id: toastId as unknown as string,
+            description: error.message || "Si è verificato un errore",
+          }
+        );
       });
-    })
-    .catch((error) => {
-      notificationService.error(
-        `Errore durante la ${status} del pagamento ricorrente`, 
-        {
-          id: toastId as unknown as string,
-          description: error.message || "Si è verificato un errore",
-        }
-      );
-    });
   };
 
   if (isLoading && recurrentPayments.length === 0) {
@@ -227,14 +245,14 @@ const RecurrentPayments = () => {
     <div className="space-y-6">
       <RecurrentPaymentHeader onAddPayment={() => handleOpenModal()} />
 
-      <RecurrentPaymentFilter 
+      <RecurrentPaymentFilter
         searchTerm={searchTerm}
         filterActive={filterActive}
         onSearchChange={setSearchTerm}
         onFilterActiveChange={setFilterActive}
       />
 
-      <RecurrentPaymentList 
+      <RecurrentPaymentList
         payments={filteredPayments}
         searchTerm={searchTerm}
         filterActive={filterActive}
@@ -245,18 +263,25 @@ const RecurrentPayments = () => {
         onAddPayment={() => handleOpenModal()}
       />
 
-      <Dialog open={isModalOpen} onOpenChange={(open) => {
-        if (!open) handleCloseModal();
-      }}>
-        <RecurrentPaymentForm 
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseModal();
+        }}
+      >
+        <RecurrentPaymentForm
           payment={currentRecurrentPayment}
           categories={categories}
           formData={formData}
           errors={errors}
           isLoading={isLoading}
+          selectedStartDate={selectedStartDate}
+          selectedEndDate={selectedEndDate}
           onInputChange={handleInputChange}
           onSelectChange={handleSelectChange}
           onCheckboxChange={handleCheckboxChange}
+          onStartDateChange={handleStartDateChange}
+          onEndDateChange={handleEndDateChange}
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
         />
