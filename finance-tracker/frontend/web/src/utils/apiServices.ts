@@ -65,6 +65,16 @@ export const transactionService = {
 
   delete: (id: string) => apiService.delete<void>(`/transactions/${id}`),
 
+  // Aggiorna multiple transazioni contemporaneamente
+  bulkUpdate: (ids: string[], updateData: Partial<UpdateTransactionData>) =>
+    apiService.post<{ success: boolean; count: number }>(
+      "/transactions/bulk-update",
+      {
+        ids,
+        data: updateData,
+      }
+    ),
+
   importCsv: (formData: FormData) =>
     apiService.upload<{
       success: boolean;

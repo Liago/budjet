@@ -1,12 +1,12 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { transactionService } from '../../utils/apiServices';
-import { 
-  CreateTransactionData, 
-  PaginatedResponse, 
-  Transaction, 
-  TransactionFilters, 
-  UpdateTransactionData 
-} from '../../utils/types';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { transactionService } from "../../utils/apiServices";
+import {
+  CreateTransactionData,
+  PaginatedResponse,
+  Transaction,
+  TransactionFilters,
+  UpdateTransactionData,
+} from "../../utils/types";
 
 interface TransactionState {
   transactions: Transaction[];
@@ -32,72 +32,88 @@ const initialState: TransactionState = {
 
 // Fetch all transactions with optional filters
 export const fetchTransactions = createAsyncThunk(
-  'transactions/fetchAll',
+  "transactions/fetchAll",
   async (filters?: TransactionFilters, { rejectWithValue }) => {
     try {
-      console.log('fetchTransactions thunk - filtri inviati all\'API:', filters);
+      console.log("fetchTransactions thunk - filtri inviati all'API:", filters);
       const response = await transactionService.getAll(filters);
-      console.log('fetchTransactions thunk - risposta ricevuta dall\'API:', response);
+      console.log(
+        "fetchTransactions thunk - risposta ricevuta dall'API:",
+        response
+      );
       return response;
     } catch (error: any) {
-      console.error('fetchTransactions thunk - errore:', error);
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch transactions');
+      console.error("fetchTransactions thunk - errore:", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch transactions"
+      );
     }
   }
 );
 
 // Fetch a single transaction by ID
 export const fetchTransactionById = createAsyncThunk(
-  'transactions/fetchById',
+  "transactions/fetchById",
   async (id: string, { rejectWithValue }) => {
     try {
       return await transactionService.getById(id);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch transaction');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch transaction"
+      );
     }
   }
 );
 
 // Create a new transaction
 export const createTransaction = createAsyncThunk(
-  'transactions/create',
+  "transactions/create",
   async (transactionData: CreateTransactionData, { rejectWithValue }) => {
     try {
       return await transactionService.create(transactionData);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create transaction');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to create transaction"
+      );
     }
   }
 );
 
 // Update an existing transaction
 export const updateTransaction = createAsyncThunk(
-  'transactions/update',
-  async ({ id, data }: { id: string; data: UpdateTransactionData }, { rejectWithValue }) => {
+  "transactions/update",
+  async (
+    { id, data }: { id: string; data: UpdateTransactionData },
+    { rejectWithValue }
+  ) => {
     try {
       return await transactionService.update(id, data);
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update transaction');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update transaction"
+      );
     }
   }
 );
 
 // Delete a transaction
 export const deleteTransaction = createAsyncThunk(
-  'transactions/delete',
+  "transactions/delete",
   async (id: string, { rejectWithValue }) => {
     try {
       await transactionService.delete(id);
       return id;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete transaction');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete transaction"
+      );
     }
   }
 );
 
 // Delete all transactions
 export const deleteAllTransactions = createAsyncThunk(
-  'transactions/deleteAll',
+  "transactions/deleteAll",
   async (_, { rejectWithValue, dispatch }) => {
     try {
       const result = await transactionService.deleteAll();
@@ -105,14 +121,16 @@ export const deleteAllTransactions = createAsyncThunk(
       dispatch(fetchTransactions());
       return result;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete all transactions');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete all transactions"
+      );
     }
   }
 );
 
 // Import transactions from CSV
 export const importTransactionsFromCsv = createAsyncThunk(
-  'transactions/importFromCsv',
+  "transactions/importFromCsv",
   async (formData: FormData, { rejectWithValue, dispatch }) => {
     try {
       const result = await transactionService.importCsv(formData);
@@ -120,19 +138,44 @@ export const importTransactionsFromCsv = createAsyncThunk(
       dispatch(fetchTransactions());
       return result;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to import transactions');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to import transactions"
+      );
+    }
+  }
+);
+
+// Bulk update transactions
+export const bulkUpdateTransactions = createAsyncThunk(
+  "transactions/bulkUpdate",
+  async (
+    { ids, data }: { ids: string[]; data: Partial<UpdateTransactionData> },
+    { rejectWithValue, dispatch }
+  ) => {
+    try {
+      const result = await transactionService.bulkUpdate(ids, data);
+      // After bulk update, refresh transactions list
+      dispatch(fetchTransactions());
+      return result;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update transactions"
+      );
     }
   }
 );
 
 const transactionSlice = createSlice({
-  name: 'transactions',
+  name: "transactions",
   initialState,
   reducers: {
     clearTransactionError: (state) => {
       state.error = null;
     },
-    setCurrentTransaction: (state, action: PayloadAction<Transaction | null>) => {
+    setCurrentTransaction: (
+      state,
+      action: PayloadAction<Transaction | null>
+    ) => {
       state.currentTransaction = action.payload;
     },
     setPage: (state, action: PayloadAction<number>) => {
@@ -146,85 +189,100 @@ const transactionSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchTransactions.fulfilled, (state, action: PayloadAction<PaginatedResponse<Transaction>>) => {
-        state.isLoading = false;
-        state.transactions = action.payload.data;
-        state.totalItems = action.payload.meta.total;
-        state.currentPage = action.payload.meta.page;
-        state.totalPages = action.payload.meta.totalPages;
-        state.limit = action.payload.meta.limit;
-      })
+      .addCase(
+        fetchTransactions.fulfilled,
+        (state, action: PayloadAction<PaginatedResponse<Transaction>>) => {
+          state.isLoading = false;
+          state.transactions = action.payload.data;
+          state.totalItems = action.payload.meta.total;
+          state.currentPage = action.payload.meta.page;
+          state.totalPages = action.payload.meta.totalPages;
+          state.limit = action.payload.meta.limit;
+        }
+      )
       .addCase(fetchTransactions.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       // Fetch transaction by ID
       .addCase(fetchTransactionById.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchTransactionById.fulfilled, (state, action: PayloadAction<Transaction>) => {
-        state.isLoading = false;
-        state.currentTransaction = action.payload;
-      })
+      .addCase(
+        fetchTransactionById.fulfilled,
+        (state, action: PayloadAction<Transaction>) => {
+          state.isLoading = false;
+          state.currentTransaction = action.payload;
+        }
+      )
       .addCase(fetchTransactionById.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       // Create transaction
       .addCase(createTransaction.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(createTransaction.fulfilled, (state, action: PayloadAction<Transaction>) => {
-        state.isLoading = false;
-        state.transactions = [action.payload, ...state.transactions];
-        state.totalItems += 1;
-      })
+      .addCase(
+        createTransaction.fulfilled,
+        (state, action: PayloadAction<Transaction>) => {
+          state.isLoading = false;
+          state.transactions = [action.payload, ...state.transactions];
+          state.totalItems += 1;
+        }
+      )
       .addCase(createTransaction.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       // Update transaction
       .addCase(updateTransaction.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(updateTransaction.fulfilled, (state, action: PayloadAction<Transaction>) => {
-        state.isLoading = false;
-        state.transactions = state.transactions.map((transaction) =>
-          transaction.id === action.payload.id ? action.payload : transaction
-        );
-        state.currentTransaction = action.payload;
-      })
+      .addCase(
+        updateTransaction.fulfilled,
+        (state, action: PayloadAction<Transaction>) => {
+          state.isLoading = false;
+          state.transactions = state.transactions.map((transaction) =>
+            transaction.id === action.payload.id ? action.payload : transaction
+          );
+          state.currentTransaction = action.payload;
+        }
+      )
       .addCase(updateTransaction.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       // Delete transaction
       .addCase(deleteTransaction.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(deleteTransaction.fulfilled, (state, action: PayloadAction<string>) => {
-        state.isLoading = false;
-        state.transactions = state.transactions.filter(
-          (transaction) => transaction.id !== action.payload
-        );
-        state.totalItems -= 1;
-        if (state.currentTransaction?.id === action.payload) {
-          state.currentTransaction = null;
+      .addCase(
+        deleteTransaction.fulfilled,
+        (state, action: PayloadAction<string>) => {
+          state.isLoading = false;
+          state.transactions = state.transactions.filter(
+            (transaction) => transaction.id !== action.payload
+          );
+          state.totalItems -= 1;
+          if (state.currentTransaction?.id === action.payload) {
+            state.currentTransaction = null;
+          }
         }
-      })
+      )
       .addCase(deleteTransaction.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       // Delete all transactions
       .addCase(deleteAllTransactions.pending, (state) => {
         state.isLoading = true;
@@ -239,7 +297,7 @@ const transactionSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       // Import transactions from CSV
       .addCase(importTransactionsFromCsv.pending, (state) => {
         state.isLoading = true;
@@ -251,9 +309,23 @@ const transactionSlice = createSlice({
       .addCase(importTransactionsFromCsv.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+
+      // Bulk update transactions
+      .addCase(bulkUpdateTransactions.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(bulkUpdateTransactions.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(bulkUpdateTransactions.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { clearTransactionError, setCurrentTransaction, setPage } = transactionSlice.actions;
-export default transactionSlice.reducer; 
+export const { clearTransactionError, setCurrentTransaction, setPage } =
+  transactionSlice.actions;
+export default transactionSlice.reducer;

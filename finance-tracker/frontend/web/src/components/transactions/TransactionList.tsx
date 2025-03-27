@@ -1,8 +1,15 @@
-import React from 'react';
-import { Transaction } from '../../utils/types';
-import { EditIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from '../Icons';
+import React from "react";
+import { Transaction } from "../../utils/types";
+import {
+  EditIcon,
+  TrashIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  CheckIcon,
+} from "../Icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -14,6 +21,10 @@ interface TransactionListProps {
   isLoading: boolean;
   isDeleting: boolean;
   formatAmount: (amount: number | string) => string;
+  selectedTransactions: string[];
+  setSelectedTransactions: (ids: string[]) => void;
+  enableMultiSelect: boolean;
+  onBulkEdit: (transactions: Transaction[]) => void;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
@@ -25,7 +36,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
   onDelete,
   isLoading,
   isDeleting,
-  formatAmount
+  formatAmount,
+  selectedTransactions,
+  setSelectedTransactions,
+  enableMultiSelect,
+  onBulkEdit,
 }) => {
   if (isLoading && transactions.length === 0) {
     return (
@@ -35,11 +50,43 @@ const TransactionList: React.FC<TransactionListProps> = ({
     );
   }
 
+  const handleSelectAll = () => {
+    if (selectedTransactions.length === transactions.length) {
+      setSelectedTransactions([]);
+    } else {
+      setSelectedTransactions(transactions.map((t) => t.id));
+    }
+  };
+
+  const handleSelectTransaction = (id: string) => {
+    if (selectedTransactions.includes(id)) {
+      setSelectedTransactions(selectedTransactions.filter((tid) => tid !== id));
+    } else {
+      setSelectedTransactions([...selectedTransactions, id]);
+    }
+  };
+
+  const getSelectedTransactionsData = (): Transaction[] => {
+    return transactions.filter((t) => selectedTransactions.includes(t.id));
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="bg-muted/50">
           <tr>
+            {enableMultiSelect && (
+              <th className="text-center p-3">
+                <Checkbox
+                  checked={
+                    transactions.length > 0 &&
+                    selectedTransactions.length === transactions.length
+                  }
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Select all transactions"
+                />
+              </th>
+            )}
             <th className="text-left text-xs font-medium p-3 uppercase text-muted-foreground">
               Description
             </th>
@@ -83,18 +130,25 @@ const TransactionList: React.FC<TransactionListProps> = ({
           {transactions.length > 0 ? (
             transactions.map((transaction) => (
               <tr key={transaction.id} className="hover:bg-muted/50">
+                {enableMultiSelect && (
+                  <td className="p-3 text-center">
+                    <Checkbox
+                      checked={selectedTransactions.includes(transaction.id)}
+                      onCheckedChange={() =>
+                        handleSelectTransaction(transaction.id)
+                      }
+                      aria-label={`Select transaction ${transaction.description}`}
+                    />
+                  </td>
+                )}
                 <td className="p-3 whitespace-nowrap">
-                  <div className="font-medium">
-                    {transaction.description}
-                  </div>
+                  <div className="font-medium">{transaction.description}</div>
                   <div className="text-sm text-muted-foreground">
                     {transaction.tags.map((tag) => tag.name).join(", ")}
                   </div>
                 </td>
                 <td className="p-3 whitespace-nowrap">
-                  <div>
-                    {new Date(transaction.date).toLocaleDateString()}
-                  </div>
+                  <div>{new Date(transaction.date).toLocaleDateString()}</div>
                 </td>
                 <td className="p-3 whitespace-nowrap">
                   <div className="flex items-center">
@@ -110,9 +164,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <td className="p-3 whitespace-nowrap">
                   <Badge
                     variant={
-                      transaction.type === "INCOME"
-                        ? "default"
-                        : "destructive"
+                      transaction.type === "INCOME" ? "default" : "destructive"
                     }
                     className={
                       transaction.type === "INCOME"
@@ -121,29 +173,24 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     }
                   >
                     {transaction.type === "INCOME" ? "+€ " : "-€ "}
-                    {
-                      formatAmount(transaction.amount).substring(2) // Rimuoviamo il simbolo € perché lo aggiungiamo prima con il segno + o -
-                    }
+                    {formatAmount(transaction.amount).substring(2)}
                   </Badge>
                 </td>
                 <td className="p-3 whitespace-nowrap text-right">
                   <Button
-                    onClick={() => onEdit(transaction)}
                     variant="ghost"
-                    size="sm"
-                    className="text-blue-600 hover:text-blue-900 mr-2"
-                    disabled={isLoading}
+                    size="icon"
+                    onClick={() => onEdit(transaction)}
                   >
-                    <EditIcon className="h-5 w-5" />
+                    <EditIcon className="h-4 w-4" />
                   </Button>
                   <Button
-                    onClick={() => onDelete(transaction.id)}
                     variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-900"
-                    disabled={isLoading || isDeleting}
+                    size="icon"
+                    onClick={() => onDelete(transaction.id)}
+                    disabled={isDeleting}
                   >
-                    <TrashIcon className="h-5 w-5" />
+                    <TrashIcon className="h-4 w-4" />
                   </Button>
                 </td>
               </tr>
@@ -151,8 +198,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
           ) : (
             <tr>
               <td
-                colSpan={5}
-                className="p-3 text-center text-muted-foreground"
+                colSpan={enableMultiSelect ? 6 : 5}
+                className="p-4 text-center text-muted-foreground"
               >
                 No transactions found
               </td>
@@ -160,8 +207,35 @@ const TransactionList: React.FC<TransactionListProps> = ({
           )}
         </tbody>
       </table>
+
+      {enableMultiSelect && selectedTransactions.length > 0 && (
+        <div className="p-3 border-t flex items-center justify-between bg-muted/20">
+          <div className="text-sm font-medium">
+            {selectedTransactions.length} transaction
+            {selectedTransactions.length !== 1 ? "s" : ""} selected
+          </div>
+          <div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              onClick={() => setSelectedTransactions([])}
+            >
+              Deselect All
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="ml-2"
+              onClick={() => onBulkEdit(getSelectedTransactionsData())}
+            >
+              Edit Selected
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default TransactionList; 
+export default TransactionList;
