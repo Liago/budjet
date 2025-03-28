@@ -11,6 +11,8 @@ import { DatabaseModule } from "./database/database.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { RecurrentPaymentsModule } from "./recurrent-payments/recurrent-payments.module";
 import { SavingsGoalsModule } from "./savings-goals/savings-goals.module";
+import { NotificationsModule } from "./notifications/notifications.module";
+import { EmailModule } from "./email/email.module";
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { SavingsGoalsModule } from "./savings-goals/savings-goals.module";
     DashboardModule,
     RecurrentPaymentsModule,
     SavingsGoalsModule,
+    NotificationsModule,
+    EmailModule,
   ],
 })
 export class AppModule {}
