@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   fetchRecurrentPayments,
   createRecurrentPayment,
@@ -24,6 +24,8 @@ import RecurrentPaymentHeader from "../components/recurrent-payments/RecurrentPa
 import RecurrentPaymentFilter from "../components/recurrent-payments/RecurrentPaymentFilter";
 import RecurrentPaymentList from "../components/recurrent-payments/RecurrentPaymentList";
 import RecurrentPaymentForm from "../components/recurrent-payments/RecurrentPaymentForm";
+import RecurrentPaymentsSummary from "../components/recurrent-payments/RecurrentPaymentsSummary";
+import LastExecutionSummary from "../components/recurrent-payments/LastExecutionSummary";
 
 // Utility per formattare gli importi con la virgola come separatore decimale e simbolo dell'euro
 const formatAmount = (amount: number | string): string => {
@@ -66,6 +68,9 @@ const RecurrentPayments = () => {
     setFilterActive,
   } = useRecurrentPaymentFilters(recurrentPayments);
 
+  const [lastExecution, setLastExecution] = useState(null);
+  const [isLoadingExecution, setIsLoadingExecution] = useState(false);
+
   // Fetch data on component mount
   useEffect(() => {
     dispatch(fetchRecurrentPayments());
@@ -77,6 +82,35 @@ const RecurrentPayments = () => {
       resetForm(currentRecurrentPayment);
     }
   }, [isModalOpen, currentRecurrentPayment, resetForm]);
+
+  useEffect(() => {
+    const fetchLastExecution = async () => {
+      try {
+        const response = await fetch("/api/recurrent-payments/last-execution", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setLastExecution(data);
+      } catch (error) {
+        console.error("Error fetching last execution:", error);
+        notificationService.error(
+          "Errore nel caricamento dell'ultima esecuzione",
+          {
+            description:
+              "Si è verificato un errore durante il recupero dei dati",
+          }
+        );
+      }
+    };
+
+    fetchLastExecution();
+  }, []);
 
   const handleOpenModal = (payment?: RecurrentPayment) => {
     if (payment) {
@@ -233,6 +267,42 @@ const RecurrentPayments = () => {
       });
   };
 
+  const handleManualExecution = async () => {
+    setIsLoadingExecution(true);
+    const toastId = notificationService.loading("Esecuzione in corso...");
+
+    try {
+      const response = await fetch("/api/recurrent-payments/execute", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+
+      setLastExecution(result);
+      notificationService.success("Esecuzione completata con successo", {
+        id: toastId as unknown as string,
+        description: `Create ${
+          result.createdTransactions
+        } transazioni per un totale di ${formatAmount(result.totalAmount)}`,
+      });
+    } catch (error) {
+      console.error("Error during manual execution:", error);
+      notificationService.error("Errore durante l'esecuzione", {
+        id: toastId as unknown as string,
+        description:
+          "Si è verificato un errore durante l'esecuzione automatica",
+      });
+    } finally {
+      setIsLoadingExecution(false);
+    }
+  };
+
   if (isLoading && recurrentPayments.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -243,25 +313,49 @@ const RecurrentPayments = () => {
 
   return (
     <div className="space-y-6">
-      <RecurrentPaymentHeader onAddPayment={() => handleOpenModal()} />
+      <div className="flex justify-between items-start">
+        <RecurrentPaymentHeader onAddPayment={() => handleOpenModal()} />
+      </div>
 
-      <RecurrentPaymentFilter
-        searchTerm={searchTerm}
-        filterActive={filterActive}
-        onSearchChange={setSearchTerm}
-        onFilterActiveChange={setFilterActive}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <RecurrentPaymentsSummary
+          payments={recurrentPayments}
+          formatAmount={formatAmount}
+        />
+      </div>
 
-      <RecurrentPaymentList
-        payments={filteredPayments}
-        searchTerm={searchTerm}
-        filterActive={filterActive}
-        formatAmount={formatAmount}
-        onToggleActive={handleToggleActive}
-        onEdit={handleOpenModal}
-        onDelete={handleDelete}
-        onAddPayment={() => handleOpenModal()}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <LastExecutionSummary
+          lastExecution={lastExecution}
+          onManualExecution={handleManualExecution}
+          isLoading={isLoadingExecution}
+          formatAmount={formatAmount}
+        />
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
+          <div className="w-full md:w-2/3">
+            <RecurrentPaymentFilter
+              searchTerm={searchTerm}
+              filterActive={filterActive}
+              onSearchChange={setSearchTerm}
+              onFilterActiveChange={setFilterActive}
+            />
+          </div>
+        </div>
+
+        <RecurrentPaymentList
+          payments={filteredPayments}
+          searchTerm={searchTerm}
+          filterActive={filterActive}
+          formatAmount={formatAmount}
+          onToggleActive={handleToggleActive}
+          onEdit={handleOpenModal}
+          onDelete={handleDelete}
+          onAddPayment={() => handleOpenModal()}
+        />
+      </div>
 
       <Dialog
         open={isModalOpen}
