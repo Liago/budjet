@@ -21,4 +21,19 @@ export class EmailController {
   ) {
     return this.emailService.sendTestEmail(req.user.email, body.template);
   }
+
+  @Post("test-transactions")
+  @ApiOperation({ summary: "Test transactions email template" })
+  @ApiResponse({ status: 200, description: "Test email sent successfully" })
+  async testTransactionsEmail(@Body() body: { email: string }) {
+    return this.emailService.testTransactionsEmail(body.email);
+  }
+
+  // Temporary endpoint for testing without authentication
+  @Post("test-temp")
+  @ApiOperation({ summary: "Temporary endpoint for testing email templates" })
+  @ApiResponse({ status: 200, description: "Test email sent successfully" })
+  async sendTestEmailTemp(@Body() body: { email: string }) {
+    return this.emailService.sendTestEmail(body.email, "transactions");
+  }
 }

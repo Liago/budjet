@@ -3,6 +3,7 @@ import { Outlet, NavLink } from "react-router-dom";
 import { RootState } from "../store";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/slices/authSlice";
+import { toast } from "sonner";
 
 // Icons
 import {
@@ -30,6 +31,11 @@ const Layout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<
+    "test" | "transactions"
+  >("test");
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
@@ -50,9 +56,40 @@ const Layout = () => {
     setIsUserMenuOpen(false);
   };
 
-  const handleTestEmail = () => {
-    // La logica per il test email è già implementata nel componente UserProfile
+  const handleTestEmail = async () => {
     setIsUserMenuOpen(false);
+    setShowEmailModal(true);
+  };
+
+  const handleSendTestEmail = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/email/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ template: selectedTemplate }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send test email");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success("Email di test inviata con successo!");
+        setShowEmailModal(false);
+      } else {
+        toast.error("Errore nell'invio dell'email: " + data.error);
+      }
+    } catch (error) {
+      toast.error("Errore nell'invio dell'email");
+      console.error("Error sending test email:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -331,6 +368,120 @@ const Layout = () => {
                 {/* Mobile navigation links */}
                 {/* ... (same NavLink components as desktop but with mobile-specific classes) ... */}
               </nav>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Test Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-[999] overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowEmailModal(false)}
+            />
+            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+              <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                      Test Email Templates
+                    </h3>
+                    <div className="mt-4 space-y-4">
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          id="test-template"
+                          name="template"
+                          value="test"
+                          checked={selectedTemplate === "test"}
+                          onChange={(e) =>
+                            setSelectedTemplate(
+                              e.target.value as "test" | "transactions"
+                            )
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <label htmlFor="test-template" className="ml-3">
+                          <span className="block text-sm font-medium text-gray-900">
+                            Template Base
+                          </span>
+                          <span className="block text-sm text-gray-500">
+                            Email di test base con conferma configurazione
+                          </span>
+                        </label>
+                      </div>
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          id="transactions-template"
+                          name="template"
+                          value="transactions"
+                          checked={selectedTemplate === "transactions"}
+                          onChange={(e) =>
+                            setSelectedTemplate(
+                              e.target.value as "test" | "transactions"
+                            )
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <label htmlFor="transactions-template" className="ml-3">
+                          <span className="block text-sm font-medium text-gray-900">
+                            Template Transazioni
+                          </span>
+                          <span className="block text-sm text-gray-500">
+                            Email con tabella transazioni e riepilogo
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button
+                  type="button"
+                  onClick={handleSendTestEmail}
+                  disabled={isLoading}
+                  className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Invio in corso...
+                    </>
+                  ) : (
+                    "Invia Test Email"
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEmailModal(false)}
+                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                >
+                  Annulla
+                </button>
+              </div>
             </div>
           </div>
         </div>

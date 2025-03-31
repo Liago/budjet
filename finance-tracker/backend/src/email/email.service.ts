@@ -36,22 +36,17 @@ export class EmailService {
           // Example data for transaction template
           const exampleTransactions = [
             {
-              name: "Netflix Abbonamento",
-              amount: 15.99,
-              nextDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+              paymentName: "Restituzione INPS",
+              amount: 221.65,
+              nextDate: new Date("2025-04-30"),
             },
             {
-              name: "Palestra",
-              amount: 39.99,
-              nextDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days from now
-            },
-            {
-              name: "Affitto",
-              amount: 800.0,
-              nextDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000), // 25 days from now
+              paymentName: "AppleOne",
+              amount: 25.95,
+              nextDate: new Date("2025-04-30"),
             },
           ];
-          html = transactionsEmailTemplate(exampleTransactions, 855.98);
+          html = transactionsEmailTemplate(exampleTransactions, 247.6);
           subject = "Test Email - Template Transazioni";
           break;
 
@@ -94,11 +89,18 @@ export class EmailService {
     totalAmount: number
   ) {
     try {
+      // Map transactions to match the template interface
+      const mappedTransactions = transactions.map((t) => ({
+        paymentName: t.name,
+        amount: t.amount,
+        nextDate: t.nextDate,
+      }));
+
       const info = await this.transporter.sendMail({
         from: this.configService.get<string>("SMTP_FROM"),
         to,
         subject: "Nuove Transazioni Automatiche Create",
-        html: transactionsEmailTemplate(transactions, totalAmount),
+        html: transactionsEmailTemplate(mappedTransactions, totalAmount),
       });
 
       return {

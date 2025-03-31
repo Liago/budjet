@@ -1,7 +1,7 @@
 import { baseTemplate } from "./base.template";
 
 interface Transaction {
-  name: string;
+  paymentName: string;
   amount: number;
   nextDate: Date;
 }
@@ -22,7 +22,7 @@ export const transactionsEmailTemplate = (
     .map(
       (t) => `
       <tr>
-        <td class="text-bold">${t.name}</td>
+        <td class="text-bold">${t.paymentName}</td>
         <td class="text-right">${formatCurrency(t.amount)}</td>
         <td>${formatDate(t.nextDate)}</td>
       </tr>
