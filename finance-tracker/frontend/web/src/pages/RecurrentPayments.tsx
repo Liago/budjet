@@ -335,7 +335,7 @@ const RecurrentPayments = () => {
 
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-          <div className="w-full md:w-2/3">
+          <div className="w-full">
             <RecurrentPaymentFilter
               searchTerm={searchTerm}
               filterActive={filterActive}

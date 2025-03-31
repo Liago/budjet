@@ -1,9 +1,15 @@
-import React from 'react';
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SearchIcon } from '../../components/Icons';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SearchIcon } from "../../components/Icons";
 
 interface RecurrentPaymentFilterProps {
   searchTerm: string;
@@ -16,14 +22,16 @@ const RecurrentPaymentFilter: React.FC<RecurrentPaymentFilterProps> = ({
   searchTerm,
   filterActive,
   onSearchChange,
-  onFilterActiveChange
+  onFilterActiveChange,
 }) => {
   return (
     <Card>
-      <CardContent className="p-4 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
+      <CardContent className="p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <Label htmlFor="search" className="mb-1">Cerca</Label>
+            <Label htmlFor="search" className="mb-1">
+              Cerca
+            </Label>
             <div className="relative">
               <Input
                 id="search"
@@ -38,13 +46,17 @@ const RecurrentPaymentFilter: React.FC<RecurrentPaymentFilterProps> = ({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="status" className="mb-1">Stato</Label>
-            <Select 
-              value={filterActive} 
-              onValueChange={(value) => onFilterActiveChange(value as "all" | "active" | "inactive")}
+          <div className="sm:w-[200px]">
+            <Label htmlFor="status" className="mb-1">
+              Stato
+            </Label>
+            <Select
+              value={filterActive}
+              onValueChange={(value) =>
+                onFilterActiveChange(value as "all" | "active" | "inactive")
+              }
             >
-              <SelectTrigger id="status" className="w-[180px]">
+              <SelectTrigger id="status" className="w-full">
                 <SelectValue placeholder="Seleziona uno stato" />
               </SelectTrigger>
               <SelectContent>
@@ -60,4 +72,4 @@ const RecurrentPaymentFilter: React.FC<RecurrentPaymentFilterProps> = ({
   );
 };
 
-export default RecurrentPaymentFilter; 
+export default RecurrentPaymentFilter;
