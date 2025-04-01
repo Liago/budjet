@@ -79,6 +79,52 @@ export class EmailService {
     }
   }
 
+  async testTransactionsEmail(to: string) {
+    // This method specifically tests the transactions email template
+    const exampleTransactions = [
+      {
+        paymentName: "Restituzione INPS",
+        amount: 221.65,
+        nextDate: new Date("2025-04-30"),
+      },
+      {
+        paymentName: "AppleOne",
+        amount: 25.95,
+        nextDate: new Date("2025-04-30"),
+      },
+      {
+        paymentName: "Netflix",
+        amount: 17.99,
+        nextDate: new Date("2025-05-05"),
+      },
+    ];
+
+    try {
+      const totalAmount = exampleTransactions.reduce(
+        (sum, t) => sum + t.amount,
+        0
+      );
+
+      const info = await this.transporter.sendMail({
+        from: this.configService.get<string>("SMTP_FROM"),
+        to,
+        subject: "Test Email - Transazioni Automatiche",
+        html: transactionsEmailTemplate(exampleTransactions, totalAmount),
+      });
+
+      return {
+        success: true,
+        messageId: info.messageId,
+      };
+    } catch (error) {
+      console.error("Error sending transactions test email:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
   async sendRecurrentPaymentsNotification(
     to: string,
     transactions: {
