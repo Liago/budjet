@@ -1,143 +1,127 @@
-import { toast, ToastT } from 'sonner';
+import { toast, ToastT } from "sonner";
 
-type NotificationType = 'success' | 'error' | 'info' | 'warning' | 'loading';
-type NotificationOptions = {
-  duration?: number;
-  position?: 'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left';
+type NotificationType = "success" | "error" | "info" | "warning" | "loading";
+
+interface NotificationOptions {
+  title?: string;
   description?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  dismissible?: boolean;
-  id?: string | number;
-};
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  cancel?: {
+    label: string;
+    onClick: () => void;
+  };
+  onDismiss?: () => void;
+  onAutoClose?: () => void;
+}
 
 class NotificationService {
-  /**
-   * Mostra una notifica di successo
-   * @param message Il messaggio principale della notifica
-   * @param options Opzioni aggiuntive per la notifica
-   * @returns L'ID della notifica creata
-   */
-  success(message: string, options?: NotificationOptions): ToastT {
-    return toast.success(message, options);
+  private static instance: NotificationService;
+
+  private constructor() {}
+
+  public static getInstance(): NotificationService {
+    if (!NotificationService.instance) {
+      NotificationService.instance = new NotificationService();
+    }
+    return NotificationService.instance;
   }
 
-  /**
-   * Mostra una notifica di errore
-   * @param message Il messaggio principale della notifica
-   * @param options Opzioni aggiuntive per la notifica
-   * @returns L'ID della notifica creata
-   */
-  error(message: string, options?: NotificationOptions): ToastT {
-    return toast.error(message, options);
-  }
-
-  /**
-   * Mostra una notifica informativa
-   * @param message Il messaggio principale della notifica
-   * @param options Opzioni aggiuntive per la notifica
-   * @returns L'ID della notifica creata
-   */
-  info(message: string, options?: NotificationOptions): ToastT {
-    return toast.info(message, options);
-  }
-
-  /**
-   * Mostra una notifica di avviso
-   * @param message Il messaggio principale della notifica
-   * @param options Opzioni aggiuntive per la notifica
-   * @returns L'ID della notifica creata
-   */
-  warning(message: string, options?: NotificationOptions): ToastT {
-    return toast.warning(message, options);
-  }
-
-  /**
-   * Mostra una notifica di caricamento
-   * @param message Il messaggio principale della notifica
-   * @param options Opzioni aggiuntive per la notifica
-   * @returns L'ID della notifica creata
-   */
-  loading(message: string, options?: NotificationOptions): ToastT {
-    return toast.loading(message, options);
-  }
-
-  /**
-   * Mostra una notifica di conferma con azioni personalizzate
-   * @param message Il messaggio principale della notifica
-   * @param onConfirm Callback da eseguire quando l'utente conferma
-   * @param onCancel Callback opzionale da eseguire quando l'utente annulla
-   * @param options Opzioni aggiuntive per la notifica
-   * @returns L'ID della notifica creata
-   */
-  confirm(
+  private show(
+    type: NotificationType,
     message: string,
-    onConfirm: () => void,
-    onCancel?: () => void,
     options?: NotificationOptions
   ): ToastT {
-    return toast(message, {
+    const toastOptions = {
       ...options,
-      action: {
-        label: options?.actionLabel || 'Conferma',
-        onClick: onConfirm,
-      },
-      cancel: {
-        label: 'Annulla',
-        onClick: onCancel,
-      },
+      duration: options?.duration || 4000,
+    };
+
+    return toast[type](message, toastOptions);
+  }
+
+  public success(message: string, options?: NotificationOptions): ToastT {
+    return this.show("success", message, options);
+  }
+
+  public error(message: string, options?: NotificationOptions): ToastT {
+    return this.show("error", message, options);
+  }
+
+  public info(message: string, options?: NotificationOptions): ToastT {
+    return this.show("info", message, options);
+  }
+
+  public warning(message: string, options?: NotificationOptions): ToastT {
+    return this.show("warning", message, options);
+  }
+
+  public loading(message: string, options?: NotificationOptions): ToastT {
+    return this.show("loading", message, options);
+  }
+
+  public promise<T>(
+    promise: Promise<T>,
+    messages: {
+      loading: string;
+      success: string;
+      error: string;
+    },
+    options?: NotificationOptions
+  ): Promise<T> {
+    return toast.promise(promise, {
+      loading: messages.loading,
+      success: messages.success,
+      error: messages.error,
+      ...options,
     });
   }
 
-  /**
-   * Aggiorna una notifica esistente
-   * @param id L'ID della notifica da aggiornare
-   * @param message Il nuovo messaggio
-   * @param type Il nuovo tipo di notifica
-   */
-  update(id: ToastT, message: string, type: NotificationType): void {
-    toast.update(id, {
-      content: message,
-      style: { type },
-    });
+  public dismiss(toastId?: number | string): void {
+    toast.dismiss(toastId);
   }
 
-  /**
-   * Rimuove una notifica
-   * @param id L'ID della notifica da rimuovere
-   */
-  dismiss(id: ToastT): void {
-    toast.dismiss(id);
-  }
-
-  /**
-   * Rimuove tutte le notifiche attive
-   */
-  dismissAll(): void {
-    toast.dismiss();
-  }
-
-  /**
-   * Alternativa diretta a window.confirm
-   * Mostra una notifica di conferma e restituisce una Promise che si risolve con true o false
-   * @param message Il messaggio di conferma
-   * @param options Opzioni aggiuntive per la notifica
-   */
-  async confirmDialog(
+  public confirmDialog(
     message: string,
-    options?: Omit<NotificationOptions, 'actionLabel' | 'onAction'>
+    options?: Omit<NotificationOptions, "action" | "cancel">
   ): Promise<boolean> {
     return new Promise((resolve) => {
       toast(message, {
         ...options,
         duration: Infinity,
+        description: "Questa azione non può essere annullata",
+        style: {
+          background: "linear-gradient(to right, #dc2626, #ef4444)",
+          color: "#ffffff",
+          border: "1px solid #dc2626",
+          padding: "16px",
+        },
         action: {
-          label: 'Conferma',
+          label: "Conferma",
           onClick: () => resolve(true),
+          style: {
+            backgroundColor: "#ffffff",
+            color: "#dc2626",
+            border: "none",
+            padding: "8px 16px",
+            borderRadius: "6px",
+            fontWeight: "500",
+          },
         },
         cancel: {
-          label: 'Annulla',
+          label: "Annulla",
           onClick: () => resolve(false),
+          style: {
+            backgroundColor: "transparent",
+            color: "#ffffff",
+            border: "1px solid #ffffff",
+            padding: "8px 16px",
+            borderRadius: "6px",
+            fontWeight: "500",
+          },
         },
         onDismiss: () => resolve(false),
       });
@@ -145,5 +129,4 @@ class NotificationService {
   }
 }
 
-// Esportiamo una singola istanza per utilizzarla in tutta l'applicazione
-export const notificationService = new NotificationService(); 
+export const notificationService = NotificationService.getInstance();

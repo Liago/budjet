@@ -14,7 +14,6 @@ import {
   ChevronUpIcon,
   MenuIcon,
   XIcon,
-  BellIcon,
   SunIcon,
   MoonIcon,
   SearchIcon,
@@ -26,6 +25,7 @@ import {
 
 // Components
 import { UserProfile } from "./UserProfile";
+import { NotificationDropdown } from "./ui/notification-dropdown";
 
 const Layout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -52,7 +52,7 @@ const Layout = () => {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logout() as any);
     setIsUserMenuOpen(false);
   };
 
@@ -276,10 +276,7 @@ const Layout = () => {
               </button>
 
               {/* Notifications */}
-              <button className="p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded-lg relative">
-                <BellIcon className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
-              </button>
+              <NotificationDropdown />
 
               {/* User menu */}
               <div className="relative">

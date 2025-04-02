@@ -1,4 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 export interface Notification {
@@ -39,6 +43,19 @@ export class NotificationsService {
     });
   }
 
+  async markAllAsRead(userId: string) {
+    return this.prisma.notification.updateMany({
+      where: { userId },
+      data: { isRead: true },
+    });
+  }
+
+  async deleteNotification(id: string) {
+    return this.prisma.notification.delete({
+      where: { id },
+    });
+  }
+
   async getUnreadNotifications(userId: string) {
     return this.prisma.notification.findMany({
       where: {
@@ -60,5 +77,25 @@ export class NotificationsService {
         createdAt: "desc",
       },
     });
+  }
+
+  async verifyOwnership(notificationId: string, userId: string) {
+    const notification = await this.prisma.notification.findUnique({
+      where: { id: notificationId },
+    });
+
+    if (!notification) {
+      throw new NotFoundException(
+        `Notification with ID ${notificationId} not found`
+      );
+    }
+
+    if (notification.userId !== userId) {
+      throw new ForbiddenException(
+        "You don't have permission to access this notification"
+      );
+    }
+
+    return notification;
   }
 }

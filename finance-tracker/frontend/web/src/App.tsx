@@ -8,7 +8,7 @@ import {
 import { fetchUserProfile } from "./store/slices/authSlice";
 import { useAppDispatch, useAppSelector } from "./utils/hooks";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { Toaster } from "sonner";
+import { Toaster } from "./components/ui/toaster";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -19,6 +19,7 @@ import Categories from "./pages/Categories";
 import NotFound from "./pages/NotFound";
 import RecurrentPayments from "./pages/RecurrentPayments";
 import Analytics from "./pages/Analytics";
+import NotificationsPage from "./pages/NotificationsPage";
 
 // Components
 import Layout from "./components/Layout";
@@ -38,15 +39,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <Toaster
-          position="bottom-right"
-          richColors
-          closeButton
-          toastOptions={{
-            duration: 4000,
-            className: "my-toast",
-          }}
-        />
+        <Toaster />
         <Routes>
           {/* Public routes */}
           <Route
@@ -75,6 +68,7 @@ function App() {
             <Route path="categories" element={<Categories />} />
             <Route path="recurrent-payments" element={<RecurrentPayments />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="notifications" element={<NotificationsPage />} />
           </Route>
 
           {/* 404 route */}
