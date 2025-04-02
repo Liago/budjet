@@ -100,12 +100,38 @@ export class NotificationsController {
   }
 
   @Post("preferences")
-  @ApiOperation({ summary: "Update user notification preferences" })
-  @ApiBody({ type: [NotificationPreferenceDto] })
+  @ApiOperation({
+    summary: "Update user notification preferences",
+    description:
+      "Accepts an array of notification preferences and updates them for the current user.",
+  })
+  @ApiBody({
+    type: [NotificationPreferenceDto],
+    description: "Array of notification preferences to update",
+    examples: {
+      preferences: {
+        value: [
+          {
+            type: "BUDGET_ALERT",
+            enabled: true,
+            channels: { email: true, app: true },
+          },
+          {
+            type: "PAYMENT_REMINDER",
+            enabled: true,
+            channels: { email: false, app: true },
+          },
+        ],
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
-    description: "Notification preferences updated",
+    description: "Notification preferences updated successfully",
+    type: [NotificationPreferenceDto],
   })
+  @ApiResponse({ status: 400, description: "Invalid request format" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   async updatePreferences(
     @Request() req,
     @Body() preferences: NotificationPreferenceDto[]
