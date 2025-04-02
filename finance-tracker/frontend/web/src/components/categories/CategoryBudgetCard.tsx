@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { EditIcon, getIconByName } from "../Icons";
+import { EditIcon, getIconByName, ArrowUpIcon, ArrowDownIcon } from "../Icons";
 import { Category } from "../../utils/types";
 
 interface CategoryBudgetCardProps {
@@ -34,21 +34,22 @@ const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
 
   const isOverBudget = () => spent > budget;
 
-  const calculateSpentPercentage = () => {
-    return Math.min(Math.round((spent / budget) * 100), 100);
-  };
-
-  const getRealSpentPercentage = () => {
+  // Calcola la percentuale effettiva di budget utilizzato
+  const calculatePercentage = () => {
+    if (budget <= 0) return 0;
     return Math.round((spent / budget) * 100);
   };
 
-  const getProgressBarColor = (percentage: number) => {
-    if (percentage > 100) return "bg-gradient-to-r from-red-500 to-red-400"; // Oltre budget
-    if (percentage > 90)
-      return "bg-gradient-to-r from-orange-500 to-orange-400"; // Quasi al limite (90-100%)
-    if (percentage > 75)
-      return "bg-gradient-to-r from-yellow-500 to-yellow-400"; // Attenzione (75-90%)
-    return "bg-gradient-to-r from-green-500 to-green-400"; // OK (0-75%)
+  const calculateSpentPercentage = () => {
+    return Math.min(calculatePercentage(), 100);
+  };
+
+  // Get color based on percentage
+  const getProgressColor = (percentage: number) => {
+    if (percentage > 90) return "#ef4444"; // red-500
+    if (percentage > 75) return "#f97316"; // orange-500
+    if (percentage > 50) return "#eab308"; // yellow-500
+    return "#22c55e"; // green-500
   };
 
   const getPercentageTextColor = (percentage: number) => {
@@ -58,22 +59,43 @@ const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
     return "text-green-600 font-semibold";
   };
 
-  const percentage = getRealSpentPercentage();
+  const percentage = calculatePercentage();
+  const isTrendingUp = isOverBudget(); // Usiamo questo per determinare se mostrare la freccia su o giù
 
   return (
-    <Card className="overflow-hidden">
-      <div className="h-2" style={{ backgroundColor: category.color }}></div>
+    <Card className="overflow-hidden bg-white">
       <CardContent className="p-4">
-        <div className="flex items-center mb-3">
-          {renderCategoryIcon(category.icon, category.color)}
-          <h3 className="font-medium">{category.name}</h3>
+        <div className="flex justify-between items-start mb-1">
+          <h3 className="font-medium text-base">{category.name}</h3>
+          <div className="flex space-x-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onEdit(category)}
+            >
+              <EditIcon className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
 
-        <div className="mt-3 space-y-2">
+        <div className="flex items-center mb-3">
+          {renderCategoryIcon(category.icon, category.color)}
+          <div className="flex items-center">
+            {isTrendingUp ? (
+              <ArrowUpIcon className="h-4 w-4 text-red-500 mr-1" />
+            ) : (
+              <ArrowDownIcon className="h-4 w-4 text-green-500 mr-1" />
+            )}
+            <span className="text-2xl font-semibold">€{budget.toFixed(0)}</span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <div className="flex justify-between text-sm mb-3">
             <span className="font-medium text-gray-600">Budget mensile:</span>
             <span className="font-bold text-blue-600">
-              ${budget.toFixed(2)}
+              €{budget.toFixed(2)}
             </span>
           </div>
 
@@ -84,7 +106,7 @@ const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
                 isOverBudget() ? "text-red-600" : "text-green-600"
               }`}
             >
-              ${spent.toFixed(2)}
+              €{spent.toFixed(2)}
             </span>
           </div>
 
@@ -95,32 +117,28 @@ const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
                 remaining < 0 ? "text-red-600" : "text-green-600"
               }`}
             >
-              ${remaining.toFixed(2)}
+              €{remaining.toFixed(2)}
             </span>
           </div>
 
-          <div className="mt-3">
+          <div>
             <div className="flex justify-between text-xs mb-1">
               <span className="text-gray-600">Utilizzato:</span>
               <span className={getPercentageTextColor(percentage)}>
                 {percentage}%
               </span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+
+            <div className="relative w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className={`${getProgressBarColor(
-                  percentage
-                )} h-2.5 rounded-full transition-all duration-500 ease-in-out`}
-                style={{ width: `${calculateSpentPercentage()}%` }}
+                className="h-full rounded-full transition-all duration-500 ease-in-out"
+                style={{
+                  width: `${calculateSpentPercentage()}%`,
+                  backgroundColor: getProgressColor(percentage),
+                }}
               ></div>
             </div>
           </div>
-        </div>
-
-        <div className="flex justify-end mt-4 space-x-2">
-          <Button variant="outline" size="sm" onClick={() => onEdit(category)}>
-            <EditIcon className="h-4 w-4" />
-          </Button>
         </div>
       </CardContent>
     </Card>

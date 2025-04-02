@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { EditIcon, TrashIcon, getIconByName } from '../Icons';
-import { Category } from '../../utils/types';
+import { EditIcon, TrashIcon, getIconByName } from "../Icons";
+import { Category } from "../../utils/types";
 
 interface CategoryCardProps {
   category: Category;
@@ -10,15 +10,15 @@ interface CategoryCardProps {
   onDelete: (id: string) => void;
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({ 
-  category, 
-  onEdit, 
-  onDelete 
+const CategoryCard: React.FC<CategoryCardProps> = ({
+  category,
+  onEdit,
+  onDelete,
 }) => {
   const renderCategoryIcon = (iconName: string, color: string) => {
     const IconComponent = getIconByName(iconName);
     return (
-      <div 
+      <div
         className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
         style={{ backgroundColor: color }}
       >
@@ -27,44 +27,47 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
     );
   };
 
+  // Ensure budget is a number for display
+  const budgetValue = category.budget ? Number(category.budget) : 0;
+
   return (
-    <Card className="overflow-hidden">
-      <div 
-        className="h-2"
-        style={{ backgroundColor: category.color }}
-      ></div>
+    <Card className="overflow-hidden bg-white">
       <CardContent className="p-4">
-        <div className="flex items-center mb-2">
-          {renderCategoryIcon(category.icon, category.color)}
-          <h3 className="font-medium">{category.name}</h3>
-        </div>
-        {category.budget && (
-          <div className="mt-2">
-            <div className="flex justify-between mb-1 text-sm">
-              <span>Monthly Budget:</span>
-              <span className="font-medium">${Number(category.budget).toFixed(2)}</span>
-            </div>
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="font-medium text-base">{category.name}</h3>
+          <div className="flex space-x-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onEdit(category)}
+            >
+              <EditIcon className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onDelete(category.id)}
+            >
+              <TrashIcon className="h-3.5 w-3.5" />
+            </Button>
           </div>
-        )}
-        <div className="flex justify-end mt-4 space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => onEdit(category)}
-          >
-            <EditIcon className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => onDelete(category.id)}
-          >
-            <TrashIcon className="h-4 w-4" />
-          </Button>
+        </div>
+
+        <div className="flex items-center">
+          {renderCategoryIcon(category.icon, category.color)}
+          {category.budget ? (
+            <span className="text-xl font-semibold">
+              €{budgetValue.toFixed(0)}
+            </span>
+          ) : (
+            <span className="text-sm text-gray-500 italic">Nessun budget</span>
+          )}
         </div>
       </CardContent>
     </Card>
   );
 };
 
-export default CategoryCard; 
+export default CategoryCard;
