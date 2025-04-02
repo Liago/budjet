@@ -16,9 +16,9 @@ interface NotificationDropdownProps {
   maxHeight?: number;
 }
 
-export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
+export function NotificationDropdown({
   maxHeight = 400,
-}) => {
+}: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [groupedNotifications, setGroupedNotifications] = useState<
@@ -199,7 +199,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               groupedNotifications.map((group, idx) => (
                 <div key={idx}>
                   <div className="sticky top-0 bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">
-                    {group.title}
+                    {group.date}
                   </div>
                   {group.notifications.map((notification) => (
                     <NotificationItem
@@ -247,4 +247,4 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       />
     </div>
   );
-};
+}

@@ -2,8 +2,10 @@ import {
   Notification,
   NotificationType,
   NotificationGroup,
+  NotificationPreference,
 } from "../types/notification";
-import { apiService } from "../utils/api";
+import { apiService, API_URL } from "../utils/api";
+import { toast } from "sonner";
 
 class NotificationService {
   private static instance: NotificationService;
@@ -95,10 +97,10 @@ class NotificationService {
     const lastWeek = today - 7 * 24 * 60 * 60 * 1000;
 
     const groups: NotificationGroup[] = [
-      { title: "Oggi", notifications: [] },
-      { title: "Ieri", notifications: [] },
-      { title: "Questa settimana", notifications: [] },
-      { title: "Precedenti", notifications: [] },
+      { date: "Oggi", notifications: [] },
+      { date: "Ieri", notifications: [] },
+      { date: "Questa settimana", notifications: [] },
+      { date: "Precedenti", notifications: [] },
     ];
 
     notifications.forEach((notification) => {
@@ -117,6 +119,134 @@ class NotificationService {
 
     // Rimuovi i gruppi vuoti
     return groups.filter((group) => group.notifications.length > 0);
+  }
+
+  // Metodi per gestire le preferenze di notifica
+  async getNotificationPreferences(): Promise<NotificationPreference[]> {
+    try {
+      const response = await apiService.get<any>(
+        `${this.BASE_URL}/preferences`
+      );
+      console.log("API response for preferences:", response);
+
+      // Verifica se la risposta è nel formato corretto
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        return response.data;
+      } else if (response && Array.isArray(response.preferences)) {
+        return response.preferences;
+      } else {
+        console.error("Unexpected API response format:", response);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      return [];
+    }
+  }
+
+  async updateNotificationPreferences(
+    preferences: NotificationPreference[]
+  ): Promise<boolean> {
+    try {
+      console.log("Sending preferences to API:", preferences);
+      // Verifica che l'array sia formattato correttamente
+      if (!Array.isArray(preferences)) {
+        console.error("preferences must be an array");
+        return false;
+      }
+
+      // Crea una versione pulita delle preferenze senza id per rispettare esattamente il DTO
+      const cleanPreferences = preferences.map((pref) => ({
+        type: pref.type,
+        enabled: pref.enabled,
+        channels: pref.channels,
+      }));
+
+      console.log("Clean preferences for API:", cleanPreferences);
+
+      // Poiché il backend rifiuta la proprietà "preferences", proviamo a inviare direttamente l'array
+      // Il controller poi avrà la responsabilità di estrarre i dati nel formato che si aspetta
+      try {
+        const response = await fetch(`${API_URL}/notifications/preferences`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(cleanPreferences),
+        });
+
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error response:", errorData);
+          throw new Error(JSON.stringify(errorData));
+        }
+
+        const data = await response.json();
+        console.log("API response for updating preferences:", data);
+        return true;
+      } catch (fetchError) {
+        console.error("Fetch error:", fetchError);
+        throw fetchError;
+      }
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      // Mostra il messaggio di errore all'utente
+      toast.error("Impossibile aggiornare le preferenze. Riprova più tardi.");
+      return false;
+    }
+  }
+
+  async getDefaultNotificationPreferences(): Promise<NotificationPreference[]> {
+    try {
+      const response = await apiService.get<any>(
+        `${this.BASE_URL}/preferences/default`
+      );
+      console.log("API response for default preferences:", response);
+
+      // Verifica se la risposta è nel formato corretto
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        return response.data;
+      } else if (response && Array.isArray(response.preferences)) {
+        return response.preferences;
+      } else {
+        console.error(
+          "Unexpected default preferences API response format:",
+          response
+        );
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching default notification preferences:", error);
+      return [];
+    }
+  }
+
+  // Toast notification helpers
+  success(message: string, options?: any) {
+    return toast.success(message, options);
+  }
+
+  error(message: string, options?: any) {
+    return toast.error(message, options);
+  }
+
+  info(message: string, options?: any) {
+    return toast.info(message, options);
+  }
+
+  warning(message: string, options?: any) {
+    return toast.warning(message, options);
+  }
+
+  loading(message: string, options?: any) {
+    return toast.loading(message, options);
   }
 }
 

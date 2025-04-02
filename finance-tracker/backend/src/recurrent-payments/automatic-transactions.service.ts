@@ -96,7 +96,7 @@ export class AutomaticTransactionsService {
     });
 
     // Process payments for each user
-    for (const [userId, { email, payments }] of userPayments) {
+    for (const [userId, { email, payments }] of userPayments.entries()) {
       let userTotalAmount = 0;
       const userTransactions = [];
 
@@ -143,20 +143,38 @@ export class AutomaticTransactionsService {
         result.createdTransactions++;
         result.totalAmount += Number(payment.amount);
 
-        // Create notification for the user
-        await this.notificationsService.create(payment.userId, {
-          title: "Transazione Automatica Creata",
-          message: `È stata creata una nuova transazione di ${
-            payment.amount
-          }€ per il pagamento ricorrente "${
-            payment.name
-          }". Prossimo pagamento: ${nextDate.toLocaleDateString()}`,
-          type: "info",
-        });
+        // Controlla se l'utente vuole ricevere notifiche in-app di questo tipo
+        const shouldSendAppNotification =
+          await this.notificationsService.shouldSendNotification(
+            payment.userId,
+            "PAYMENT_REMINDER",
+            "app"
+          );
+
+        // Create notification for the user if allowed
+        if (shouldSendAppNotification) {
+          await this.notificationsService.create(payment.userId, {
+            title: "Transazione Automatica Creata",
+            message: `È stata creata una nuova transazione di ${
+              payment.amount
+            }€ per il pagamento ricorrente "${
+              payment.name
+            }". Prossimo pagamento: ${nextDate.toLocaleDateString()}`,
+            type: "info",
+          });
+        }
       }
 
-      // Send email to the user
-      if (userTransactions.length > 0) {
+      // Controlla se l'utente vuole ricevere email di questo tipo
+      const shouldSendEmailNotification =
+        await this.notificationsService.shouldSendNotification(
+          userId,
+          "PAYMENT_REMINDER",
+          "email"
+        );
+
+      // Send email to the user if allowed
+      if (userTransactions.length > 0 && shouldSendEmailNotification) {
         await this.emailService.sendRecurrentPaymentsNotification(
           email,
           userTransactions,

@@ -28,6 +28,7 @@ model User {
   recurrentPayments  RecurrentPayment[]
   savingsGoals       SavingsGoal[]     // Riferimento ai nuovi obiettivi di risparmio
   notifications      Notification[]
+  notificationPreferences NotificationPreference[] // Preferenze notifiche
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 }
@@ -134,4 +135,18 @@ model Notification {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+}
+
+// Modello per le preferenze di notifica
+model NotificationPreference {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // 'BUDGET_ALERT', 'PAYMENT_REMINDER', ecc.
+  enabled   Boolean  @default(true)
+  channels  String   // JSON string formato: {"email": boolean, "app": boolean}
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type])
 } 

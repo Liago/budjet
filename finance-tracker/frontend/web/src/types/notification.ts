@@ -22,7 +22,7 @@ export interface Notification {
 }
 
 export interface NotificationGroup {
-  title: string;
+  date: string;
   notifications: Notification[];
 }
 
@@ -31,4 +31,14 @@ export interface NotificationState {
   unreadCount: number;
   loading: boolean;
   error: string | null;
+}
+
+export interface NotificationPreference {
+  id?: string;
+  type: string;
+  enabled: boolean;
+  channels: {
+    email: boolean;
+    app: boolean;
+  };
 }

@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Request,
+  Body,
 } from "@nestjs/common";
 import { NotificationsService } from "./notifications.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -16,7 +17,12 @@ import {
   ApiParam,
   ApiResponse,
   ApiTags,
+  ApiBody,
 } from "@nestjs/swagger";
+import {
+  UpdateNotificationPreferencesDto,
+  NotificationPreferenceDto,
+} from "./dto/notification-preference.dto";
 
 @ApiTags("notifications")
 @Controller("notifications")
@@ -72,5 +78,52 @@ export class NotificationsController {
     // Verifica che la notifica appartenga all'utente (implementazione da fare nel servizio)
     await this.notificationsService.verifyOwnership(id, req.user.id);
     return this.notificationsService.deleteNotification(id);
+  }
+
+  @Get("preferences")
+  @ApiOperation({ summary: "Get user notification preferences" })
+  @ApiResponse({
+    status: 200,
+    description: "Returns user notification preferences",
+  })
+  async getPreferences(@Request() req) {
+    const userId = req.user.id;
+    const preferences =
+      await this.notificationsService.getNotificationPreferences(userId);
+
+    if (preferences.length === 0) {
+      // Se l'utente non ha ancora preferenze, restituisci quelle di default
+      return this.notificationsService.getDefaultNotificationPreferences();
+    }
+
+    return preferences;
+  }
+
+  @Post("preferences")
+  @ApiOperation({ summary: "Update user notification preferences" })
+  @ApiBody({ type: [NotificationPreferenceDto] })
+  @ApiResponse({
+    status: 200,
+    description: "Notification preferences updated",
+  })
+  async updatePreferences(
+    @Request() req,
+    @Body() preferences: NotificationPreferenceDto[]
+  ) {
+    const userId = req.user.id;
+    return this.notificationsService.updateNotificationPreferences(
+      userId,
+      preferences
+    );
+  }
+
+  @Get("preferences/default")
+  @ApiOperation({ summary: "Get default notification preferences" })
+  @ApiResponse({
+    status: 200,
+    description: "Returns default notification preferences",
+  })
+  async getDefaultPreferences() {
+    return this.notificationsService.getDefaultNotificationPreferences();
   }
 }
