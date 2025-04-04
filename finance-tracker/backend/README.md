@@ -10,24 +10,30 @@ NestJS backend for the Finance Tracker application.
 - Transaction tracking with filtering and pagination
 - Tag management for additional transaction categorization
 - Financial reporting with monthly and annual summaries
+- Notification system with preferences management
+- Recurrent payments automation
 
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Set up environment variables:
+
    - Create a `.env` file based on `.env.example`
    - Configure your database connection string
 
 3. Run database migrations:
+
    ```bash
    npx prisma migrate dev
    ```
 
 4. Generate Prisma client:
+
    ```bash
    npx prisma generate
    ```
@@ -44,14 +50,17 @@ The API documentation is available at `/api/docs` when the server is running.
 ### Main Endpoints
 
 - **Authentication**
+
   - `POST /api/auth/register` - Register a new user
   - `POST /api/auth/login` - Login and get JWT token
 
 - **Users**
+
   - `GET /api/users/me` - Get current user profile
   - `PATCH /api/users/me` - Update current user profile
 
 - **Categories**
+
   - `GET /api/categories` - Get all categories
   - `POST /api/categories` - Create a new category
   - `GET /api/categories/:id` - Get a specific category
@@ -59,6 +68,7 @@ The API documentation is available at `/api/docs` when the server is running.
   - `DELETE /api/categories/:id` - Delete a category
 
 - **Transactions**
+
   - `GET /api/transactions` - Get all transactions with filtering and pagination
   - `POST /api/transactions` - Create a new transaction
   - `GET /api/transactions/:id` - Get a specific transaction
@@ -66,6 +76,7 @@ The API documentation is available at `/api/docs` when the server is running.
   - `DELETE /api/transactions/:id` - Delete a transaction
 
 - **Tags**
+
   - `GET /api/tags` - Get all tags
   - `POST /api/tags` - Create a new tag
   - `GET /api/tags/:id` - Get a specific tag
@@ -73,8 +84,28 @@ The API documentation is available at `/api/docs` when the server is running.
   - `DELETE /api/tags/:id` - Delete a tag
 
 - **Reports**
+
   - `GET /api/reports/monthly` - Get monthly financial report
   - `GET /api/reports/annual` - Get annual financial report
+
+- **Notifications**
+
+  - `GET /api/notifications` - Get all notifications for current user
+  - `GET /api/notifications/unread/count` - Get count of unread notifications
+  - `PATCH /api/notifications/:id/read` - Mark a notification as read
+  - `POST /api/notifications/read-all` - Mark all notifications as read
+  - `DELETE /api/notifications/:id` - Delete a notification
+  - `GET /api/notifications/preferences` - Get user notification preferences
+  - `POST /api/notifications/preferences` - Update user notification preferences
+  - `GET /api/notifications/preferences/default` - Get default notification preferences
+
+- **Recurrent Payments**
+  - `GET /api/recurrent-payments` - Get all recurrent payments
+  - `POST /api/recurrent-payments` - Create a new recurrent payment
+  - `GET /api/recurrent-payments/:id` - Get a specific recurrent payment
+  - `PATCH /api/recurrent-payments/:id` - Update a recurrent payment
+  - `DELETE /api/recurrent-payments/:id` - Delete a recurrent payment
+  - `GET /api/recurrent-payments/last-execution` - Get info about last automatic execution
 
 ## Project Structure
 
@@ -85,7 +116,9 @@ The API documentation is available at `/api/docs` when the server is running.
   - `categories/` - Category management
   - `tags/` - Tag management
   - `reports/` - Financial reporting
+  - `notifications/` - Notification system and preferences
+  - `recurrent-payments/` - Recurrent payments automation
   - `common/` - Shared utilities, guards, and decorators
   - `prisma/` - Prisma ORM service
   - `app.module.ts` - Main application module
-  - `main.ts` - Application entry point 
+  - `main.ts` - Application entry point
