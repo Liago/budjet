@@ -4,6 +4,7 @@ import { RootState } from "../store";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/slices/authSlice";
 import { toast } from "sonner";
+import { useTheme } from "../utils/hooks/useTheme";
 
 // Icons
 import {
@@ -34,7 +35,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -50,10 +51,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
-  };
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
   };
 
   const handleLogout = () => {
@@ -98,12 +95,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-50">
+    <div
+      className={`h-screen flex overflow-hidden ${
+        isDark ? "dark" : ""
+      } bg-background`}
+    >
       {/* Sidebar for desktop */}
-      <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-white border-r border-gray-200">
+      <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-card border-r border-border">
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex items-center h-16 flex-shrink-0 px-4 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-blue-600">Bud-Jet</h1>
+          <div className="flex items-center h-16 flex-shrink-0 px-4 border-b border-border">
+            <h1 className="text-xl font-bold text-primary">Bud-Jet</h1>
           </div>
           <div className="flex-1 flex flex-col overflow-y-auto">
             <nav className="flex-1 px-3 py-4 space-y-1">
@@ -113,8 +114,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className={({ isActive }) =>
                     `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
                       isActive
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-700 hover:bg-gray-50"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-foreground hover:bg-accent/50"
                     }`
                   }
                 >
@@ -122,8 +123,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     className={({ isActive }) =>
                       `mr-3 flex-shrink-0 h-5 w-5 ${
                         isActive
-                          ? "text-blue-600"
-                          : "text-gray-400 group-hover:text-gray-500"
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground group-hover:text-foreground"
                       }`
                     }
                   />
@@ -135,8 +136,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className={({ isActive }) =>
                     `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
                       isActive
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-700 hover:bg-gray-50"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-foreground hover:bg-accent/50"
                     }`
                   }
                 >
@@ -144,8 +145,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     className={({ isActive }) =>
                       `mr-3 flex-shrink-0 h-5 w-5 ${
                         isActive
-                          ? "text-blue-600"
-                          : "text-gray-400 group-hover:text-gray-500"
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground group-hover:text-foreground"
                       }`
                     }
                   />
@@ -157,8 +158,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className={({ isActive }) =>
                     `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
                       isActive
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-700 hover:bg-gray-50"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-foreground hover:bg-accent/50"
                     }`
                   }
                 >
@@ -166,8 +167,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     className={({ isActive }) =>
                       `mr-3 flex-shrink-0 h-5 w-5 ${
                         isActive
-                          ? "text-blue-600"
-                          : "text-gray-400 group-hover:text-gray-500"
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground group-hover:text-foreground"
                       }`
                     }
                   />
@@ -179,8 +180,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className={({ isActive }) =>
                     `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
                       isActive
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-700 hover:bg-gray-50"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-foreground hover:bg-accent/50"
                     }`
                   }
                 >
@@ -188,8 +189,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     className={({ isActive }) =>
                       `mr-3 flex-shrink-0 h-5 w-5 ${
                         isActive
-                          ? "text-blue-600"
-                          : "text-gray-400 group-hover:text-gray-500"
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground group-hover:text-foreground"
                       }`
                     }
                   />
@@ -201,8 +202,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className={({ isActive }) =>
                     `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
                       isActive
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-700 hover:bg-gray-50"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-foreground hover:bg-accent/50"
                     }`
                   }
                 >
@@ -210,8 +211,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     className={({ isActive }) =>
                       `mr-3 flex-shrink-0 h-5 w-5 ${
                         isActive
-                          ? "text-blue-600"
-                          : "text-gray-400 group-hover:text-gray-500"
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground group-hover:text-foreground"
                       }`
                     }
                   />
@@ -225,13 +226,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Header bar */}
       <div className="flex-1 flex flex-col md:pl-64">
-        <div className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white border-b border-gray-200">
+        <div className="sticky top-0 z-10 flex-shrink-0 h-16 bg-card border-b border-border">
           <div className="flex items-center justify-between px-4 h-full">
             {/* Left side - Mobile menu button & Search */}
             <div className="flex items-center md:hidden">
               <button
                 onClick={toggleMobileMenu}
-                className="p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none"
+                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 focus:outline-none"
               >
                 {isMobileMenuOpen ? (
                   <XIcon className="h-6 w-6" />
@@ -247,18 +248,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <label htmlFor="search" className="sr-only">
                   Search
                 </label>
-                <div className="relative text-gray-400 focus-within:text-gray-600">
+                <div className="relative text-muted-foreground focus-within:text-foreground">
                   <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
                     <SearchIcon className="h-5 w-5" />
                   </div>
                   <input
                     id="search"
-                    className="block w-full bg-white py-2 pl-10 pr-3 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full bg-background py-2 pl-10 pr-3 border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
                     placeholder="Search or type command..."
                     type="search"
                   />
                   <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
-                    <kbd className="inline-flex items-center border border-gray-200 rounded px-2 text-sm font-sans font-medium text-gray-400">
+                    <kbd className="inline-flex items-center border border-border rounded px-2 text-sm font-sans font-medium text-muted-foreground">
                       ⌘K
                     </kbd>
                   </div>
@@ -271,9 +272,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Theme toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-colors"
+                aria-label={
+                  isDark ? "Passa al tema chiaro" : "Passa al tema scuro"
+                }
               >
-                {isDarkMode ? (
+                {isDark ? (
                   <SunIcon className="h-5 w-5" />
                 ) : (
                   <MoonIcon className="h-5 w-5" />
@@ -286,7 +290,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* User menu */}
               <div className="relative">
                 <button
-                  className="flex items-center space-x-3 p-1.5 rounded-lg hover:bg-gray-100"
+                  className="flex items-center space-x-3 p-1.5 rounded-lg hover:bg-accent/50"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
                   <img
@@ -295,35 +299,37 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     alt={`${user?.firstName} ${user?.lastName}`}
                   />
                   <div className="hidden md:flex md:items-center">
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-foreground">
                       {user?.firstName} {user?.lastName}
                     </span>
-                    <ChevronDownIcon className="ml-2 h-4 w-4 text-gray-500" />
+                    <ChevronDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
                   </div>
                 </button>
 
                 {/* Dropdown menu */}
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">
+                  <div className="absolute right-0 mt-2 w-48 rounded-lg bg-popover py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <div className="px-4 py-2 border-b border-border">
+                      <p className="text-sm font-medium text-foreground">
                         {user?.firstName} {user?.lastName}
                       </p>
-                      <p className="text-sm text-gray-500">{user?.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {user?.email}
+                      </p>
                     </div>
                     <div className="py-1">
                       <button
                         onClick={handleTestEmail}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                        className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent/50 flex items-center"
                       >
-                        <MailIcon className="mr-3 h-4 w-4 text-gray-400" />
+                        <MailIcon className="mr-3 h-4 w-4 text-muted-foreground" />
                         Test Email
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                        className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent/50 flex items-center"
                       >
-                        <LogOutIcon className="mr-3 h-4 w-4 text-gray-400" />
+                        <LogOutIcon className="mr-3 h-4 w-4 text-muted-foreground" />
                         Logout
                       </button>
                     </div>
@@ -345,28 +351,47 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 flex">
           <div
-            className="fixed inset-0 bg-gray-600 bg-opacity-75"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
             onClick={closeMobileMenu}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-card">
             <div className="absolute top-0 right-0 -mr-12 pt-2">
               <button
                 onClick={closeMobileMenu}
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-foreground"
               >
                 <span className="sr-only">Close sidebar</span>
-                <XIcon className="h-6 w-6 text-white" />
+                <XIcon className="h-6 w-6 text-foreground" />
               </button>
             </div>
             {/* Mobile menu content */}
             <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
               <div className="flex-shrink-0 flex items-center px-4">
-                <h1 className="text-xl font-bold text-blue-600">Bud-Jet</h1>
+                <h1 className="text-xl font-bold text-primary">Bud-Jet</h1>
               </div>
               <nav className="mt-5 px-2 space-y-1">
                 {/* Mobile navigation links */}
                 {/* ... (same NavLink components as desktop but with mobile-specific classes) ... */}
               </nav>
+            </div>
+            {/* Mobile theme toggle */}
+            <div className="border-t border-border p-4">
+              <button
+                onClick={toggleTheme}
+                className="flex items-center w-full px-2 py-2 text-sm text-foreground hover:bg-accent/50 rounded-lg"
+              >
+                {isDark ? (
+                  <>
+                    <SunIcon className="mr-3 h-5 w-5 text-muted-foreground" />
+                    <span>Passa al tema chiaro</span>
+                  </>
+                ) : (
+                  <>
+                    <MoonIcon className="mr-3 h-5 w-5 text-muted-foreground" />
+                    <span>Passa al tema scuro</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -377,14 +402,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="fixed inset-0 z-[999] overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
               onClick={() => setShowEmailModal(false)}
             />
-            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-              <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+            <div className="relative transform overflow-hidden rounded-lg bg-card text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+              <div className="bg-card px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                    <h3 className="text-lg font-semibold leading-6 text-foreground">
                       Test Email Templates
                     </h3>
                     <div className="mt-4 space-y-4">
@@ -400,13 +425,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                               e.target.value as "test" | "transactions"
                             )
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          className="h-4 w-4 text-primary focus:ring-primary border-border"
                         />
                         <label htmlFor="test-template" className="ml-3">
-                          <span className="block text-sm font-medium text-gray-900">
+                          <span className="block text-sm font-medium text-foreground">
                             Template Base
                           </span>
-                          <span className="block text-sm text-gray-500">
+                          <span className="block text-sm text-muted-foreground">
                             Email di test base con conferma configurazione
                           </span>
                         </label>
@@ -423,13 +448,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                               e.target.value as "test" | "transactions"
                             )
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          className="h-4 w-4 text-primary focus:ring-primary border-border"
                         />
                         <label htmlFor="transactions-template" className="ml-3">
-                          <span className="block text-sm font-medium text-gray-900">
+                          <span className="block text-sm font-medium text-foreground">
                             Template Transazioni
                           </span>
-                          <span className="block text-sm text-gray-500">
+                          <span className="block text-sm text-muted-foreground">
                             Email con tabella transazioni e riepilogo
                           </span>
                         </label>
@@ -438,12 +463,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              <div className="bg-accent/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                 <button
                   type="button"
                   onClick={handleSendTestEmail}
                   disabled={isLoading}
-                  className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <>
@@ -476,7 +501,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <button
                   type="button"
                   onClick={() => setShowEmailModal(false)}
-                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                  className="mt-3 inline-flex w-full justify-center rounded-md bg-card px-3 py-2 text-sm font-semibold text-foreground shadow-sm ring-1 ring-inset ring-border hover:bg-accent/50 sm:mt-0 sm:w-auto"
                 >
                   Annulla
                 </button>
