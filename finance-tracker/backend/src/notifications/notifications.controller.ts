@@ -36,7 +36,14 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: "Returns all notifications" })
   async getAllNotifications(@Request() req) {
     const userId = req.user.id;
-    return this.notificationsService.getAllNotifications(userId);
+    const notifications = await this.notificationsService.getAllNotifications(
+      userId
+    );
+    // Converte isRead in read per compatibilità con il frontend
+    return notifications.map((notification) => ({
+      ...notification,
+      read: notification.isRead,
+    }));
   }
 
   @Get("unread/count")
@@ -59,7 +66,12 @@ export class NotificationsController {
   async markAsRead(@Param("id") id: string, @Request() req) {
     // Verifica che la notifica appartenga all'utente (implementazione da fare nel servizio)
     await this.notificationsService.verifyOwnership(id, req.user.id);
-    return this.notificationsService.markAsRead(id);
+    const updatedNotification = await this.notificationsService.markAsRead(id);
+    // Converte isRead in read per compatibilità con il frontend
+    return {
+      ...updatedNotification,
+      read: updatedNotification.isRead,
+    };
   }
 
   @Post("read-all")

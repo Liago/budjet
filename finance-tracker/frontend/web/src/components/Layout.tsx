@@ -27,7 +27,12 @@ import {
 import { UserProfile } from "./UserProfile";
 import { NotificationDropdown } from "./ui/notification-dropdown";
 
-const Layout = () => {
+// Modifichiamo il tipo per accettare children come prop
+interface LayoutProps {
+  children?: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -330,12 +335,9 @@ const Layout = () => {
         </div>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <Outlet />
-            </div>
-          </div>
+        <main className="flex-1 relative overflow-y-auto focus:outline-none">
+          {/* Rendiamo il componente flessibile per mostrare o children o Outlet */}
+          {children ? children : <Outlet />}
         </main>
       </div>
 

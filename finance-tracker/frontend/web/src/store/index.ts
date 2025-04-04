@@ -48,8 +48,3 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-
-// Hooks for interacting with the Redux store
-export const useAppSelector = <T>(selector: (state: RootState) => T): T =>
-  selector(store.getState());
-export const useAppDispatch = (): AppDispatch => store.dispatch;
