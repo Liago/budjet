@@ -1,150 +1,50 @@
-# Bud-Jet Mobile App
 
-Bud-Jet è un'applicazione mobile per la gestione delle finanze personali, sviluppata con React Native e TypeScript. L'app permette agli utenti di tenere traccia delle proprie spese e entrate, analizzare i propri dati finanziari e gestire il proprio budget in modo efficace.
+# TypeScript
 
-## Tecnologie Utilizzate
+[![CI](https://github.com/microsoft/TypeScript/actions/workflows/ci.yml/badge.svg)](https://github.com/microsoft/TypeScript/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/typescript.svg)](https://www.npmjs.com/package/typescript)
+[![Downloads](https://img.shields.io/npm/dm/typescript.svg)](https://www.npmjs.com/package/typescript)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/microsoft/TypeScript/badge)](https://securityscorecards.dev/viewer/?uri=github.com/microsoft/TypeScript)
 
-- React Native con TypeScript
-- Redux Toolkit per la gestione dello stato
-- Tailwind CSS per lo styling
-- Ionicons per le icone
-- React Native Chart Kit per i grafici
-- Expo Notifications per le notifiche
-- AsyncStorage per la persistenza dei dati
-- Expo File System per la gestione dei file
-- Expo Sharing per la condivisione dei file
 
-## Funzionalità Principali
+[TypeScript](https://www.typescriptlang.org/) is a language for application-scale JavaScript. TypeScript adds optional types to JavaScript that support tools for large-scale JavaScript applications for any browser, for any host, on any OS. TypeScript compiles to readable, standards-based JavaScript. Try it out at the [playground](https://www.typescriptlang.org/play/), and stay up to date via [our blog](https://blogs.msdn.microsoft.com/typescript) and [Twitter account](https://twitter.com/typescript).
 
-### 1. Dashboard
+Find others who are using TypeScript at [our community page](https://www.typescriptlang.org/community/).
 
-- Visualizzazione del saldo corrente
-- Grafici interattivi per l'andamento mensile
-- Distribuzione delle spese per categoria
-- Distribuzione delle entrate per categoria
-- Accesso rapido alle funzionalità principali
+## Installing
 
-### 2. Gestione Transazioni
-
-- Aggiunta di nuove transazioni (spese ed entrate)
-- Categorizzazione delle transazioni
-- Selezione della data
-- Validazione dei dati inseriti
-- Filtri avanzati per la ricerca
-- Funzionalità di ricerca testuale
-
-### 3. Gestione Categorie
-
-- Creazione di categorie personalizzate
-- Modifica delle categorie esistenti
-- Assegnazione di icone alle categorie
-- Visualizzazione delle categorie più utilizzate
-
-### 4. Statistiche Avanzate
-
-- Analisi dettagliata delle spese
-- Trend mensili e annuali
-- Calcolo del tasso di risparmio
-- Media delle transazioni
-- Top categorie di spesa
-- Visualizzazione dei dati tramite grafici
-
-### 5. Notifiche
-
-- Avvisi per il superamento del budget
-- Report mensili automatici
-- Promemoria per le bollette
-- Notifiche per gli obiettivi di risparmio
-- Personalizzazione delle notifiche
-
-### 6. Backup e Ripristino
-
-- Creazione di backup automatici
-- Ripristino dei dati da backup
-- Condivisione dei backup
-- Gestione di più backup
-- Validazione dei dati di backup
-
-### 7. Personalizzazione
-
-- Tema chiaro/scuro
-- Personalizzazione delle categorie
-- Impostazioni delle notifiche
-- Preferenze di visualizzazione
-
-## Struttura del Progetto
-
-```
-src/
-├── components/
-│   ├── charts/         # Componenti per i grafici
-│   ├── forms/          # Componenti per i form
-│   ├── stats/          # Componenti per le statistiche
-│   └── themed/         # Componenti con tema
-├── screens/
-│   ├── dashboard/      # Schermata principale
-│   ├── transactions/   # Gestione transazioni
-│   ├── categories/     # Gestione categorie
-│   ├── stats/          # Statistiche avanzate
-│   └── settings/       # Impostazioni e backup
-├── services/
-│   ├── api/           # Servizi API
-│   ├── backup/        # Servizio di backup
-│   └── notifications/ # Servizio notifiche
-├── store/
-│   └── slices/        # Redux slices
-├── hooks/             # Custom hooks
-├── navigation/        # Configurazione navigazione
-└── theme/            # Configurazione tema
-```
-
-## Installazione
-
-1. Clona il repository:
+For the latest stable version:
 
 ```bash
-git clone https://github.com/yourusername/bud-jet.git
-cd bud-jet/frontend/mobile
+npm install -D typescript
 ```
 
-2. Installa le dipendenze:
+For our nightly builds:
 
 ```bash
-npm install
+npm install -D typescript@next
 ```
 
-3. Avvia l'applicazione:
+## Contribute
 
-```bash
-npm start
-```
+There are many ways to [contribute](https://github.com/microsoft/TypeScript/blob/main/CONTRIBUTING.md) to TypeScript.
+* [Submit bugs](https://github.com/microsoft/TypeScript/issues) and help us verify fixes as they are checked in.
+* Review the [source code changes](https://github.com/microsoft/TypeScript/pulls).
+* Engage with other TypeScript users and developers on [StackOverflow](https://stackoverflow.com/questions/tagged/typescript).
+* Help each other in the [TypeScript Community Discord](https://discord.gg/typescript).
+* Join the [#typescript](https://twitter.com/search?q=%23TypeScript) discussion on Twitter.
+* [Contribute bug fixes](https://github.com/microsoft/TypeScript/blob/main/CONTRIBUTING.md).
 
-## Configurazione
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see
+the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com)
+with any additional questions or comments.
 
-1. Crea un file `.env` nella root del progetto mobile con le seguenti variabili:
+## Documentation
 
-```
-API_URL=your_api_url
-```
+*  [TypeScript in 5 minutes](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html)
+*  [Programming handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
+*  [Homepage](https://www.typescriptlang.org/)
 
-2. Configura le notifiche push (opzionale):
+## Roadmap
 
-```bash
-expo push:configure
-```
-
-## Contribuire
-
-1. Fork il repository
-2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit le tue modifiche (`git commit -m 'Add some AmazingFeature'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Apri una Pull Request
-
-## Licenza
-
-Questo progetto è sotto licenza MIT. Vedi il file `LICENSE` per maggiori dettagli.
-
-## Supporto
-
-Per supporto, email support@budjet.com o apri un issue nel repository.
+For details on our planned features and future direction, please refer to our [roadmap](https://github.com/microsoft/TypeScript/wiki/Roadmap).
