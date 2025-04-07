@@ -1,0 +1,30 @@
+module.exports = {
+  name: 'mobile',
+  slug: 'mobile',
+  version: '1.0.0',
+  orientation: 'portrait',
+  scheme: 'myapp',
+  userInterfaceStyle: 'automatic',
+  newArchEnabled: true,
+  assetBundlePatterns: [
+    '**/*'
+  ],
+  ios: {
+    supportsTablet: true
+  },
+  android: {
+    adaptiveIcon: {
+      backgroundColor: '#ffffff'
+    }
+  },
+  web: {
+    bundler: 'metro',
+    output: 'static'
+  },
+  plugins: [
+    'expo-router'
+  ],
+  experiments: {
+    typedRoutes: true
+  }
+}; 
