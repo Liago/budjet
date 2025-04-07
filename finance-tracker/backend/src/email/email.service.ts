@@ -128,25 +128,19 @@ export class EmailService {
   async sendRecurrentPaymentsNotification(
     to: string,
     transactions: {
-      name: string;
+      paymentName: string;
       amount: number;
       nextDate: Date;
     }[],
     totalAmount: number
   ) {
     try {
-      // Map transactions to match the template interface
-      const mappedTransactions = transactions.map((t) => ({
-        paymentName: t.name,
-        amount: t.amount,
-        nextDate: t.nextDate,
-      }));
-
+      // No need to map anymore since the properties already match
       const info = await this.transporter.sendMail({
         from: this.configService.get<string>("SMTP_FROM"),
         to,
         subject: "Nuove Transazioni Automatiche Create",
-        html: transactionsEmailTemplate(mappedTransactions, totalAmount),
+        html: transactionsEmailTemplate(transactions, totalAmount),
       });
 
       return {
