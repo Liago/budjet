@@ -71,6 +71,7 @@ export interface TransactionFilters {
   startDate?: string;
   endDate?: string;
   categoryIds?: string[];
+  categoryId?: string;
   type?: "INCOME" | "EXPENSE";
   minAmount?: number;
   maxAmount?: number;

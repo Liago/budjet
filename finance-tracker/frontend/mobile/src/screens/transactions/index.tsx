@@ -90,6 +90,9 @@ export default function TransactionsScreen() {
   );
   const { categories } = useAppSelector((state) => state.category);
   const [refreshing, setRefreshing] = useState(false);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    Transaction[]
+  >([]);
 
   // Array di mesi per il filtro
   const months = [
@@ -110,10 +113,10 @@ export default function TransactionsScreen() {
   // Carica le transazioni e le categorie
   const loadData = async () => {
     try {
-      // Aggiungiamo la ricerca ai filtri se presente
+      // Aggiungiamo i filtri senza includere la ricerca testo
       const currentFilters: TransactionFilters = {
         ...filters,
-        search: searchText || undefined,
+        // Non includiamo search perché non è supportato dal backend
         limit: 100, // Carica più transazioni per evitare frequenti richieste
       };
 
@@ -138,7 +141,7 @@ export default function TransactionsScreen() {
 
       // Aggiungiamo il filtro per categorie se selezionate
       if (selectedCategoryIds.length > 0) {
-        currentFilters.categoryIds = selectedCategoryIds;
+        currentFilters.categoryId = selectedCategoryIds[0];
       }
 
       await dispatch(fetchTransactions(currentFilters));
@@ -151,7 +154,52 @@ export default function TransactionsScreen() {
   // Carica i dati all'avvio
   useEffect(() => {
     loadData();
-  }, [dispatch, searchText, selectedMonth, selectedType, selectedCategoryIds]);
+  }, [dispatch, selectedMonth, selectedType, selectedCategoryIds]);
+
+  // Applica il filtro di ricerca lato client quando searchText o transactions cambiano
+  useEffect(() => {
+    if (!searchText || searchText.trim() === "") {
+      setFilteredTransactions(transactions);
+      return;
+    }
+
+    const searchLower = searchText.toLowerCase();
+    const filtered = transactions.filter((transaction) => {
+      // Cerca nella descrizione
+      if (
+        transaction.description &&
+        transaction.description.toLowerCase().includes(searchLower)
+      ) {
+        return true;
+      }
+
+      // Cerca nella categoria
+      if (
+        transaction.category &&
+        transaction.category.name &&
+        transaction.category.name.toLowerCase().includes(searchLower)
+      ) {
+        return true;
+      }
+
+      // Cerca nei tag (se esistono)
+      if (transaction.tags && transaction.tags.length > 0) {
+        // In alcuni casi tags può essere un array di stringhe o un array di oggetti con proprietà 'name'
+        return transaction.tags.some((tag) => {
+          if (typeof tag === "string") {
+            return tag.toLowerCase().includes(searchLower);
+          } else if (typeof tag === "object" && tag !== null && "name" in tag) {
+            return tag.name.toLowerCase().includes(searchLower);
+          }
+          return false;
+        });
+      }
+
+      return false;
+    });
+
+    setFilteredTransactions(filtered);
+  }, [searchText, transactions]);
 
   // Gestisce il refresh pull-to-refresh
   const onRefresh = async () => {
@@ -160,14 +208,87 @@ export default function TransactionsScreen() {
     setRefreshing(false);
   };
 
-  // Formatta la valuta
-  const formatCurrency = (amount: number): string => {
-    try {
-      return `€${Number(amount).toFixed(2)}`.replace(".", ",");
-    } catch (error) {
-      console.error("Errore nella formattazione della valuta:", error);
+  // Funzione per formattare la valuta
+  const formatCurrency = (amount: any): string => {
+    // Converti esplicitamente a number se possibile
+    const numAmount = Number(amount);
+
+    // Verifica se è un numero valido
+    if (amount === undefined || amount === null || isNaN(numAmount)) {
       return "€0,00";
     }
+
+    try {
+      return `€${numAmount.toFixed(2)}`.replace(".", ",");
+    } catch (error) {
+      console.error("Error formatting currency:", error, amount);
+      return "€0,00";
+    }
+  };
+
+  // Calcola i totali delle transazioni
+  const calculateTotals = () => {
+    const totals = {
+      income: 0,
+      expense: 0,
+      balance: 0,
+    };
+
+    // Usa filteredTransactions invece di transactions
+    filteredTransactions.forEach((transaction) => {
+      if (transaction.type === "INCOME") {
+        totals.income += Number(transaction.amount);
+      } else {
+        totals.expense += Number(transaction.amount);
+      }
+    });
+
+    totals.balance = totals.income - totals.expense;
+    return totals;
+  };
+
+  const transactionTotals = calculateTotals();
+
+  // Componente per visualizzare i totali
+  const renderTransactionTotals = () => {
+    return (
+      <View
+        style={[
+          styles.totalsContainer,
+          { backgroundColor: theme.colors.surface },
+        ]}
+      >
+        <Text
+          style={[
+            styles.transactionsCount,
+            { color: theme.colors.textSecondary },
+          ]}
+        >
+          Mostrando {filteredTransactions.length} transazioni
+        </Text>
+        <View style={styles.totalsSummary}>
+          <Text style={[styles.totalIncome, { color: theme.colors.success }]}>
+            Entrate: {formatCurrency(transactionTotals.income)}
+          </Text>
+          <Text style={[styles.totalExpense, { color: theme.colors.error }]}>
+            Uscite: {formatCurrency(transactionTotals.expense)}
+          </Text>
+          <Text
+            style={[
+              styles.totalBalance,
+              {
+                color:
+                  transactionTotals.balance >= 0
+                    ? theme.colors.primary
+                    : theme.colors.error,
+              },
+            ]}
+          >
+            Bilancio: {formatCurrency(transactionTotals.balance)}
+          </Text>
+        </View>
+      </View>
+    );
   };
 
   // Formatta la data
@@ -515,7 +636,7 @@ export default function TransactionsScreen() {
   );
 
   // Mostra il caricamento se non c'è refresh e sta caricando
-  if (isLoading && !refreshing && transactions.length === 0) {
+  if (isLoading && !refreshing && filteredTransactions.length === 0) {
     return <LoadingScreen message="Caricamento transazioni..." />;
   }
 
@@ -579,10 +700,20 @@ export default function TransactionsScreen() {
           >
             Filtri attivi:
             {searchText ? " Ricerca" : ""}
-            {selectedMonth ? ` Mese: ${selectedMonth}` : ""}
-            {selectedType ? ` Tipo: ${selectedType}` : ""}
+            {selectedMonth
+              ? ` Mese: ${
+                  months.find((m) => m.value === selectedMonth)?.label ||
+                  selectedMonth
+                }`
+              : ""}
+            {selectedType
+              ? ` Tipo: ${selectedType === "INCOME" ? "Entrate" : "Uscite"}`
+              : ""}
             {selectedCategoryIds.length > 0
-              ? ` Categorie: ${selectedCategoryIds.length}`
+              ? ` Categorie: ${categories
+                  .filter((cat) => selectedCategoryIds.includes(cat.id))
+                  .map((cat) => cat.name)
+                  .join(", ")}`
               : ""}
           </Text>
           <TouchableOpacity onPress={resetFilters}>
@@ -592,7 +723,7 @@ export default function TransactionsScreen() {
       )}
 
       {/* Lista delle transazioni */}
-      {transactions.length === 0 ? (
+      {filteredTransactions.length === 0 ? (
         <View style={styles.emptyState}>
           <Text
             style={[
@@ -604,22 +735,25 @@ export default function TransactionsScreen() {
           </Text>
         </View>
       ) : (
-        <SwipeListView
-          data={transactions}
-          renderItem={renderTransactionItem}
-          renderHiddenItem={renderHiddenItem}
-          rightOpenValue={-75}
-          disableRightSwipe
-          keyExtractor={(item) => `transaction-${item.id}`}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[theme.colors.primary]}
-              tintColor={theme.colors.primary}
-            />
-          }
-        />
+        <>
+          <SwipeListView
+            data={filteredTransactions}
+            renderItem={renderTransactionItem}
+            renderHiddenItem={renderHiddenItem}
+            rightOpenValue={-75}
+            disableRightSwipe
+            keyExtractor={(item) => `transaction-${item.id}`}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[theme.colors.primary]}
+                tintColor={theme.colors.primary}
+              />
+            }
+          />
+          {renderTransactionTotals()}
+        </>
       )}
 
       {/* Modale dei filtri */}
@@ -849,5 +983,32 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  // Stili per i totali
+  totalsContainer: {
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 12,
+    marginBottom: 80, // Spazio per il FAB
+  },
+  transactionsCount: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  totalsSummary: {
+    flexDirection: "column",
+    gap: 4,
+  },
+  totalIncome: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  totalExpense: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  totalBalance: {
+    fontSize: 14,
+    fontWeight: "700",
   },
 });
