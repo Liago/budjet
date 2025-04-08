@@ -5,16 +5,28 @@ import {
   ScrollView,
   StyleSheet,
   RefreshControl,
+  Alert,
+  Animated,
+  PanResponder,
+  PanResponderInstance,
+  I18nManager,
 } from "react-native";
 import { useTheme } from "styled-components/native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+} from "react-native-gesture-handler";
 
 import { useAppDispatch, useAppSelector } from "../../store";
 import { fetchDashboardStats } from "../../store/slices/dashboardSlice";
 import { fetchCategories } from "../../store/slices/categorySlice";
-import { fetchTransactions } from "../../store/slices/transactionSlice";
+import {
+  fetchTransactions,
+  deleteTransaction,
+} from "../../store/slices/transactionSlice";
 import { LoadingScreen } from "../../components/common/LoadingScreen";
 import { Button } from "../../components/common/button";
 import { RootStackParamList } from "../../navigation";
@@ -32,6 +44,7 @@ interface Transaction {
     color?: string;
     icon?: string;
   };
+  date?: string;
 }
 
 interface Budget {
@@ -42,6 +55,30 @@ interface Budget {
   spent?: number;
   budget?: number;
 }
+
+// Icone sicure per Ionicons
+const safeIcons = {
+  default: "card-outline",
+  food: "restaurant-outline",
+  transport: "car-outline",
+  shopping: "cart-outline",
+  health: "medkit-outline",
+  entertainment: "game-controller-outline",
+  house: "home-outline",
+  utilities: "flash-outline",
+  education: "school-outline",
+  travel: "airplane-outline",
+  salary: "cash-outline",
+  gifts: "gift-outline",
+} as const;
+
+// Funzione per ottenere un'icona sicura
+const getSafeIcon = (iconName?: string): keyof typeof safeIcons => {
+  if (!iconName) return "default";
+  return safeIcons[iconName as keyof typeof safeIcons]
+    ? (iconName as keyof typeof safeIcons)
+    : "default";
+};
 
 export default function DashboardScreen() {
   const theme = useTheme();
@@ -131,6 +168,23 @@ export default function DashboardScreen() {
     }
   };
 
+  // Aggiungiamo una funzione per formattare le date
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("it-IT", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error, dateStr);
+      return "";
+    }
+  };
+
   // Ensure stats is defined before rendering with default safe values
   const safeStats = {
     balance: stats?.balance || 0,
@@ -150,6 +204,7 @@ export default function DashboardScreen() {
             color: t.category?.color || "#ccc",
             icon: t.category?.icon || "apps-outline",
           },
+          date: t.date,
         }))
       : [],
     budgetStatus: Array.isArray(stats?.budgetStatus)
@@ -185,66 +240,151 @@ export default function DashboardScreen() {
       );
     }
 
-    // Mostra solo le prime 5 transazioni
-    return safeStats.recentTransactions
-      .slice(0, 5)
-      .map((transaction, index) => {
-        // Protezione extra per amount undefined
-        const amount = transaction.amount || 0;
-        const isExpense = transaction.type === "EXPENSE";
+    // Funzione per eliminare una transazione
+    const handleDeleteTransaction = async (transactionId: string) => {
+      try {
+        await dispatch(deleteTransaction(transactionId)).unwrap();
+        Alert.alert("Successo", "Transazione eliminata con successo");
+        // Ricaricare i dati
+        onRefresh();
+      } catch (error) {
+        console.error("Errore durante l'eliminazione:", error);
+        Alert.alert("Errore", "Impossibile eliminare la transazione");
+      }
+    };
 
-        return (
-          <View
-            style={[
-              styles.transactionCard,
-              { backgroundColor: theme.colors.surface },
-            ]}
-            key={`transaction-${index}`}
-          >
-            <View style={styles.transactionIcon}>
-              <View
-                style={[
-                  styles.iconCircle,
-                  {
-                    backgroundColor:
-                      transaction.category?.color || theme.colors.secondary,
-                  },
-                ]}
-              >
-                <Ionicons name="card-outline" size={20} color="white" />
+    // Conferma prima di eliminare
+    const confirmDelete = (transactionId: string) => {
+      Alert.alert(
+        "Conferma eliminazione",
+        "Sei sicuro di voler eliminare questa transazione?",
+        [
+          {
+            text: "Annulla",
+            style: "cancel",
+          },
+          {
+            text: "Elimina",
+            onPress: () => handleDeleteTransaction(transactionId),
+            style: "destructive",
+          },
+        ]
+      );
+    };
+
+    // Una soluzione più semplice per le transazioni
+    const recentTransactions = safeStats.recentTransactions.slice(0, 5);
+
+    return (
+      <View>
+        {recentTransactions.map((transaction) => {
+          const amount = transaction.amount || 0;
+          const isExpense = transaction.type === "EXPENSE";
+          const iconName = transaction.category?.icon
+            ? getSafeIcon(transaction.category.icon)
+            : "default";
+
+          return (
+            <React.Fragment key={transaction.id}>
+              <View style={styles.transactionContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.transactionCard,
+                    { backgroundColor: theme.colors.surface },
+                  ]}
+                  onPress={() =>
+                    navigation.navigate("EditTransaction", {
+                      transactionId: transaction.id,
+                    })
+                  }
+                  onLongPress={() => confirmDelete(transaction.id)}
+                  delayLongPress={500}
+                >
+                  <View style={styles.transactionIcon}>
+                    <View
+                      style={[
+                        styles.iconCircle,
+                        {
+                          backgroundColor:
+                            transaction.category?.color ||
+                            theme.colors.secondary,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name={safeIcons[iconName]}
+                        size={20}
+                        color="white"
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.transactionDetails}>
+                    <Text
+                      style={[
+                        styles.transactionTitle,
+                        { color: theme.colors.text },
+                      ]}
+                    >
+                      {transaction.description || "Transazione"}
+                    </Text>
+                    <View style={styles.transactionSubtitle}>
+                      <Text
+                        style={[
+                          styles.transactionCategory,
+                          { color: theme.colors.textSecondary },
+                        ]}
+                      >
+                        {transaction.category?.name || "Non categorizzato"}
+                      </Text>
+                      {transaction.date && (
+                        <Text
+                          style={[
+                            styles.transactionDate,
+                            { color: theme.colors.textSecondary },
+                          ]}
+                        >
+                          {formatDate(transaction.date)}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.transactionAmount,
+                      {
+                        color: isExpense
+                          ? theme.colors.error
+                          : theme.colors.success,
+                      },
+                    ]}
+                  >
+                    {isExpense ? "-" : "+"}
+                    {formatCurrency(amount)}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableWithoutFeedback
+                  onPress={() => confirmDelete(transaction.id)}
+                >
+                  <View
+                    style={[
+                      styles.deleteHint,
+                      { backgroundColor: theme.colors.error },
+                    ]}
+                  >
+                    <Text style={{ color: "white", fontSize: 10 }}>
+                      Tieni premuto per eliminare
+                    </Text>
+                  </View>
+                </TouchableWithoutFeedback>
               </View>
-            </View>
-
-            <View style={styles.transactionDetails}>
-              <Text
-                style={[styles.transactionTitle, { color: theme.colors.text }]}
-              >
-                {transaction.description || "Transazione"}
-              </Text>
-              <Text
-                style={[
-                  styles.transactionCategory,
-                  { color: theme.colors.textSecondary },
-                ]}
-              >
-                {transaction.category?.name || "Non categorizzato"}
-              </Text>
-            </View>
-
-            <Text
-              style={[
-                styles.transactionAmount,
-                {
-                  color: isExpense ? theme.colors.error : theme.colors.success,
-                },
-              ]}
-            >
-              {isExpense ? "-" : "+"}
-              {formatCurrency(amount)}
-            </Text>
-          </View>
-        );
-      });
+            </React.Fragment>
+          );
+        })}
+      </View>
+    );
   };
 
   // Assicuriamoci che ogni budget abbia i campi necessari prima di renderizzarlo
@@ -460,7 +600,12 @@ export default function DashboardScreen() {
           <Text
             style={[styles.viewAll, { color: theme.colors.primary }]}
             onPress={() => {
-              /* Navigare alla pagina transazioni */
+              navigation.navigate("Transactions", {
+                screen: "TransactionsList",
+                params: {
+                  showFilters: true,
+                },
+              });
             }}
           >
             Vedi tutte
@@ -584,8 +729,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginBottom: 4,
   },
+  transactionSubtitle: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   transactionCategory: {
     fontSize: 14,
+  },
+  transactionDate: {
+    fontSize: 12,
+    marginLeft: 8,
   },
   transactionAmount: {
     fontSize: 16,
@@ -646,5 +799,19 @@ const styles = StyleSheet.create({
   },
   budgetTotal: {
     fontSize: 14,
+  },
+  transactionContainer: {
+    position: "relative",
+    marginBottom: 8,
+  },
+  deleteHint: {
+    position: "absolute",
+    bottom: -18,
+    right: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+    fontSize: 10,
+    opacity: 0.7,
   },
 });

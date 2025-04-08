@@ -204,7 +204,14 @@ export default function StatisticsScreen() {
           .toISOString()
           .split("T")[0];
 
-        await dispatch(fetchDashboardStats({ startDate, endDate }));
+        console.log(
+          "Caricamento dati statistiche dal",
+          startDate,
+          "al",
+          endDate
+        );
+
+        // Prima carica le transazioni, poi i dati della dashboard
         await dispatch(
           fetchTransactions({
             startDate,
@@ -212,6 +219,8 @@ export default function StatisticsScreen() {
             limit: 100,
           })
         );
+
+        await dispatch(fetchDashboardStats({ startDate, endDate }));
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       }
@@ -585,17 +594,18 @@ const SummaryValue = styled.Text<{ isNegative?: boolean }>`
 `;
 
 const SummaryDivider = styled.View`
-  width: 1px;
-  height: 100%;
+  height: 1px;
   background-color: ${({ theme }) => theme.colors.border};
+  margin: ${({ theme }) => theme.spacing.md}px 0;
 `;
 
 const ViewSelector = styled.View`
   flex-direction: row;
-  margin-bottom: ${({ theme }) => theme.spacing.md}px;
+  background-color: ${({ theme }) => theme.colors.surface};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   overflow: hidden;
   border: 1px solid ${({ theme }) => theme.colors.border};
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;
 
 interface ViewButtonProps {
@@ -604,7 +614,7 @@ interface ViewButtonProps {
 
 const ViewButton = styled.TouchableOpacity<ViewButtonProps>`
   flex: 1;
-  padding: ${({ theme }) => theme.spacing.md}px;
+  padding: ${({ theme }) => theme.spacing.sm}px;
   align-items: center;
   background-color: ${({ theme, isSelected }) =>
     isSelected ? theme.colors.primary : "transparent"};
@@ -615,8 +625,7 @@ interface ViewButtonTextProps {
 }
 
 const ViewButtonText = styled.Text<ViewButtonTextProps>`
-  font-size: ${({ theme }) => theme.typography.fontSizes.md}px;
-  font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm}px;
   color: ${({ theme, isSelected }) =>
     isSelected ? theme.colors.surface : theme.colors.textSecondary};
 `;
@@ -626,42 +635,49 @@ const ChartContainer = styled.View`
   border-radius: ${({ theme }) => theme.borderRadius.lg}px;
   padding: ${({ theme }) => theme.spacing.md}px;
   margin-bottom: ${({ theme }) => theme.spacing.md}px;
+  shadow-opacity: 0.1;
+  shadow-radius: 10px;
+  shadow-color: #000;
+  shadow-offset: 0px 5px;
+  elevation: 3;
 `;
 
 const PieChartVisual = styled.View`
-  margin-bottom: ${({ theme }) => theme.spacing.md}px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 const PieChartPlaceholder = styled.View`
+  flex: 1;
   align-items: center;
   justify-content: center;
-  padding: ${({ theme }) => theme.spacing.lg}px;
-  position: relative;
 `;
 
 const TotalAmount = styled.Text`
-  position: absolute;
   font-size: ${({ theme }) => theme.typography.fontSizes.md}px;
   font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
   color: ${({ theme }) => theme.colors.text};
+  margin-top: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const Legend = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   margin-top: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const LegendItem = styled.View`
   flex-direction: row;
   align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing.xs}px;
 `;
 
-const ColorIndicator = styled.View<{ color: string }>`
-  width: 16px;
-  height: 16px;
-  border-radius: 8px;
-  background-color: ${({ color }) => color};
-  margin-right: ${({ theme }) => theme.spacing.sm}px;
+const ColorIndicator = styled.View`
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  margin-right: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const LegendText = styled.Text`
@@ -670,7 +686,7 @@ const LegendText = styled.Text`
 `;
 
 const EmptyState = styled.View`
-  padding: ${({ theme }) => theme.spacing.xl}px;
+  flex: 1;
   align-items: center;
   justify-content: center;
 `;
@@ -678,35 +694,37 @@ const EmptyState = styled.View`
 const EmptyStateText = styled.Text`
   font-size: ${({ theme }) => theme.typography.fontSizes.md}px;
   color: ${({ theme }) => theme.colors.textSecondary};
-  text-align: center;
+  margin-top: ${({ theme }) => theme.spacing.md}px;
 `;
 
-// Nuovi componenti stilizzati per la sezione budget
+const EmptyStateCard = styled.View`
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  padding: ${({ theme }) => theme.spacing.md}px;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
+  align-items: center;
+  justify-content: center;
+`;
+
 const SectionTitle = styled.Text`
-  font-size: 18px;
-  font-weight: 700;
+  font-size: ${({ theme }) => theme.typography.fontSizes.lg}px;
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
   color: ${({ theme }) => theme.colors.text};
-  margin-top: 24px;
-  margin-bottom: 12px;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const BudgetCard = styled.View`
   background-color: ${({ theme }) => theme.colors.surface};
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  shadow-color: #000;
-  shadow-offset: 0px 2px;
-  shadow-opacity: 0.1;
-  shadow-radius: 3px;
-  elevation: 2;
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  padding: ${({ theme }) => theme.spacing.md}px;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const BudgetHeader = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const CategoryInfo = styled.View`
@@ -718,57 +736,45 @@ const CategoryDot = styled.View`
   width: 12px;
   height: 12px;
   border-radius: 6px;
-  margin-right: 8px;
+  margin-right: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const BudgetCategory = styled.Text`
-  font-size: 16px;
-  font-weight: 500;
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm}px;
   color: ${({ theme }) => theme.colors.text};
 `;
 
-interface BudgetPercentageProps {
-  percentage: boolean;
-}
-
-const BudgetPercentage = styled.Text<BudgetPercentageProps>`
-  font-size: 16px;
-  font-weight: 500;
+const BudgetPercentage = styled.Text<{ percentage: boolean }>`
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm}px;
   color: ${({ theme, percentage }) =>
-    percentage ? "#ef4444" : theme.colors.text};
+    percentage ? theme.colors.error : theme.colors.success};
 `;
 
 const ProgressBarContainer = styled.View`
-  height: 8px;
-  border-radius: 4px;
-  background-color: ${({ theme }) => theme.colors.border};
-  margin-bottom: 8px;
+  height: 12px;
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-radius: 6px;
   overflow: hidden;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;
 
 const ProgressBar = styled.View`
   height: 100%;
+  background-color: ${({ theme }) => theme.colors.primary};
 `;
 
 const BudgetValues = styled.View`
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
 `;
 
 const BudgetSpent = styled.Text`
-  font-size: 14px;
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm}px;
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 const BudgetTotal = styled.Text`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-const EmptyStateCard = styled.View`
-  background-color: ${({ theme }) => theme.colors.surface};
-  border-radius: 12px;
-  padding: 20px;
-  align-items: center;
-  margin-bottom: 12px;
+  font-size: ${({ theme }) => theme.typography.fontSizes.sm}px;
+  color: ${({ theme }) => theme.colors.text};
 `;

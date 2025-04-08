@@ -78,18 +78,39 @@ export const transactionService = {
 
   create: (transactionData: CreateTransactionData) => {
     // Crea una copia dei dati
-    const formattedData = { ...transactionData } as any;
+    const formattedData = { ...transactionData };
 
-    // Converti l'importo in una stringa con esattamente 2 decimali
-    if (typeof formattedData.amount === "number") {
+    // Assicuriamoci che amount sia un numero con esattamente 2 decimali
+    // Convertiamolo in stringa per rispettare il formato richiesto dall'API
+    if (typeof formattedData.amount !== "number") {
+      console.error("Errore: amount deve essere un numero");
+    } else {
+      // Convertiamo il numero in stringa con 2 decimali
       formattedData.amount = formattedData.amount.toFixed(2);
     }
 
+    console.log("Invio transazione al server:", formattedData);
     return apiService.post<Transaction>("/transactions", formattedData);
   },
 
-  update: (id: string, transactionData: UpdateTransactionData) =>
-    apiService.patch<Transaction>(`/transactions/${id}`, transactionData),
+  update: (id: string, transactionData: UpdateTransactionData) => {
+    // Crea una copia dei dati
+    const formattedData = { ...transactionData };
+
+    // Assicuriamoci che amount sia un numero con esattamente 2 decimali
+    // Convertiamolo in stringa per rispettare il formato richiesto dall'API
+    if (transactionData.amount !== undefined) {
+      if (typeof formattedData.amount !== "number") {
+        console.error("Errore: amount deve essere un numero");
+      } else {
+        // Convertiamo il numero in stringa con 2 decimali
+        formattedData.amount = formattedData.amount.toFixed(2);
+      }
+    }
+
+    console.log("Aggiornamento transazione:", id, formattedData);
+    return apiService.patch<Transaction>(`/transactions/${id}`, formattedData);
+  },
 
   delete: (id: string) => apiService.delete<void>(`/transactions/${id}`),
 };

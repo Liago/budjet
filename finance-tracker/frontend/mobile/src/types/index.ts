@@ -50,7 +50,7 @@ export interface Transaction {
 }
 
 export interface CreateTransactionData {
-  amount: number;
+  amount: number | string;
   date: string;
   description: string;
   categoryId: string;
@@ -59,7 +59,7 @@ export interface CreateTransactionData {
 }
 
 export interface UpdateTransactionData {
-  amount?: number;
+  amount?: number | string;
   date?: string;
   description?: string;
   categoryId?: string;

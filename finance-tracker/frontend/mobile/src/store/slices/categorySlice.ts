@@ -92,6 +92,92 @@ export const deleteCategory = createAsyncThunk(
   }
 );
 
+export const fetchCategoriesByType = createAsyncThunk(
+  "categories/fetchByType",
+  async (type: "INCOME" | "EXPENSE", { rejectWithValue }) => {
+    try {
+      console.log(`Fetching categories with type ${type}`);
+      const response = await categoryService.getAll();
+
+      // Mappa di categorie comuni per tipo per l'inferenza
+      const expenseCategories = [
+        "grocery",
+        "alimentari",
+        "spesa",
+        "bar",
+        "restaurant",
+        "ristorante",
+        "car",
+        "auto",
+        "transport",
+        "trasporti",
+        "health",
+        "salute",
+        "home",
+        "casa",
+        "utilities",
+        "bollette",
+        "pets",
+        "animali",
+        "shopping",
+        "acquisti",
+        "technology",
+        "tecnologia",
+        "taxes",
+        "tasse",
+      ];
+
+      const incomeCategories = [
+        "salary",
+        "stipendio",
+        "bonus",
+        "gift",
+        "regalo",
+        "investment",
+        "investimento",
+        "refund",
+        "rimborso",
+        "special",
+        "speciale",
+      ];
+
+      // Filtra le categorie in base al tipo esplicito o inferito
+      const filteredCategories = response.filter((category) => {
+        // Se la categoria ha un tipo esplicito
+        if (category.type) {
+          return category.type.toUpperCase() === type.toUpperCase();
+        }
+
+        // Altrimenti, inferiamo il tipo dal nome della categoria
+        const categoryName = (category.name || "").toLowerCase();
+
+        // Verifica se è una categoria di spesa o entrata in base al nome
+        if (type === "EXPENSE") {
+          return (
+            expenseCategories.some((name) =>
+              categoryName.includes(name.toLowerCase())
+            ) || categoryName.includes("uncategorized")
+          );
+        } else {
+          return incomeCategories.some((name) =>
+            categoryName.includes(name.toLowerCase())
+          );
+        }
+      });
+
+      console.log(
+        `Found ${filteredCategories.length} categories of type ${type}`
+      );
+      return filteredCategories;
+    } catch (error: any) {
+      console.error("Error in fetchCategoriesByType:", error);
+      return rejectWithValue(
+        error.response?.data?.message || `Failed to fetch ${type} categories`
+      );
+    }
+  }
+);
+
 const categorySlice = createSlice({
   name: "categories",
   initialState,
@@ -205,6 +291,23 @@ const categorySlice = createSlice({
         }
       )
       .addCase(deleteCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Fetch Categories By Type
+      .addCase(fetchCategoriesByType.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchCategoriesByType.fulfilled,
+        (state, action: PayloadAction<Category[]>) => {
+          state.isLoading = false;
+          state.categories = action.payload;
+        }
+      )
+      .addCase(fetchCategoriesByType.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

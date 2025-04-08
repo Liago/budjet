@@ -15,6 +15,7 @@ import AddTransactionScreen from "../screens/add-transaction";
 import SettingsScreen from "../screens/settings";
 import StatisticsScreen from "../screens/statistics";
 import { LoadingScreen } from "../components/common/LoadingScreen";
+import TransactionsScreen from "../screens/transactions";
 
 // Types
 export type RootStackParamList = {
@@ -22,6 +23,9 @@ export type RootStackParamList = {
   MainTabs: undefined;
   BudgetDetail: { budgetId: string };
   AddTransaction: { budgetId?: string };
+  Transactions: { screen: string; params?: any };
+  TransactionsList: { showFilters?: boolean };
+  EditTransaction: { transactionId: string };
 };
 
 export type AuthStackParamList = {
@@ -184,6 +188,16 @@ export default function Navigation() {
             name="AddTransaction"
             component={AddTransactionScreen}
             options={{ title: "Aggiungi Transazione" }}
+          />
+          <Stack.Screen
+            name="Transactions"
+            component={TransactionsScreen}
+            options={{ title: "Transazioni" }}
+          />
+          <Stack.Screen
+            name="EditTransaction"
+            component={AddTransactionScreen}
+            options={{ title: "Modifica Transazione" }}
           />
         </>
       )}

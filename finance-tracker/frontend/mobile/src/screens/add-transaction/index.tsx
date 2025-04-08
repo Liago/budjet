@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,23 +16,30 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useAppDispatch, useAppSelector } from "../../store";
-import { createTransaction } from "../../store/slices/transactionSlice";
+import {
+  createTransaction,
+  updateTransaction,
+  fetchTransactionById,
+} from "../../store/slices/transactionSlice";
 import {
   fetchCategories,
   createCategory,
+  fetchCategoriesByType,
 } from "../../store/slices/categorySlice";
 import { Input } from "../../components/common/input";
 import { Button } from "../../components/common/button";
 import { LoadingScreen } from "../../components/common/LoadingScreen";
 import { RootStackParamList } from "../../navigation";
+import { fetchDefaultCategoriesByType } from "../../utils/defaultCategories";
 
 type AddTransactionScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "AddTransaction"
+  "AddTransaction" | "EditTransaction"
 >;
+
 type AddTransactionScreenRouteProp = RouteProp<
   RootStackParamList,
-  "AddTransaction"
+  "AddTransaction" | "EditTransaction"
 >;
 
 export default function AddTransactionScreen() {
@@ -41,12 +48,21 @@ export default function AddTransactionScreen() {
   const route = useRoute<AddTransactionScreenRouteProp>();
   const dispatch = useAppDispatch();
 
-  const { isLoading: isTransactionLoading, error: transactionError } =
-    useAppSelector((state) => state.transaction);
+  // Determina se siamo in modalità modifica - NON usare route.name direttamente in hooks condizionali
+  const isEditMode = route.name === "EditTransaction";
+  const transactionId = isEditMode ? route.params?.transactionId : null;
+
+  const {
+    transactions,
+    selectedTransaction,
+    isLoading: isTransactionLoading,
+    error: transactionError,
+  } = useAppSelector((state) => state.transaction);
   const { categories, isLoading: isCategoriesLoading } = useAppSelector(
     (state) => state.category
   );
 
+  // Definiamo tutti gli stati all'inizio
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date());
@@ -56,30 +72,88 @@ export default function AddTransactionScreen() {
     null
   );
   const [showCategorySelector, setShowCategorySelector] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Form validation errors
   const [descriptionError, setDescriptionError] = useState("");
   const [amountError, setAmountError] = useState("");
   const [categoryError, setCategoryError] = useState("");
 
+  // Carica tutte le categorie all'inizio - useEffect sempre eseguito
   useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Carica prima le categorie generali
+        console.log("Caricamento categorie iniziale...");
+        await dispatch(fetchCategories()).unwrap();
 
-  // Aggiungi console log per le categorie caricate
+        // Poi carica le categorie specifiche per il tipo corrente
+        console.log("Caricamento categorie per tipo:", type);
+        await dispatch(fetchCategoriesByType(type)).unwrap();
+
+        // Se siamo in modalità modifica, carica la transazione
+        if (isEditMode && transactionId) {
+          console.log("Caricamento transazione con ID:", transactionId);
+          await dispatch(fetchTransactionById(transactionId)).unwrap();
+        }
+      } catch (error) {
+        console.error("Errore durante il caricamento iniziale:", error);
+        Alert.alert(
+          "Errore",
+          "Impossibile caricare i dati necessari. Riprova più tardi."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [dispatch, isEditMode, transactionId, type]);
+
+  // Aggiorna il form quando la transazione viene caricata - sempre chiamato
   useEffect(() => {
-    console.log("Categorie caricate:", categories);
-    console.log("Tipo transazione corrente:", type);
-    console.log(
-      "Categorie filtrate:",
-      categories.filter((category) => category.type === type)
+    if (isEditMode && selectedTransaction) {
+      setDescription(selectedTransaction.description || "");
+      setAmount(
+        selectedTransaction.amount ? selectedTransaction.amount.toString() : ""
+      );
+      setDate(
+        selectedTransaction.date
+          ? new Date(selectedTransaction.date)
+          : new Date()
+      );
+      setType(selectedTransaction.type || "EXPENSE");
+      setSelectedCategoryId(selectedTransaction.categoryId || null);
+    }
+  }, [isEditMode, selectedTransaction]);
+
+  // Log per le categorie caricate - sempre chiamato
+  useEffect(() => {
+    console.log("Categorie caricate totali:", categories.length);
+
+    const relevantCategories = categories.filter(
+      (category) => category.type === type
     );
+    console.log(`Categorie di tipo ${type}:`, relevantCategories.length);
 
-    // Se non ci sono categorie, creiamo alcune categorie predefinite
-    if (categories.length === 0 && !isCategoriesLoading) {
+    // Verifica se ci sono categorie solo quando abbiamo finito di caricare
+    // e solo se non ci sono categorie per il tipo specifico
+    // E SOLO SE NON SIAMO IN MODALITÀ MODIFICA CON UNA CATEGORIA GIÀ SELEZIONATA
+    if (
+      !isCategoriesLoading &&
+      !isLoading &&
+      relevantCategories.length === 0 &&
+      !(isEditMode && selectedCategoryId)
+    ) {
+      console.log(
+        `Nessuna categoria di tipo ${type} trovata, offrendo di creare predefinite`
+      );
       Alert.alert(
         "Nessuna categoria trovata",
-        "Vuoi creare alcune categorie predefinite?",
+        `Vuoi creare alcune categorie di ${
+          type === "EXPENSE" ? "spesa" : "entrata"
+        } predefinite?`,
         [
           {
             text: "No",
@@ -87,68 +161,163 @@ export default function AddTransactionScreen() {
           },
           {
             text: "Sì",
-            onPress: () => createDefaultCategories(),
+            onPress: async () => {
+              try {
+                setIsLoading(true);
+                await fetchDefaultCategoriesByType(dispatch, type);
+                // Ricarichiamo le categorie dopo aver creato quelle predefinite
+                await dispatch(fetchCategoriesByType(type)).unwrap();
+              } catch (error) {
+                console.error("Errore creazione categorie predefinite:", error);
+              } finally {
+                setIsLoading(false);
+              }
+            },
           },
         ]
       );
     }
-  }, [categories, type, isCategoriesLoading]);
+  }, [
+    categories,
+    type,
+    isCategoriesLoading,
+    dispatch,
+    isLoading,
+    isEditMode,
+    selectedCategoryId,
+  ]);
 
-  // Funzione per creare le categorie predefinite
-  const createDefaultCategories = async () => {
-    try {
-      // Categorie di spesa
-      const expenseCategories = [
-        { name: "Alimentari", type: "EXPENSE", color: "#FF5733" },
-        { name: "Trasporti", type: "EXPENSE", color: "#33A8FF" },
-        { name: "Casa", type: "EXPENSE", color: "#33FF57" },
-        { name: "Svago", type: "EXPENSE", color: "#FF33A8" },
-        { name: "Salute", type: "EXPENSE", color: "#A833FF" },
-      ];
-
-      // Categorie di entrata
-      const incomeCategories = [
-        { name: "Stipendio", type: "INCOME", color: "#57FF33" },
-        { name: "Bonus", type: "INCOME", color: "#33FFA8" },
-        { name: "Regali", type: "INCOME", color: "#A8FF33" },
-      ];
-
-      // Crea le categorie
-      const categories = [...expenseCategories, ...incomeCategories];
-
-      // Mostra indicatore di caricamento
-      Alert.alert(
-        "Creazione categorie",
-        "Sto creando le categorie predefinite..."
-      );
-
-      // Crea le categorie una alla volta
-      for (const category of categories) {
-        await dispatch(createCategory(category)).unwrap();
-      }
-
-      // Ricarica le categorie dopo averle create
-      await dispatch(fetchCategories()).unwrap();
-
-      Alert.alert("Successo", "Categorie predefinite create con successo!");
-    } catch (error) {
-      console.error(
-        "Errore nella creazione delle categorie predefinite:",
-        error
-      );
-      Alert.alert(
-        "Errore",
-        "Non è stato possibile creare le categorie predefinite"
-      );
-    }
-  };
-
-  // Show alert for API errors
+  // Show alert for API errors - sempre chiamato
   useEffect(() => {
     if (transactionError) {
       Alert.alert("Errore", transactionError);
     }
   }, [transactionError]);
+
+  // Filtra le categorie in base al tipo selezionato - Creiamo un valore memorizzato ma sempre eseguito
+  const filteredCategories = useMemo(() => {
+    // Assicurati che tipo sia una stringa maiuscola
+    const currentType = type.toUpperCase();
+
+    // Se le categorie non sono ancora caricate, ritorna un array vuoto
+    if (!categories || categories.length === 0) {
+      return [];
+    }
+
+    console.log(`Filtraggio categorie per tipo: ${currentType}`);
+    console.log(`Categorie disponibili: ${categories.length}`);
+
+    // Debug delle categorie caricate
+    categories.forEach((cat, index) => {
+      console.log(
+        `Categoria ${index}: ID=${cat.id}, Nome=${cat.name}, Tipo=${
+          cat.type || "undefined"
+        }`
+      );
+    });
+
+    // Mappa di categorie comuni per tipo
+    const expenseCategories = [
+      "grocery",
+      "alimentari",
+      "spesa",
+      "bar",
+      "restaurant",
+      "ristorante",
+      "car",
+      "auto",
+      "transport",
+      "trasporti",
+      "health",
+      "salute",
+      "home",
+      "casa",
+      "utilities",
+      "bollette",
+      "pets",
+      "animali",
+      "shopping",
+      "acquisti",
+      "technology",
+      "tecnologia",
+      "taxes",
+      "tasse",
+    ];
+
+    const incomeCategories = [
+      "salary",
+      "stipendio",
+      "bonus",
+      "gift",
+      "regalo",
+      "investment",
+      "investimento",
+      "refund",
+      "rimborso",
+      "special",
+      "speciale",
+    ];
+
+    // Filtra le categorie considerando sia il tipo esplicito che l'inferenza dal nome
+    const filtered = categories.filter((category) => {
+      if (!category) return false;
+
+      // Se la categoria ha un tipo esplicito, utilizziamolo per il confronto
+      if (category.type) {
+        const categoryType = category.type.toUpperCase();
+        const isMatch = categoryType === currentType;
+        console.log(
+          `Categoria ${category.name} con tipo esplicito ${categoryType} -> match: ${isMatch}`
+        );
+        return isMatch;
+      }
+
+      // Altrimenti, inferiamo il tipo dal nome della categoria
+      const categoryName = category.name.toLowerCase();
+
+      // Verifica se il nome della categoria è presente nella lista dei nomi comuni per le spese
+      const isExpenseName = expenseCategories.some((name) =>
+        categoryName.includes(name.toLowerCase())
+      );
+
+      // Verifica se il nome della categoria è presente nella lista dei nomi comuni per le entrate
+      const isIncomeName = incomeCategories.some((name) =>
+        categoryName.includes(name.toLowerCase())
+      );
+
+      // Se è stato identificato chiaramente come spesa o entrata
+      if (isExpenseName && !isIncomeName) {
+        console.log(`Categoria ${category.name} inferita come EXPENSE`);
+        return currentType === "EXPENSE";
+      }
+
+      if (isIncomeName && !isExpenseName) {
+        console.log(`Categoria ${category.name} inferita come INCOME`);
+        return currentType === "INCOME";
+      }
+
+      // Se non riusciamo a determinare chiaramente, mostriamo la categoria in entrambi i tipi
+      // In alternativa, potremmo considerare "Uncategorized" come una spesa
+      if (categoryName.includes("uncategorized")) {
+        console.log(`Categoria ${category.name} mostrata come spesa generica`);
+        return currentType === "EXPENSE";
+      }
+
+      // Mostro per debug le categorie che non riusciamo a classificare
+      console.log(
+        `Categoria ${category.name} non classificata chiaramente - mostrata in entrambi i tipi`
+      );
+      return true; // Mostra in entrambi i tipi
+    });
+
+    console.log(`Found ${filtered.length} categories of type ${currentType}`);
+    return filtered;
+  }, [categories, type]);
+
+  // Trova la categoria selezionata - Deve essere dopo filteredCategories
+  const selectedCategory = useMemo(() => {
+    return categories.find((category) => category.id === selectedCategoryId);
+  }, [categories, selectedCategoryId]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
@@ -218,13 +387,15 @@ export default function AddTransactionScreen() {
       console.log("Usando il tipo dalla categoria:", effectiveType);
     }
 
-    // Formatta l'importo come numero con 2 decimali, poi riconvertilo a numero
+    // Formatta l'importo come number con 2 decimali
     const parsedAmount = parseFloat(amount.replace(",", "."));
-    const formattedAmount = parseFloat(parsedAmount.toFixed(2));
+    // Utilizziamo Math.round per arrotondare a 2 decimali in modo preciso
+    // moltiplicando e dividendo per 100 evitiamo problemi di precisione con i numeri in virgola mobile
+    const formattedAmount = Math.round(parsedAmount * 100) / 100;
 
     const transactionData = {
       description,
-      amount: formattedAmount, // Invia come numero con precisione due decimali
+      amount: formattedAmount, // Invia come stringa con precisione due decimali
       date: date.toISOString().split("T")[0],
       type: effectiveType,
       categoryId: selectedCategoryId!,
@@ -233,12 +404,26 @@ export default function AddTransactionScreen() {
     console.log("Dati transazione da inviare:", transactionData);
 
     try {
-      await dispatch(createTransaction(transactionData)).unwrap();
-      Alert.alert("Successo", "Transazione aggiunta con successo", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
+      if (isEditMode && transactionId) {
+        // Modalità modifica
+        await dispatch(
+          updateTransaction({
+            id: transactionId,
+            data: transactionData,
+          })
+        ).unwrap();
+        Alert.alert("Successo", "Transazione aggiornata con successo", [
+          { text: "OK", onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        // Modalità aggiunta
+        await dispatch(createTransaction(transactionData)).unwrap();
+        Alert.alert("Successo", "Transazione aggiunta con successo", [
+          { text: "OK", onPress: () => navigation.goBack() },
+        ]);
+      }
     } catch (error: any) {
-      console.error("Errore creazione transazione:", error);
+      console.error("Errore gestione transazione:", error);
       Alert.alert(
         "Errore",
         error?.message ||
@@ -247,33 +432,22 @@ export default function AddTransactionScreen() {
     }
   };
 
-  if (isCategoriesLoading) {
-    return <LoadingScreen message="Caricamento categorie..." />;
+  // Invece di un return precoce, renderizziamo un componente di caricamento se necessario
+  if (
+    isLoading ||
+    isCategoriesLoading ||
+    (isEditMode && isTransactionLoading && !selectedTransaction)
+  ) {
+    return (
+      <LoadingScreen
+        message={
+          isEditMode ? "Caricamento transazione..." : "Caricamento categorie..."
+        }
+      />
+    );
   }
 
-  // Filtra le categorie in base al tipo selezionato
-  const incomeCategories = ["Salary", "Bonus", "Income", "Special"];
-  const filteredCategories = categories.filter((category) => {
-    // Se la categoria ha già un tipo definito, usalo per il filtro
-    if (category.type) {
-      return category.type.toUpperCase() === type || category.type === type;
-    }
-
-    // Altrimenti, assegna un tipo basato sul nome della categoria
-    // Le categorie con nomi specifici vengono considerate INCOME, tutte le altre EXPENSE
-    const inferredType = incomeCategories.includes(category.name)
-      ? "INCOME"
-      : "EXPENSE";
-
-    // Confronta il tipo inferito con il tipo selezionato
-    return inferredType === type;
-  });
-
-  // Trova la categoria selezionata
-  const selectedCategory = categories.find(
-    (category) => category.id === selectedCategoryId
-  );
-
+  // Il rendering principale ora avviene sempre, con gli stessi hooks eseguiti in ogni caso
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -483,7 +657,7 @@ export default function AddTransactionScreen() {
             style={{ flex: 1, marginRight: 8 }}
           />
           <Button
-            title="Salva"
+            title={isEditMode ? "Aggiorna" : "Salva"}
             isLoading={isTransactionLoading}
             onPress={handleSubmit}
             style={{ flex: 1, marginLeft: 8 }}
