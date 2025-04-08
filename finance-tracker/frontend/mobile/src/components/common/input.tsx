@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
-import { TextInput, TextInputProps, View, TouchableOpacity } from 'react-native';
-import styled from 'styled-components/native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from "react";
+import {
+  TextInput,
+  TextInputProps,
+  View,
+  TouchableOpacity,
+} from "react-native";
+import styled, { useTheme } from "styled-components/native";
+import { Ionicons } from "@expo/vector-icons";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -10,7 +15,7 @@ interface InputProps extends TextInputProps {
   rightIcon?: string;
   onRightIconPress?: () => void;
   isPassword?: boolean;
-  variant?: 'default' | 'filled';
+  variant?: "default" | "filled";
   fullWidth?: boolean;
 }
 
@@ -21,12 +26,13 @@ export function Input({
   rightIcon,
   onRightIconPress,
   isPassword = false,
-  variant = 'default',
+  variant = "default",
   fullWidth = true,
   ...rest
 }: InputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(!isPassword);
+  const theme = useTheme();
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -52,9 +58,15 @@ export function Input({
       return (
         <IconContainer onPress={togglePasswordVisibility}>
           <Ionicons
-            name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+            name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
             size={20}
-            color={error ? 'error' : isFocused ? 'primary' : 'textSecondary'}
+            color={
+              error
+                ? theme.colors.error
+                : isFocused
+                ? theme.colors.primary
+                : theme.colors.textSecondary
+            }
           />
         </IconContainer>
       );
@@ -66,7 +78,13 @@ export function Input({
           <Ionicons
             name={rightIcon as any}
             size={20}
-            color={error ? 'error' : isFocused ? 'primary' : 'textSecondary'}
+            color={
+              error
+                ? theme.colors.error
+                : isFocused
+                ? theme.colors.primary
+                : theme.colors.textSecondary
+            }
           />
         </IconContainer>
       );
@@ -88,24 +106,30 @@ export function Input({
             <Ionicons
               name={leftIcon as any}
               size={20}
-              color={error ? 'error' : isFocused ? 'primary' : 'textSecondary'}
+              color={
+                error
+                  ? theme.colors.error
+                  : isFocused
+                  ? theme.colors.primary
+                  : theme.colors.textSecondary
+              }
             />
           </LeftIconContainer>
         )}
-        
+
         <StyledInput
           onFocus={handleFocus}
           onBlur={handleBlur}
           secureTextEntry={isPassword && !isPasswordVisible}
-          placeholderTextColor="textSecondary"
+          placeholderTextColor={theme.colors.textSecondary}
           hasLeftIcon={!!leftIcon}
           hasRightIcon={!!rightIcon || isPassword}
           {...rest}
         />
-        
+
         {renderRightIcon()}
       </InputContainer>
-      
+
       {error && <ErrorText>{error}</ErrorText>}
     </Container>
   );
@@ -113,7 +137,7 @@ export function Input({
 
 const Container = styled.View<{ fullWidth: boolean }>`
   margin-bottom: ${({ theme }) => theme.spacing.md}px;
-  width: ${({ fullWidth }) => (fullWidth ? '100%' : 'auto')};
+  width: ${({ fullWidth }) => (fullWidth ? "100%" : "auto")};
 `;
 
 const Label = styled.Text<{ error: boolean }>`
@@ -126,7 +150,7 @@ const Label = styled.Text<{ error: boolean }>`
 interface InputContainerProps {
   isFocused: boolean;
   hasError: boolean;
-  variant: 'default' | 'filled';
+  variant: "default" | "filled";
 }
 
 const InputContainer = styled.View<InputContainerProps>`
@@ -134,20 +158,20 @@ const InputContainer = styled.View<InputContainerProps>`
   align-items: center;
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   overflow: hidden;
-  
+
   ${({ variant, theme }) =>
-    variant === 'filled'
+    variant === "filled"
       ? `background-color: ${theme.colors.background};`
       : `
         background-color: transparent;
         border-width: 1px;
       `}
-  
+
   ${({ isFocused, hasError, theme }) => {
     if (hasError) {
       return `border-color: ${theme.colors.error};`;
     }
-    
+
     return isFocused
       ? `border-color: ${theme.colors.primary};`
       : `border-color: ${theme.colors.border};`;
@@ -174,9 +198,9 @@ const StyledInput = styled.TextInput<StyledInputProps>`
   color: ${({ theme }) => theme.colors.text};
   font-size: ${({ theme }) => theme.typography.fontSizes.md}px;
   padding: ${({ theme }) => theme.spacing.sm}px;
-  
-  ${({ hasLeftIcon }) => hasLeftIcon && 'padding-left: 0;'}
-  ${({ hasRightIcon }) => hasRightIcon && 'padding-right: 0;'}
+
+  ${({ hasLeftIcon }) => hasLeftIcon && "padding-left: 0;"}
+  ${({ hasRightIcon }) => hasRightIcon && "padding-right: 0;"}
 `;
 
 const ErrorText = styled.Text`

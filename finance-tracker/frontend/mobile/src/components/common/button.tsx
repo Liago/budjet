@@ -1,12 +1,12 @@
-import React from 'react';
-import { ActivityIndicator, TouchableOpacityProps, View } from 'react-native';
-import styled from 'styled-components/native';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { ActivityIndicator, TouchableOpacityProps, View } from "react-native";
+import styled, { useTheme } from "styled-components/native";
+import { Ionicons } from "@expo/vector-icons";
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
-  variant?: 'primary' | 'secondary' | 'outline' | 'text';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline" | "text";
+  size?: "small" | "medium" | "large";
   isLoading?: boolean;
   isDisabled?: boolean;
   leftIcon?: string;
@@ -16,8 +16,8 @@ interface ButtonProps extends TouchableOpacityProps {
 
 export function Button({
   title,
-  variant = 'primary',
-  size = 'medium',
+  variant = "primary",
+  size = "medium",
   isLoading = false,
   isDisabled = false,
   leftIcon,
@@ -25,12 +25,18 @@ export function Button({
   fullWidth = false,
   ...rest
 }: ButtonProps) {
+  const theme = useTheme();
+
   const getIconSize = () => {
     switch (size) {
-      case 'small': return 16;
-      case 'medium': return 20;
-      case 'large': return 24;
-      default: return 20;
+      case "small":
+        return 16;
+      case "medium":
+        return 20;
+      case "large":
+        return 24;
+      default:
+        return 20;
     }
   };
 
@@ -45,7 +51,11 @@ export function Button({
       {isLoading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'outline' || variant === 'text' ? 'primary' : 'white'}
+          color={
+            variant === "outline" || variant === "text"
+              ? theme.colors.primary
+              : theme.colors.surface
+          }
         />
       ) : (
         <ButtonContent>
@@ -55,9 +65,9 @@ export function Button({
                 name={leftIcon as any}
                 size={getIconSize()}
                 color={
-                  variant === 'outline' || variant === 'text'
-                    ? 'primary'
-                    : 'white'
+                  variant === "outline" || variant === "text"
+                    ? theme.colors.primary
+                    : theme.colors.surface
                 }
               />
             </IconContainer>
@@ -71,9 +81,9 @@ export function Button({
                 name={rightIcon as any}
                 size={getIconSize()}
                 color={
-                  variant === 'outline' || variant === 'text'
-                    ? 'primary'
-                    : 'white'
+                  variant === "outline" || variant === "text"
+                    ? theme.colors.primary
+                    : theme.colors.surface
                 }
               />
             </IconContainer>
@@ -85,8 +95,8 @@ export function Button({
 }
 
 interface StyledButtonProps {
-  variant: 'primary' | 'secondary' | 'outline' | 'text';
-  size: 'small' | 'medium' | 'large';
+  variant: "primary" | "secondary" | "outline" | "text";
+  size: "small" | "medium" | "large";
   fullWidth: boolean;
 }
 
@@ -94,60 +104,60 @@ const ButtonContainer = styled.TouchableOpacity<StyledButtonProps>`
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   justify-content: center;
   align-items: center;
-  
+
   ${({ variant, theme }) => {
     switch (variant) {
-      case 'primary':
+      case "primary":
         return `
           background-color: ${theme.colors.primary};
           border: none;
         `;
-      case 'secondary':
+      case "secondary":
         return `
           background-color: ${theme.colors.secondary};
           border: none;
         `;
-      case 'outline':
+      case "outline":
         return `
           background-color: transparent;
           border: 1px solid ${theme.colors.primary};
         `;
-      case 'text':
+      case "text":
         return `
           background-color: transparent;
           border: none;
           padding: 0;
         `;
       default:
-        return '';
+        return "";
     }
   }}
-  
+
   ${({ size, theme, variant }) => {
-    if (variant === 'text') return '';
-    
+    if (variant === "text") return "";
+
     switch (size) {
-      case 'small':
+      case "small":
         return `
           padding: ${theme.spacing.xs}px ${theme.spacing.sm}px;
           min-height: 32px;
         `;
-      case 'medium':
+      case "medium":
         return `
           padding: ${theme.spacing.sm}px ${theme.spacing.md}px;
           min-height: 44px;
         `;
-      case 'large':
+      case "large":
         return `
           padding: ${theme.spacing.md}px ${theme.spacing.lg}px;
           min-height: 56px;
         `;
       default:
-        return '';
+        return "";
     }
   }}
   
-  ${({ fullWidth }) => fullWidth && 'width: 100%;'}
+  ${({ fullWidth }) => fullWidth && "width: 100%;"}
   
   opacity: ${({ disabled }) => (disabled ? 0.6 : 1)};
 `;
@@ -159,46 +169,46 @@ const ButtonContent = styled.View`
 `;
 
 interface ButtonTextProps {
-  variant: 'primary' | 'secondary' | 'outline' | 'text';
-  size: 'small' | 'medium' | 'large';
+  variant: "primary" | "secondary" | "outline" | "text";
+  size: "small" | "medium" | "large";
 }
 
 const ButtonText = styled.Text<ButtonTextProps>`
   font-weight: ${({ theme }) => theme.typography.fontWeights.medium};
   text-align: center;
-  
+
   ${({ variant, theme }) => {
     switch (variant) {
-      case 'primary':
-      case 'secondary':
+      case "primary":
+      case "secondary":
         return `color: ${theme.colors.surface};`;
-      case 'outline':
-      case 'text':
+      case "outline":
+      case "text":
         return `color: ${theme.colors.primary};`;
       default:
-        return '';
+        return "";
     }
   }}
-  
+
   ${({ size, theme }) => {
     switch (size) {
-      case 'small':
+      case "small":
         return `font-size: ${theme.typography.fontSizes.xs}px;`;
-      case 'medium':
+      case "medium":
         return `font-size: ${theme.typography.fontSizes.sm}px;`;
-      case 'large':
+      case "large":
         return `font-size: ${theme.typography.fontSizes.md}px;`;
       default:
-        return '';
+        return "";
     }
   }}
 `;
 
 interface IconContainerProps {
-  position: 'left' | 'right';
+  position: "left" | "right";
 }
 
 const IconContainer = styled(View)<IconContainerProps>`
-  ${({ position }) => position === 'left' && 'margin-right: 8px;'}
-  ${({ position }) => position === 'right' && 'margin-left: 8px;'}
+  ${({ position }) => position === "left" && "margin-right: 8px;"}
+  ${({ position }) => position === "right" && "margin-left: 8px;"}
 `;
