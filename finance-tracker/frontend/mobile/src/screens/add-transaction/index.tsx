@@ -17,7 +17,10 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useAppDispatch, useAppSelector } from "../../store";
 import { createTransaction } from "../../store/slices/transactionSlice";
-import { fetchCategories } from "../../store/slices/categorySlice";
+import {
+  fetchCategories,
+  createCategory,
+} from "../../store/slices/categorySlice";
 import { Input } from "../../components/common/input";
 import { Button } from "../../components/common/button";
 import { LoadingScreen } from "../../components/common/LoadingScreen";
@@ -62,6 +65,83 @@ export default function AddTransactionScreen() {
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
+
+  // Aggiungi console log per le categorie caricate
+  useEffect(() => {
+    console.log("Categorie caricate:", categories);
+    console.log("Tipo transazione corrente:", type);
+    console.log(
+      "Categorie filtrate:",
+      categories.filter((category) => category.type === type)
+    );
+
+    // Se non ci sono categorie, creiamo alcune categorie predefinite
+    if (categories.length === 0 && !isCategoriesLoading) {
+      Alert.alert(
+        "Nessuna categoria trovata",
+        "Vuoi creare alcune categorie predefinite?",
+        [
+          {
+            text: "No",
+            style: "cancel",
+          },
+          {
+            text: "Sì",
+            onPress: () => createDefaultCategories(),
+          },
+        ]
+      );
+    }
+  }, [categories, type, isCategoriesLoading]);
+
+  // Funzione per creare le categorie predefinite
+  const createDefaultCategories = async () => {
+    try {
+      // Categorie di spesa
+      const expenseCategories = [
+        { name: "Alimentari", type: "EXPENSE", color: "#FF5733" },
+        { name: "Trasporti", type: "EXPENSE", color: "#33A8FF" },
+        { name: "Casa", type: "EXPENSE", color: "#33FF57" },
+        { name: "Svago", type: "EXPENSE", color: "#FF33A8" },
+        { name: "Salute", type: "EXPENSE", color: "#A833FF" },
+      ];
+
+      // Categorie di entrata
+      const incomeCategories = [
+        { name: "Stipendio", type: "INCOME", color: "#57FF33" },
+        { name: "Bonus", type: "INCOME", color: "#33FFA8" },
+        { name: "Regali", type: "INCOME", color: "#A8FF33" },
+      ];
+
+      // Crea le categorie
+      const categories = [...expenseCategories, ...incomeCategories];
+
+      // Mostra indicatore di caricamento
+      Alert.alert(
+        "Creazione categorie",
+        "Sto creando le categorie predefinite..."
+      );
+
+      // Crea le categorie una alla volta
+      for (const category of categories) {
+        await dispatch(createCategory(category)).unwrap();
+      }
+
+      // Ricarica le categorie dopo averle create
+      await dispatch(fetchCategories()).unwrap();
+
+      Alert.alert("Successo", "Categorie predefinite create con successo!");
+    } catch (error) {
+      console.error(
+        "Errore nella creazione delle categorie predefinite:",
+        error
+      );
+      Alert.alert(
+        "Errore",
+        "Non è stato possibile creare le categorie predefinite"
+      );
+    }
+  };
 
   // Show alert for API errors
   useEffect(() => {
@@ -126,21 +206,44 @@ export default function AddTransactionScreen() {
       return;
     }
 
+    // Log dei dati selezionati per la transazione
+    console.log("Categoria selezionata:", selectedCategory);
+    console.log("Tipo impostato:", type);
+
+    // Determina il tipo della transazione in modo più robusto
+    let effectiveType = type;
+    // Se la categoria ha un tipo definito, usa quello
+    if (selectedCategory && selectedCategory.type) {
+      effectiveType = selectedCategory.type as "INCOME" | "EXPENSE";
+      console.log("Usando il tipo dalla categoria:", effectiveType);
+    }
+
+    // Formatta l'importo come numero con 2 decimali, poi riconvertilo a numero
+    const parsedAmount = parseFloat(amount.replace(",", "."));
+    const formattedAmount = parseFloat(parsedAmount.toFixed(2));
+
     const transactionData = {
       description,
-      amount: parseFloat(amount.replace(",", ".")),
+      amount: formattedAmount, // Invia come numero con precisione due decimali
       date: date.toISOString().split("T")[0],
-      type,
+      type: effectiveType,
       categoryId: selectedCategoryId!,
     };
+
+    console.log("Dati transazione da inviare:", transactionData);
 
     try {
       await dispatch(createTransaction(transactionData)).unwrap();
       Alert.alert("Successo", "Transazione aggiunta con successo", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
-    } catch (error) {
-      // L'errore viene già gestito nell'effect
+    } catch (error: any) {
+      console.error("Errore creazione transazione:", error);
+      Alert.alert(
+        "Errore",
+        error?.message ||
+          "Si è verificato un errore durante il salvataggio della transazione."
+      );
     }
   };
 
@@ -149,9 +252,22 @@ export default function AddTransactionScreen() {
   }
 
   // Filtra le categorie in base al tipo selezionato
-  const filteredCategories = categories.filter(
-    (category) => category.type === type
-  );
+  const incomeCategories = ["Salary", "Bonus", "Income", "Special"];
+  const filteredCategories = categories.filter((category) => {
+    // Se la categoria ha già un tipo definito, usalo per il filtro
+    if (category.type) {
+      return category.type.toUpperCase() === type || category.type === type;
+    }
+
+    // Altrimenti, assegna un tipo basato sul nome della categoria
+    // Le categorie con nomi specifici vengono considerate INCOME, tutte le altre EXPENSE
+    const inferredType = incomeCategories.includes(category.name)
+      ? "INCOME"
+      : "EXPENSE";
+
+    // Confronta il tipo inferito con il tipo selezionato
+    return inferredType === type;
+  });
 
   // Trova la categoria selezionata
   const selectedCategory = categories.find(

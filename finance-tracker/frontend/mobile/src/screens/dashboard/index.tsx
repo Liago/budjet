@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { fetchDashboardStats } from "../../store/slices/dashboardSlice";
 import { fetchCategories } from "../../store/slices/categorySlice";
+import { fetchTransactions } from "../../store/slices/transactionSlice";
 import { LoadingScreen } from "../../components/common/LoadingScreen";
 import { Button } from "../../components/common/button";
 import { RootStackParamList } from "../../navigation";
@@ -54,19 +55,45 @@ export default function DashboardScreen() {
 
   const loadData = async () => {
     try {
-      // Definisci l'intervallo di date per il mese corrente
+      // Definisci l'intervallo di date per il mese corrente in modo più esplicito
       const today = new Date();
+
+      // First day of current month (YYYY-MM-01)
       const startDate = new Date(today.getFullYear(), today.getMonth(), 1)
         .toISOString()
         .split("T")[0];
+
+      // Last day of current month (YYYY-MM-[28-31])
       const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
         .toISOString()
         .split("T")[0];
 
-      await Promise.all([
-        dispatch(fetchDashboardStats({ startDate, endDate })),
-        dispatch(fetchCategories()),
-      ]);
+      console.log("Loading dashboard data for period:", { startDate, endDate });
+
+      // First fetch dashboard stats
+      await dispatch(fetchDashboardStats({ startDate, endDate }));
+      console.log("Dashboard stats loaded");
+
+      // Then fetch transactions with the same date range
+      try {
+        await dispatch(
+          fetchTransactions({
+            startDate,
+            endDate,
+            limit: 100,
+            // Rimuovi i parametri che potrebbero causare problemi con la API
+            // Questo è più compatibile con l'API esistente
+          })
+        );
+        console.log("Transactions loaded");
+      } catch (transactionError) {
+        console.error("Error loading transactions:", transactionError);
+        // Continue execution even if transactions fail
+      }
+
+      // Finally fetch categories
+      await dispatch(fetchCategories());
+      console.log("Categories loaded");
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     }
@@ -109,6 +136,9 @@ export default function DashboardScreen() {
     balance: stats?.balance || 0,
     totalIncome: stats?.totalIncome || 0,
     totalExpense: stats?.totalExpense || 0,
+    totalBudget: stats?.totalBudget || 0,
+    budgetRemaining: stats?.budgetRemaining || 0,
+    budgetPercentage: stats?.budgetPercentage || 0,
     recentTransactions: Array.isArray(stats?.recentTransactions)
       ? stats.recentTransactions.map((t) => ({
           id: t.id || `tmp-${Math.random()}`,
@@ -136,14 +166,13 @@ export default function DashboardScreen() {
 
   // Assicuriamoci che ogni transazione abbia i campi necessari prima di renderizzarla
   const renderTransactions = () => {
+    // Protezione extra nel caso non ci siano transazioni
     if (
       !safeStats.recentTransactions ||
       safeStats.recentTransactions.length === 0
     ) {
       return (
-        <View
-          style={[styles.emptyState, { backgroundColor: theme.colors.surface }]}
-        >
+        <View style={styles.emptyState}>
           <Text
             style={[
               styles.emptyStateText,
@@ -156,60 +185,66 @@ export default function DashboardScreen() {
       );
     }
 
-    return safeStats.recentTransactions.map((transaction: Transaction) => (
-      <View
-        key={transaction.id}
-        style={[
-          styles.transactionItem,
-          { backgroundColor: theme.colors.surface },
-        ]}
-      >
-        <View
-          style={[
-            styles.categoryIcon,
-            { backgroundColor: transaction.category?.color || "#ccc" },
-          ]}
-        >
-          <Ionicons
-            name={(transaction.category?.icon as any) || "apps-outline"}
-            size={18}
-            color="#fff"
-          />
-        </View>
-        <View style={styles.transactionInfo}>
-          <Text
+    // Mostra solo le prime 5 transazioni
+    return safeStats.recentTransactions
+      .slice(0, 5)
+      .map((transaction, index) => {
+        // Protezione extra per amount undefined
+        const amount = transaction.amount || 0;
+        const isExpense = transaction.type === "EXPENSE";
+
+        return (
+          <View
             style={[
-              styles.transactionDescription,
-              { color: theme.colors.text },
+              styles.transactionCard,
+              { backgroundColor: theme.colors.surface },
             ]}
+            key={`transaction-${index}`}
           >
-            {transaction.description || "Senza descrizione"}
-          </Text>
-          <Text
-            style={[
-              styles.transactionCategory,
-              { color: theme.colors.textSecondary },
-            ]}
-          >
-            {transaction.category?.name || "Categoria"}
-          </Text>
-        </View>
-        <Text
-          style={[
-            styles.transactionAmount,
-            {
-              color:
-                transaction.type === "INCOME"
-                  ? theme.colors.success
-                  : theme.colors.error,
-            },
-          ]}
-        >
-          {transaction.type === "INCOME" ? "+" : "-"}
-          {formatCurrency(transaction.amount)}
-        </Text>
-      </View>
-    ));
+            <View style={styles.transactionIcon}>
+              <View
+                style={[
+                  styles.iconCircle,
+                  {
+                    backgroundColor:
+                      transaction.category?.color || theme.colors.secondary,
+                  },
+                ]}
+              >
+                <Ionicons name="card-outline" size={20} color="white" />
+              </View>
+            </View>
+
+            <View style={styles.transactionDetails}>
+              <Text
+                style={[styles.transactionTitle, { color: theme.colors.text }]}
+              >
+                {transaction.description || "Transazione"}
+              </Text>
+              <Text
+                style={[
+                  styles.transactionCategory,
+                  { color: theme.colors.textSecondary },
+                ]}
+              >
+                {transaction.category?.name || "Non categorizzato"}
+              </Text>
+            </View>
+
+            <Text
+              style={[
+                styles.transactionAmount,
+                {
+                  color: isExpense ? theme.colors.error : theme.colors.success,
+                },
+              ]}
+            >
+              {isExpense ? "-" : "+"}
+              {formatCurrency(amount)}
+            </Text>
+          </View>
+        );
+      });
   };
 
   // Assicuriamoci che ogni budget abbia i campi necessari prima di renderizzarlo
@@ -231,14 +266,14 @@ export default function DashboardScreen() {
       );
     }
 
-    return safeStats.budgetStatus.map((budget: Budget) => {
+    return safeStats.budgetStatus.map((budget: Budget, index) => {
       const percentage =
         typeof budget.percentage === "number" ? budget.percentage : 0;
 
       return (
         <View
-          key={budget.categoryId}
           style={[styles.budgetItem, { backgroundColor: theme.colors.surface }]}
+          key={`budget-${index}`}
         >
           <View style={styles.budgetHeader}>
             <View style={styles.categoryInfo}>
@@ -434,17 +469,6 @@ export default function DashboardScreen() {
 
         {renderTransactions()}
       </View>
-
-      {/* Stato budget */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Stato budget
-          </Text>
-        </View>
-
-        {renderBudgets()}
-      </View>
     </ScrollView>
   );
 }
@@ -530,14 +554,14 @@ const styles = StyleSheet.create({
   viewAll: {
     fontSize: 14,
   },
-  transactionItem: {
+  transactionCard: {
     flexDirection: "row",
     alignItems: "center",
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
   },
-  categoryIcon: {
+  transactionIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -545,10 +569,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  transactionInfo: {
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  transactionDetails: {
     flex: 1,
   },
-  transactionDescription: {
+  transactionTitle: {
     fontSize: 16,
     fontWeight: "500",
     marginBottom: 4,

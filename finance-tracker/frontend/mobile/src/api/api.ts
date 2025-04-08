@@ -63,39 +63,180 @@ axiosInstance.interceptors.response.use(
 export const apiService = {
   // GET request
   get: async <T>(endpoint: string, params?: any): Promise<T> => {
-    const config: AxiosRequestConfig = { params };
-    const response: AxiosResponse<T> = await axiosInstance.get(
-      endpoint,
-      config
-    );
-    return response.data;
+    try {
+      // Log della richiesta effettivamente inviata
+      console.log(`API Request to ${endpoint} with params:`, params);
+
+      // Formatta i parametri per le API - assicurati che le date siano stringhe
+      const formattedParams = params ? { ...params } : {};
+
+      const config: AxiosRequestConfig = { params: formattedParams };
+      const response: AxiosResponse<T> = await axiosInstance.get(
+        endpoint,
+        config
+      );
+
+      // Log all API responses in development
+      console.log(`API Response for ${endpoint}:`, response.data);
+
+      // Special handling for dashboard stats to ensure data consistency with web app
+      if (endpoint === "/dashboard/stats") {
+        console.log("Raw dashboard stats:", response.data);
+
+        // Ensure data is properly structured
+        const data = response.data as any;
+
+        // Convert categories to budgetStatus if using older API
+        if (data.categories && !data.budgetStatus) {
+          data.budgetStatus = data.categories
+            .filter((cat: any) => cat.budget)
+            .map((cat: any) => ({
+              categoryId: cat.categoryId,
+              categoryName: cat.categoryName,
+              categoryColor: cat.categoryColor,
+              budget: cat.budget || 0,
+              spent: cat.amount || 0,
+              remaining: (cat.budget || 0) - (cat.amount || 0),
+              percentage: cat.budgetPercentage || 0,
+            }));
+        }
+
+        console.log("Processed dashboard stats:", data);
+        return data as T;
+      }
+
+      // Special handling for transactions to ensure all fields are properly set
+      if (endpoint === "/transactions") {
+        console.log("Raw transactions data:", response.data);
+
+        const data = response.data as any;
+
+        // Ensure transaction amounts are numeric
+        if (data.data && Array.isArray(data.data)) {
+          data.data = data.data.map((transaction: any) => ({
+            ...transaction,
+            amount:
+              typeof transaction.amount === "number"
+                ? transaction.amount
+                : typeof transaction.amount === "string"
+                ? parseFloat(transaction.amount)
+                : 0,
+          }));
+        }
+
+        console.log("Processed transactions data:", data);
+        return data as T;
+      }
+
+      // Special handling for categories
+      if (endpoint === "/categories") {
+        console.log("Raw categories data:", JSON.stringify(response.data));
+        if (Array.isArray(response.data)) {
+          console.log(`Ricevute ${response.data.length} categorie dal server`);
+          // Verifica che ogni categoria abbia il tipo definito
+          response.data.forEach((cat, index) => {
+            console.log(
+              `Categoria ${index}: ID=${cat.id}, Nome=${cat.name}, Tipo=${cat.type}`
+            );
+          });
+        } else {
+          console.log(
+            "Il server ha restituito dati non array per le categorie:",
+            typeof response.data
+          );
+        }
+        return response.data;
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error(`API Error for ${endpoint}:`, error);
+
+      // Se c'è un errore con le transazioni, restituisci un risultato vuoto ma non far fallire l'app
+      if (endpoint === "/transactions") {
+        console.log("Returning empty transaction data for error case");
+        return {
+          data: [],
+          meta: {
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 0,
+          },
+        } as unknown as T;
+      }
+
+      // Se c'è un errore con le categorie, restituisci un array vuoto
+      if (endpoint === "/categories") {
+        console.log("Returning empty categories array for error case");
+        return [] as unknown as T;
+      }
+
+      throw error;
+    }
   },
 
   // POST request
   post: async <T>(endpoint: string, data: any): Promise<T> => {
-    const response: AxiosResponse<T> = await axiosInstance.post(endpoint, data);
-    return response.data;
+    try {
+      console.log(`API POST Request to ${endpoint}:`, JSON.stringify(data));
+      const response: AxiosResponse<T> = await axiosInstance.post(
+        endpoint,
+        data
+      );
+      console.log(`API POST Response from ${endpoint}:`, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error(`API Error for ${endpoint}:`, error);
+      console.error(
+        "Request data that caused the error:",
+        JSON.stringify(data)
+      );
+      if (error.response) {
+        console.error("Response error data:", error.response.data);
+        console.error("Response status:", error.response.status);
+      }
+      throw error;
+    }
   },
 
   // PUT request
   put: async <T>(endpoint: string, data: any): Promise<T> => {
-    const response: AxiosResponse<T> = await axiosInstance.put(endpoint, data);
-    return response.data;
+    try {
+      const response: AxiosResponse<T> = await axiosInstance.put(
+        endpoint,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`API Error for ${endpoint}:`, error);
+      throw error;
+    }
   },
 
   // PATCH request
   patch: async <T>(endpoint: string, data: any): Promise<T> => {
-    const response: AxiosResponse<T> = await axiosInstance.patch(
-      endpoint,
-      data
-    );
-    return response.data;
+    try {
+      const response: AxiosResponse<T> = await axiosInstance.patch(
+        endpoint,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`API Error for ${endpoint}:`, error);
+      throw error;
+    }
   },
 
   // DELETE request
   delete: async <T>(endpoint: string): Promise<T> => {
-    const response: AxiosResponse<T> = await axiosInstance.delete(endpoint);
-    return response.data;
+    try {
+      const response: AxiosResponse<T> = await axiosInstance.delete(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error(`API Error for ${endpoint}:`, error);
+      throw error;
+    }
   },
 
   // Form data upload

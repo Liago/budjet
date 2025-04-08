@@ -47,13 +47,46 @@ export const categoryService = {
 
 // Transaction Service
 export const transactionService = {
-  getAll: (filters?: TransactionFilters) =>
-    apiService.get<PaginatedResponse<Transaction>>("/transactions", filters),
+  getAll: (filters?: TransactionFilters) => {
+    let formattedFilters = { ...filters };
+
+    if (filters?.startDate) {
+      console.log("Original startDate:", filters.startDate);
+    }
+
+    if (filters?.endDate) {
+      console.log("Original endDate:", filters.endDate);
+    }
+
+    if (formattedFilters.sortBy && formattedFilters.sortDirection) {
+      delete formattedFilters.sortBy;
+      delete formattedFilters.sortDirection;
+    }
+
+    console.log(
+      "Fetching transactions with formatted filters:",
+      formattedFilters
+    );
+
+    return apiService.get<PaginatedResponse<Transaction>>(
+      "/transactions",
+      formattedFilters
+    );
+  },
 
   getById: (id: string) => apiService.get<Transaction>(`/transactions/${id}`),
 
-  create: (transactionData: CreateTransactionData) =>
-    apiService.post<Transaction>("/transactions", transactionData),
+  create: (transactionData: CreateTransactionData) => {
+    // Crea una copia dei dati
+    const formattedData = { ...transactionData } as any;
+
+    // Converti l'importo in una stringa con esattamente 2 decimali
+    if (typeof formattedData.amount === "number") {
+      formattedData.amount = formattedData.amount.toFixed(2);
+    }
+
+    return apiService.post<Transaction>("/transactions", formattedData);
+  },
 
   update: (id: string, transactionData: UpdateTransactionData) =>
     apiService.patch<Transaction>(`/transactions/${id}`, transactionData),
@@ -63,9 +96,14 @@ export const transactionService = {
 
 // Dashboard Service
 export const dashboardService = {
-  // Get dashboard statistics
-  getStats: (startDate?: string, endDate?: string) =>
-    apiService.get<DashboardStats>("/dashboard/stats", { startDate, endDate }),
+  // Get dashboard statistics with proper date parameters
+  getStats: (startDate?: string, endDate?: string) => {
+    console.log("Calling dashboard stats with dates:", { startDate, endDate });
+    return apiService.get<DashboardStats>("/dashboard/stats", {
+      startDate,
+      endDate,
+    });
+  },
 
   // Get trend data
   getTrendData: (timeRange = "3m") =>

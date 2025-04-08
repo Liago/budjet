@@ -76,9 +76,24 @@ export const createTransaction = createAsyncThunk(
       const response = await transactionService.create(transactionData);
       return response;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to create transaction"
+      console.log(
+        "Errore completo durante la creazione della transazione:",
+        error
       );
+
+      // Gestione messaggi di errore dettagliati
+      let errorMessage = "Errore durante la creazione della transazione";
+
+      if (error.response?.data) {
+        const responseError = error.response.data;
+        if (Array.isArray(responseError.message)) {
+          errorMessage = responseError.message.join(", ");
+        } else if (typeof responseError.message === "string") {
+          errorMessage = responseError.message;
+        }
+      }
+
+      return rejectWithValue(errorMessage);
     }
   }
 );

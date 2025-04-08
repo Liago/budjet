@@ -25,9 +25,69 @@ export const fetchDashboardStats = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
+      console.log("Fetching dashboard stats with dates:", {
+        startDate,
+        endDate,
+      });
       const response = await dashboardService.getStats(startDate, endDate);
-      return response;
+      console.log("Dashboard stats response:", response);
+
+      // Ensure all required fields are present and correctly typed as numbers
+      const processedResponse = {
+        ...response,
+        totalIncome:
+          typeof response.totalIncome === "number"
+            ? response.totalIncome
+            : typeof response.totalIncome === "string"
+            ? parseFloat(response.totalIncome)
+            : 0,
+        totalExpense:
+          typeof response.totalExpense === "number"
+            ? response.totalExpense
+            : typeof response.totalExpense === "string"
+            ? parseFloat(response.totalExpense)
+            : 0,
+        balance:
+          typeof response.balance === "number"
+            ? response.balance
+            : typeof response.balance === "string"
+            ? parseFloat(response.balance)
+            : 0,
+        totalBudget:
+          typeof response.totalBudget === "number"
+            ? response.totalBudget
+            : typeof response.totalBudget === "string"
+            ? parseFloat(response.totalBudget)
+            : 0,
+        budgetRemaining:
+          typeof response.budgetRemaining === "number"
+            ? response.budgetRemaining
+            : typeof response.budgetRemaining === "string"
+            ? parseFloat(response.budgetRemaining)
+            : 0,
+        budgetPercentage:
+          typeof response.budgetPercentage === "number"
+            ? response.budgetPercentage
+            : typeof response.budgetPercentage === "string"
+            ? parseFloat(response.budgetPercentage)
+            : 0,
+        recentTransactions: Array.isArray(response.recentTransactions)
+          ? response.recentTransactions.map((t) => ({
+              ...t,
+              amount:
+                typeof t.amount === "number"
+                  ? t.amount
+                  : typeof t.amount === "string"
+                  ? parseFloat(t.amount)
+                  : 0,
+            }))
+          : [],
+      };
+
+      console.log("Processed dashboard response:", processedResponse);
+      return processedResponse;
     } catch (error: any) {
+      console.error("Error fetching dashboard stats:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch dashboard statistics"
       );

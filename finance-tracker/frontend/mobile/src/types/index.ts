@@ -97,19 +97,17 @@ export interface DashboardStats {
   totalIncome: number;
   totalExpense: number;
   balance: number;
-  incomeCategories: {
+  totalBudget: number;
+  budgetRemaining: number;
+  budgetPercentage: number;
+  categories: {
     categoryId: string;
     categoryName: string;
     categoryColor: string;
     amount: number;
     percentage: number;
-  }[];
-  expenseCategories: {
-    categoryId: string;
-    categoryName: string;
-    categoryColor: string;
-    amount: number;
-    percentage: number;
+    budget?: number;
+    budgetPercentage?: number;
   }[];
   recentTransactions: Transaction[];
   budgetStatus: {

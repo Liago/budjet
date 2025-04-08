@@ -20,9 +20,15 @@ export const fetchCategories = createAsyncThunk(
   "categories/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
+      console.log("Chiamata fetchCategories iniziata");
       const response = await categoryService.getAll();
+      console.log(
+        "Chiamata fetchCategories completata con successo:",
+        response
+      );
       return response;
     } catch (error: any) {
+      console.error("Errore in fetchCategories:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch categories"
       );
