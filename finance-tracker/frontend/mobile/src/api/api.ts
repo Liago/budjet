@@ -2,6 +2,9 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// Rimuovo l'import diretto dello store per evitare il ciclo di dipendenze
+// import { store } from "../store";
+
 // Base URL will be different for local development on different platforms
 const API_BASE_URL =
   Platform.OS === "ios"
@@ -36,28 +39,13 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor for handling common errors
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+// Creo un'utilità per gestire le azioni di dispatch senza importare lo store direttamente
+let storeDispatch: any = null;
 
-    // Handle unauthorized errors (401)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      // Clear token on auth error
-      await AsyncStorage.removeItem("token");
-
-      // You could implement token refresh logic here instead
-
-      // For now, just reject with the error
-      return Promise.reject(error);
-    }
-
-    return Promise.reject(error);
-  }
-);
+// Funzione per impostare il dispatch dal componente principale
+export const setStoreDispatch = (dispatch: any) => {
+  storeDispatch = dispatch;
+};
 
 // API service utility
 export const apiService = {
@@ -149,21 +137,34 @@ export const apiService = {
       }
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`API Error for ${endpoint}:`, error);
+
+      // Log di errori 400 (Bad Request) per debugging
+      if (error.response?.status === 400) {
+        console.error(`Bad Request Error Details for ${endpoint}:`);
+        console.error("Request params:", params);
+        console.error("Response data:", error.response?.data);
+        console.error("Server message:", error.response?.data?.message);
+      }
 
       // Se c'è un errore con le transazioni, restituisci un risultato vuoto ma non far fallire l'app
       if (endpoint === "/transactions") {
         console.log("Returning empty transaction data for error case");
-        return {
+
+        // Create a properly formatted empty response that matches the expected type
+        const emptyResponse = {
           data: [],
           meta: {
             total: 0,
-            page: 1,
-            limit: 10,
+            page: params?.page || 1,
+            limit: params?.limit || 10,
             totalPages: 0,
           },
-        } as unknown as T;
+        };
+
+        console.log("Empty response structure:", emptyResponse);
+        return emptyResponse as unknown as T;
       }
 
       // Se c'è un errore con le categorie, restituisci un array vuoto
@@ -253,3 +254,46 @@ export const apiService = {
     return response.data;
   },
 };
+
+// Response interceptor for handling common errors
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle unauthorized errors (401)
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Get token from storage
+        const token = await AsyncStorage.getItem("token");
+
+        // If we have no token, it's a genuine auth issue
+        if (!token) {
+          console.log("No authentication token found in storage");
+          // Dispatch logout action using our utility function
+          if (storeDispatch) {
+            storeDispatch({ type: "auth/logout/fulfilled", payload: null });
+          }
+          return Promise.reject(error);
+        }
+
+        // If we have a token that's not working, it might be expired
+        console.log(
+          "Token exists but API returned 401 - session likely expired"
+        );
+        await AsyncStorage.removeItem("token");
+        if (storeDispatch) {
+          storeDispatch({ type: "auth/logout/fulfilled", payload: null });
+        }
+      } catch (storageError) {
+        console.error("Error accessing token storage:", storageError);
+      }
+
+      return Promise.reject(error);
+    }
+
+    return Promise.reject(error);
+  }
+);

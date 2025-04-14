@@ -10,12 +10,16 @@ import Navigation from "./src/navigation";
 import { lightTheme, darkTheme } from "./src/theme";
 import { store } from "./src/store";
 import { initializeAuth } from "./src/store/slices/authSlice";
+import { setStoreDispatch } from "./src/api/api";
 
 // Componente interno per inizializzare lo stato dell'app
 function AppInitializer({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    // Inizializza lo storeDispatch per le chiamate API
+    setStoreDispatch(dispatch);
+    // Inizializza l'autenticazione
     dispatch(initializeAuth());
   }, [dispatch]);
 

@@ -48,16 +48,65 @@ export const categoryService = {
 // Transaction Service
 export const transactionService = {
   getAll: (filters?: TransactionFilters) => {
+    // Crea una copia del filtro per non modificare l'originale
     let formattedFilters = { ...filters };
 
-    if (filters?.startDate) {
-      console.log("Original startDate:", filters.startDate);
+    // Log dei filtri originali per debug
+    console.log("Filtri originali:", filters);
+
+    // Assicuriamoci che tutti i parametri undefined vengano rimossi
+    Object.keys(formattedFilters).forEach((key) => {
+      if (formattedFilters[key as keyof TransactionFilters] === undefined) {
+        delete formattedFilters[key as keyof TransactionFilters];
+      }
+    });
+
+    // Conversione del parametro month in startDate e endDate
+    // Il backend NON accetta il parametro "month" (errore 400)
+    if (formattedFilters.month) {
+      const month = formattedFilters.month;
+      const currentYear = new Date().getFullYear();
+
+      // Determina l'anno-mese
+      let yearMonth: string;
+      if (month.length === 2) {
+        yearMonth = `${currentYear}-${month}`;
+      } else {
+        yearMonth = month; // Già nel formato corretto
+      }
+
+      // Calcola il primo giorno del mese
+      const startDate = `${yearMonth}-01`;
+
+      // Calcola l'ultimo giorno del mese
+      const [year, monthNum] = yearMonth.split("-").map((n) => parseInt(n));
+      // Creiamo una data al primo giorno del mese successivo e sottraiamo 1 giorno
+      const lastDay = new Date(year, monthNum, 0).getDate();
+      const endDate = `${yearMonth}-${lastDay}`;
+
+      // Aggiorna i filtri con le date calcolate
+      formattedFilters.startDate = startDate;
+      formattedFilters.endDate = endDate;
+
+      // Rimuovi il parametro month che non è supportato dal backend
+      delete formattedFilters.month;
+
+      console.log(`Convertito mese ${month} in intervallo date:`, {
+        startDate,
+        endDate,
+      });
     }
 
-    if (filters?.endDate) {
-      console.log("Original endDate:", filters.endDate);
+    // Conversione esplicita di parametri numerici
+    if (formattedFilters.page) {
+      formattedFilters.page = Number(formattedFilters.page);
     }
 
+    if (formattedFilters.limit) {
+      formattedFilters.limit = Number(formattedFilters.limit);
+    }
+
+    // Rimuovi i parametri di ordinamento se non necessari o se causano problemi
     if (formattedFilters.sortBy && formattedFilters.sortDirection) {
       delete formattedFilters.sortBy;
       delete formattedFilters.sortDirection;

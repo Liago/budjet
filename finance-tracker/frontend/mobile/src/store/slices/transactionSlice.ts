@@ -43,10 +43,17 @@ const initialState: TransactionState = {
 
 export const fetchTransactions = createAsyncThunk(
   "transactions/fetchAll",
-  async (filters: TransactionFilters = {}, { rejectWithValue }) => {
+  async (filters: TransactionFilters = {}, { rejectWithValue, getState }) => {
     try {
+      // Se abbiamo la pagina > 1, stiamo facendo infinite scrolling
+      const isLoadingMore = filters.page && filters.page > 1;
       const response = await transactionService.getAll(filters);
-      return response;
+      
+      // Ritorna informazioni aggiuntive per gestire l'infinite scrolling
+      return {
+        ...response,
+        isLoadingMore,
+      };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch transactions"
@@ -162,9 +169,17 @@ const transactionSlice = createSlice({
       })
       .addCase(
         fetchTransactions.fulfilled,
-        (state, action: PayloadAction<PaginatedResponse<Transaction>>) => {
+        (state, action: PayloadAction<any>) => {
           state.isLoading = false;
-          state.transactions = action.payload.data;
+          
+          // Se stiamo caricando più transazioni, le aggiungiamo a quelle esistenti
+          if (action.payload.isLoadingMore) {
+            state.transactions = [...state.transactions, ...action.payload.data];
+          } else {
+            // Altrimenti sostituiamo le transazioni esistenti
+            state.transactions = action.payload.data;
+          }
+          
           state.pagination = action.payload.meta;
         }
       )

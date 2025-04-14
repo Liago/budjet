@@ -1,650 +1,718 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
   StyleSheet,
-  RefreshControl,
-  Alert,
-  TextInput,
-  Modal,
-  TouchableWithoutFeedback,
   FlatList,
+  TextInput,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+  Modal,
+  ScrollView,
 } from "react-native";
 import { useTheme } from "styled-components/native";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native-gesture-handler";
-import { SwipeListView } from "react-native-swipe-list-view";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 import { useAppDispatch, useAppSelector } from "../../store";
 import {
   fetchTransactions,
   deleteTransaction,
-  setFilters,
 } from "../../store/slices/transactionSlice";
-import {
-  fetchCategories,
-  fetchCategoriesByType,
-} from "../../store/slices/categorySlice";
-import { LoadingScreen } from "../../components/common/LoadingScreen";
-import { Button } from "../../components/common/button";
+import { TransactionItem } from "../../components/transaction-item";
+import { Transaction, Category } from "../../types";
 import { RootStackParamList } from "../../navigation";
-import { Category, Transaction, TransactionFilters } from "../../types";
+import { categoryService } from "../../api/services";
 
-type TransactionsScreenRouteProp = RouteProp<
-  RootStackParamList,
-  "TransactionsList"
->;
+type TransactionsScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
-type TransactionsScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "TransactionsList"
->;
+interface DayGroup {
+  date: string;
+  transactions: Transaction[];
+  totalIncome: number;
+  totalExpense: number;
+  dailyBalance: number;
+}
 
-// Icone sicure per Ionicons
-const safeIcons = {
-  default: "card-outline",
-  food: "restaurant-outline",
-  transport: "car-outline",
-  shopping: "cart-outline",
-  health: "medkit-outline",
-  entertainment: "game-controller-outline",
-  house: "home-outline",
-  utilities: "flash-outline",
-  education: "school-outline",
-  travel: "airplane-outline",
-  salary: "cash-outline",
-  gifts: "gift-outline",
-} as const;
+// Mappa di associazione tra categorie e icone di Ionicons
+const CATEGORY_ICONS: Record<string, string> = {
+  // Categorie di Spesa
+  Alimentari: "restaurant-outline",
+  Grocery: "basket-outline",
+  Cibo: "restaurant-outline",
+  Food: "restaurant-outline",
+  Restaurant: "restaurant-outline",
+  Ristorante: "restaurant-outline",
 
-// Funzione per ottenere un'icona sicura
-const getSafeIcon = (iconName?: string): keyof typeof safeIcons => {
-  if (!iconName) return "default";
-  return safeIcons[iconName as keyof typeof safeIcons]
-    ? (iconName as keyof typeof safeIcons)
-    : "default";
+  Trasporti: "car-outline",
+  Transport: "car-outline",
+  Car: "car-outline",
+  Auto: "car-outline",
+  Gasoline: "flame-outline",
+  Benzina: "flame-outline",
+  Gasolio: "flame-outline",
+  Carburante: "flame-outline",
+
+  Casa: "home-outline",
+  House: "home-outline",
+  Home: "home-outline",
+  Rent: "home-outline",
+  Affitto: "home-outline",
+  Mutuo: "home-outline",
+  Mortgage: "home-outline",
+
+  Svago: "game-controller-outline",
+  Entertainment: "game-controller-outline",
+  Games: "game-controller-outline",
+  Cinema: "film-outline",
+  Movies: "film-outline",
+
+  Salute: "medkit-outline",
+  Health: "medkit-outline",
+  Medical: "medical-outline",
+  Doctor: "medical-outline",
+  Medico: "medical-outline",
+  Farmacia: "fitness-outline",
+  Pharmacy: "fitness-outline",
+
+  Bollette: "flash-outline",
+  Utilities: "flash-outline",
+  Electricity: "flash-outline",
+  Water: "water-outline",
+  Gas: "flame-outline",
+  Internet: "wifi-outline",
+  Phone: "call-outline",
+  Telefono: "call-outline",
+
+  Shopping: "bag-handle-outline",
+  Clothes: "shirt-outline",
+  Abbigliamento: "shirt-outline",
+  Shoes: "footsteps-outline",
+  Scarpe: "footsteps-outline",
+
+  Istruzione: "school-outline",
+  Education: "school-outline",
+  Books: "book-outline",
+  Libri: "book-outline",
+  Corsi: "school-outline",
+  Courses: "school-outline",
+
+  Viaggi: "airplane-outline",
+  Travel: "airplane-outline",
+  Hotel: "bed-outline",
+  Vacation: "umbrella-outline",
+  Vacanza: "umbrella-outline",
+
+  Pets: "paw-outline",
+  Animali: "paw-outline",
+  Pet: "paw-outline",
+
+  Altro: "apps-outline",
+  Other: "apps-outline",
+  Miscellaneous: "apps-outline",
+  Varie: "apps-outline",
+
+  // Categorie Entrate
+  Stipendio: "cash-outline",
+  Salary: "cash-outline",
+  Income: "cash-outline",
+  Entrata: "cash-outline",
+  Paycheck: "cash-outline",
+  Wages: "cash-outline",
+
+  Bonus: "gift-outline",
+  Premio: "gift-outline",
+  Award: "trophy-outline",
+
+  Regali: "gift-outline",
+  Gifts: "gift-outline",
+  Present: "gift-outline",
+
+  Investment: "trending-up-outline",
+  Investimento: "trending-up-outline",
+  Stocks: "stats-chart-outline",
+  Azioni: "stats-chart-outline",
+
+  Rimborso: "return-down-back-outline",
+  Refund: "return-down-back-outline",
+  Reimbursement: "return-down-back-outline",
+
+  // Categorie generali o speciali
+  Taxes: "document-text-outline",
+  Tasse: "document-text-outline",
+  Tax: "document-text-outline",
+
+  Bar: "wine-outline",
+  Pub: "beer-outline",
+  Drink: "beer-outline",
+
+  Satispay: "wallet-outline",
+  PayPal: "logo-paypal",
+  "Credit Card": "card-outline",
+  "Carta di credito": "card-outline",
+  Carta: "card-outline",
+  Card: "card-outline",
+  Special: "star-outline",
+  Speciale: "star-outline",
+
+  // La categoria "Tutte le categorie" per il filtro
+  "Tutte le categorie": "grid-outline",
+  "All categories": "grid-outline",
 };
 
-export default function TransactionsScreen() {
+const TransactionsScreen = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const navigation = useNavigation<TransactionsScreenNavigationProp>();
-  const route = useRoute<TransactionsScreenRouteProp>();
+  const initialLoadDone = useRef(false);
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Stato per i filtri
-  const [showFilters, setShowFilters] = useState(
-    route.params?.showFilters || false
+  // Accesso sicuro allo stato con selettori memoizzati per prevenire re-render inutili
+  const transactions = useAppSelector(
+    (state) => state.transaction?.transactions || []
   );
-  const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [searchText, setSearchText] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const [selectedType, setSelectedType] = useState<"INCOME" | "EXPENSE" | null>(
-    null
+  const isLoading = useAppSelector(
+    (state) => state.transaction?.isLoading || false
   );
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const paginationFromState = useAppSelector(
+    (state) =>
+      state.transaction?.pagination || {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      }
+  );
 
-  // Ottenere i dati dalle transazioni
-  const { transactions, isLoading, filters, pagination } = useAppSelector(
-    (state) => state.transaction
-  );
-  const { categories } = useAppSelector((state) => state.category);
   const [refreshing, setRefreshing] = useState(false);
-  const [filteredTransactions, setFilteredTransactions] = useState<
-    Transaction[]
-  >([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [groupedTransactions, setGroupedTransactions] = useState<DayGroup[]>(
+    []
+  );
 
-  // Array di mesi per il filtro
-  const months = [
-    { label: "Gennaio", value: "01" },
-    { label: "Febbraio", value: "02" },
-    { label: "Marzo", value: "03" },
-    { label: "Aprile", value: "04" },
-    { label: "Maggio", value: "05" },
-    { label: "Giugno", value: "06" },
-    { label: "Luglio", value: "07" },
-    { label: "Agosto", value: "08" },
-    { label: "Settembre", value: "09" },
-    { label: "Ottobre", value: "10" },
-    { label: "Novembre", value: "11" },
-    { label: "Dicembre", value: "12" },
-  ];
+  // Stati per i filtri
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<"INCOME" | "EXPENSE" | "">(
+    ""
+  );
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [categoryList, setCategoryList] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] =
+    useState<boolean>(false);
 
-  // Carica le transazioni e le categorie
-  const loadData = async () => {
+  // Riferimento per lo scroll view dei mesi
+  const monthsScrollViewRef = useRef<ScrollView>(null);
+  const filterScrollViewRef = useRef<ScrollView>(null);
+
+  // Opzioni per i filtri
+  const months = useMemo(
+    () => [
+      { label: "Tutti i mesi", value: "" },
+      { label: "Gennaio", value: "01" },
+      { label: "Febbraio", value: "02" },
+      { label: "Marzo", value: "03" },
+      { label: "Aprile", value: "04" },
+      { label: "Maggio", value: "05" },
+      { label: "Giugno", value: "06" },
+      { label: "Luglio", value: "07" },
+      { label: "Agosto", value: "08" },
+      { label: "Settembre", value: "09" },
+      { label: "Ottobre", value: "10" },
+      { label: "Novembre", value: "11" },
+      { label: "Dicembre", value: "12" },
+    ],
+    []
+  );
+
+  const types = useMemo(
+    () => [
+      { label: "Tutti i tipi", value: "" },
+      { label: "Entrate", value: "INCOME" },
+      { label: "Uscite", value: "EXPENSE" },
+    ],
+    []
+  );
+
+  // Carica le categorie dal backend
+  const loadCategories = useCallback(async () => {
+    setIsLoadingCategories(true);
     try {
-      // Aggiungiamo i filtri senza includere la ricerca testo
-      const currentFilters: TransactionFilters = {
-        ...filters,
-        // Non includiamo search perché non è supportato dal backend
-        limit: 100, // Carica più transazioni per evitare frequenti richieste
-      };
-
-      // Aggiungiamo il filtro per mese se selezionato
-      if (selectedMonth) {
-        const currentYear = new Date().getFullYear();
-        currentFilters.startDate = `${currentYear}-${selectedMonth}-01`;
-
-        // Ultimo giorno del mese
-        const lastDay = new Date(
-          currentYear,
-          parseInt(selectedMonth),
-          0
-        ).getDate();
-        currentFilters.endDate = `${currentYear}-${selectedMonth}-${lastDay}`;
-      }
-
-      // Aggiungiamo il filtro per tipo se selezionato
-      if (selectedType) {
-        currentFilters.type = selectedType;
-      }
-
-      // Aggiungiamo il filtro per categorie se selezionate
-      if (selectedCategoryIds.length > 0) {
-        currentFilters.categoryId = selectedCategoryIds[0];
-      }
-
-      await dispatch(fetchTransactions(currentFilters));
-      await dispatch(fetchCategories());
+      const categories = await categoryService.getAll();
+      console.log("Categorie caricate:", categories);
+      setCategoryList(categories);
     } catch (error) {
-      console.error("Errore nel caricamento delle transazioni:", error);
+      console.error("Errore nel caricamento delle categorie:", error);
+    } finally {
+      setIsLoadingCategories(false);
     }
-  };
+  }, []);
 
-  // Carica i dati all'avvio
+  // Carica le categorie quando si apre il filtro
   useEffect(() => {
-    loadData();
-  }, [dispatch, selectedMonth, selectedType, selectedCategoryIds]);
-
-  // Applica il filtro di ricerca lato client quando searchText o transactions cambiano
-  useEffect(() => {
-    if (!searchText || searchText.trim() === "") {
-      setFilteredTransactions(transactions);
-      return;
+    if (showFilters && categoryList.length === 0 && !isLoadingCategories) {
+      loadCategories();
     }
+  }, [showFilters, loadCategories, categoryList, isLoadingCategories]);
 
-    const searchLower = searchText.toLowerCase();
-    const filtered = transactions.filter((transaction) => {
-      // Cerca nella descrizione
-      if (
-        transaction.description &&
-        transaction.description.toLowerCase().includes(searchLower)
-      ) {
-        return true;
+  // Scorre automaticamente al mese selezionato quando viene aperta la modal
+  useEffect(() => {
+    if (showFilters && selectedMonth) {
+      setTimeout(() => {
+        // Trova l'indice del mese selezionato
+        const selectedIndex = months.findIndex(
+          (m) => m.value === selectedMonth
+        );
+        if (selectedIndex !== -1 && monthsScrollViewRef.current) {
+          // Calcola la posizione di scroll (approssimativa)
+          const position = selectedIndex * 100; // Approssimazione della larghezza di un elemento chip
+          monthsScrollViewRef.current.scrollTo({ x: position, animated: true });
+        }
+      }, 300); // Piccolo delay per far sì che la modal sia completamente visibile
+    }
+  }, [showFilters, selectedMonth, months]);
+
+  // Raggruppa le transazioni per data - memoizzato una volta per tutte
+  const groupTransactionsByDate = useCallback(
+    (transactionList: Transaction[]) => {
+      const groups: Record<string, Transaction[]> = {};
+
+      transactionList.forEach((transaction) => {
+        if (!transaction.date) return;
+
+        const date = transaction.date.split("T")[0]; // YYYY-MM-DD
+        if (!groups[date]) {
+          groups[date] = [];
+        }
+        groups[date].push(transaction);
+      });
+
+      const result: DayGroup[] = Object.entries(groups).map(
+        ([date, dayTransactions]) => {
+          let totalIncome = 0;
+          let totalExpense = 0;
+
+          dayTransactions.forEach((t) => {
+            if (t.type === "INCOME") {
+              totalIncome += Number(t.amount) || 0;
+            } else {
+              totalExpense += Number(t.amount) || 0;
+            }
+          });
+
+          return {
+            date,
+            transactions: dayTransactions,
+            totalIncome,
+            totalExpense,
+            dailyBalance: totalIncome - totalExpense,
+          };
+        }
+      );
+
+      return result.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+    },
+    []
+  );
+
+  // Carica le transazioni - evitando loop infiniti
+  const loadTransactions = useCallback(
+    async (newPage = 1, search = "") => {
+      if (isLoading) return; // Previene chiamate multiple se è già in caricamento
+
+      try {
+        const filters = {
+          search: search || undefined,
+          page: newPage,
+          limit: 10,
+          sortBy: "date",
+          sortDirection: "desc" as "desc",
+          month: selectedMonth || undefined,
+          type: selectedType || undefined,
+          categoryId: selectedCategory || undefined,
+        };
+
+        await dispatch(fetchTransactions(filters));
+      } catch (error: any) {
+        console.error(
+          "Errore durante il caricamento delle transazioni:",
+          error
+        );
+
+        // Reset state in case of error
+        setRefreshing(false);
+        setLoadingMore(false);
+
+        // Allow API service to handle 401 errors globally
+        // The API interceptor will handle redirection to login
+        if (error.response?.status !== 401) {
+          // For other errors, show a message to the user
+          alert("Errore nel caricamento delle transazioni. Riprova più tardi.");
+        }
       }
+    },
+    [
+      dispatch,
+      isLoading,
+      selectedMonth,
+      selectedType,
+      selectedCategory,
+      navigation,
+    ]
+  );
 
-      // Cerca nella categoria
-      if (
-        transaction.category &&
-        transaction.category.name &&
-        transaction.category.name.toLowerCase().includes(searchLower)
-      ) {
-        return true;
-      }
+  // Carica i dati iniziali - una sola volta al montaggio
+  useEffect(() => {
+    if (!initialLoadDone.current) {
+      loadTransactions(1, searchQuery);
+      initialLoadDone.current = true;
+    }
+  }, []);
 
-      // Cerca nei tag (se esistono)
-      if (transaction.tags && transaction.tags.length > 0) {
-        // In alcuni casi tags può essere un array di stringhe o un array di oggetti con proprietà 'name'
-        return transaction.tags.some((tag) => {
-          if (typeof tag === "string") {
-            return tag.toLowerCase().includes(searchLower);
-          } else if (typeof tag === "object" && tag !== null && "name" in tag) {
-            return tag.name.toLowerCase().includes(searchLower);
-          }
-          return false;
-        });
-      }
+  // Aggiorna i gruppi quando le transazioni cambiano
+  useEffect(() => {
+    if (transactions?.length > 0) {
+      const grouped = groupTransactionsByDate(transactions);
+      setGroupedTransactions(grouped);
+    } else {
+      setGroupedTransactions([]);
+    }
+  }, [transactions, groupTransactionsByDate]);
 
-      return false;
-    });
+  // Gestisce l'aggiornamento
+  const onRefresh = useCallback(async () => {
+    if (isLoading) return; // Evita chiamate multiple durante il caricamento
 
-    setFilteredTransactions(filtered);
-  }, [searchText, transactions]);
-
-  // Gestisce il refresh pull-to-refresh
-  const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    setPage(1);
+    await loadTransactions(1, searchQuery);
     setRefreshing(false);
-  };
+  }, [loadTransactions, searchQuery, isLoading]);
 
-  // Funzione per formattare la valuta
-  const formatCurrency = (amount: any): string => {
-    // Converti esplicitamente a number se possibile
-    const numAmount = Number(amount);
+  // Gestisce la ricerca
+  const handleSearch = useCallback(() => {
+    if (isLoading) return; // Evita chiamate multiple durante il caricamento
 
-    // Verifica se è un numero valido
-    if (amount === undefined || amount === null || isNaN(numAmount)) {
-      return "€0,00";
-    }
+    setPage(1);
+    loadTransactions(1, searchQuery);
+  }, [loadTransactions, searchQuery, isLoading]);
 
-    try {
-      return `€${numAmount.toFixed(2)}`.replace(".", ",");
-    } catch (error) {
-      console.error("Error formatting currency:", error, amount);
-      return "€0,00";
-    }
-  };
+  // Elimina una transazione
+  const handleDeleteTransaction = useCallback(
+    async (transactionId: string) => {
+      if (isLoading) return; // Evita chiamate multiple durante il caricamento
 
-  // Calcola i totali delle transazioni
-  const calculateTotals = () => {
-    const totals = {
-      income: 0,
-      expense: 0,
-      balance: 0,
-    };
+      try {
+        await dispatch(deleteTransaction(transactionId));
+        // Ricarica le transazioni per aggiornare la vista
+        setPage(1);
+        loadTransactions(1, searchQuery);
+      } catch (error) {
+        console.error(
+          "Errore durante l'eliminazione della transazione:",
+          error
+        );
+      }
+    },
+    [dispatch, loadTransactions, searchQuery, isLoading]
+  );
 
-    // Usa filteredTransactions invece di transactions
-    filteredTransactions.forEach((transaction) => {
+  // Formatta la data per il titolo del gruppo
+  const formatGroupDate = useCallback((dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("it-IT", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }, []);
+
+  // Formatta l'importo in valuta
+  const formatCurrency = useCallback((amount: number) => {
+    return `€${Math.abs(amount).toFixed(2)}`.replace(".", ",");
+  }, []);
+
+  // Calcola il riepilogo - memoizzato per evitare calcoli inutili
+  const summary = useMemo(() => {
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    transactions.forEach((transaction: Transaction) => {
       if (transaction.type === "INCOME") {
-        totals.income += Number(transaction.amount);
+        totalIncome += Number(transaction.amount) || 0;
       } else {
-        totals.expense += Number(transaction.amount);
+        totalExpense += Number(transaction.amount) || 0;
       }
     });
 
-    totals.balance = totals.income - totals.expense;
-    return totals;
-  };
+    return {
+      totalIncome,
+      totalExpense,
+      balance: totalIncome - totalExpense,
+    };
+  }, [transactions]);
 
-  const transactionTotals = calculateTotals();
+  // Carica più transazioni
+  const handleLoadMore = useCallback(() => {
+    if (loadingMore || isLoading) return;
+    const currentPagination = paginationFromState;
 
-  // Componente per visualizzare i totali
-  const renderTransactionTotals = () => {
+    if (currentPagination && page < currentPagination.totalPages) {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      loadTransactions(nextPage, searchQuery).finally(() => {
+        setPage(nextPage);
+        setLoadingMore(false);
+      });
+    }
+  }, [
+    loadingMore,
+    isLoading,
+    paginationFromState,
+    page,
+    loadTransactions,
+    searchQuery,
+  ]);
+
+  // Gestisce l'applicazione dei filtri
+  const applyFilters = useCallback(() => {
+    setPage(1);
+    loadTransactions(1, searchQuery);
+    setShowFilters(false);
+  }, [loadTransactions, searchQuery]);
+
+  // Resetta i filtri
+  const resetFilters = useCallback(() => {
+    setSelectedMonth("");
+    setSelectedType("");
+    setSelectedCategory("");
+    setPage(1);
+    loadTransactions(1, searchQuery);
+    setShowFilters(false);
+  }, [loadTransactions, searchQuery]);
+
+  // Renderizza un gruppo di transazioni
+  const renderItem = useCallback(
+    ({ item }: { item: DayGroup }) => {
+      return (
+        <View
+          style={[
+            styles.groupContainer,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
+          <View
+            style={[
+              styles.groupHeader,
+              { backgroundColor: theme.colors.background },
+            ]}
+          >
+            <Text style={[styles.groupDate, { color: theme.colors.text }]}>
+              {formatGroupDate(item.date)}
+            </Text>
+            <View style={styles.groupSummary}>
+              <Text
+                style={[
+                  styles.groupBalance,
+                  {
+                    color:
+                      item.dailyBalance >= 0
+                        ? theme.colors.success
+                        : theme.colors.error,
+                  },
+                ]}
+              >
+                {item.dailyBalance >= 0 ? "+" : "-"}
+                {formatCurrency(Math.abs(item.dailyBalance))}
+              </Text>
+            </View>
+          </View>
+
+          {item.transactions.map((transaction) => (
+            <TransactionItem
+              key={transaction.id}
+              transaction={transaction}
+              onDelete={handleDeleteTransaction}
+            />
+          ))}
+        </View>
+      );
+    },
+    [formatGroupDate, formatCurrency, theme.colors, handleDeleteTransaction]
+  );
+
+  // Renderizza il sommario
+  const renderSummary = () => {
+    if (transactions.length === 0) return null;
+
     return (
       <View
         style={[
-          styles.totalsContainer,
+          styles.summaryContainer,
           { backgroundColor: theme.colors.surface },
         ]}
       >
-        <Text
-          style={[
-            styles.transactionsCount,
-            { color: theme.colors.textSecondary },
-          ]}
-        >
-          Mostrando {filteredTransactions.length} transazioni
+        <Text style={styles.summaryTitle}>
+          Mostrando {transactions.length} transazioni
         </Text>
-        <View style={styles.totalsSummary}>
-          <Text style={[styles.totalIncome, { color: theme.colors.success }]}>
-            Entrate: {formatCurrency(transactionTotals.income)}
+        <View style={styles.summaryRow}>
+          <Text style={[styles.summaryLabel, { color: theme.colors.success }]}>
+            Entrate:{" "}
+            <Text style={styles.summaryAmount}>
+              {formatCurrency(summary.totalIncome)}
+            </Text>
           </Text>
-          <Text style={[styles.totalExpense, { color: theme.colors.error }]}>
-            Uscite: {formatCurrency(transactionTotals.expense)}
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={[styles.summaryLabel, { color: theme.colors.error }]}>
+            Uscite:{" "}
+            <Text style={styles.summaryAmount}>
+              {formatCurrency(summary.totalExpense)}
+            </Text>
           </Text>
+        </View>
+        <View style={styles.summaryRow}>
           <Text
             style={[
-              styles.totalBalance,
+              styles.summaryLabel,
               {
                 color:
-                  transactionTotals.balance >= 0
-                    ? theme.colors.primary
+                  summary.balance >= 0
+                    ? theme.colors.success
                     : theme.colors.error,
               },
             ]}
           >
-            Bilancio: {formatCurrency(transactionTotals.balance)}
+            Bilancio:{" "}
+            <Text style={styles.summaryAmount}>
+              {summary.balance >= 0 ? "€" : "€-"}
+              {formatCurrency(Math.abs(summary.balance))}
+            </Text>
           </Text>
         </View>
       </View>
     );
   };
 
-  // Formatta la data
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "";
-
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString("it-IT", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    } catch (error) {
-      console.error("Errore nella formattazione della data:", error);
-      return "";
-    }
-  };
-
-  // Gestisce l'eliminazione di una transazione
-  const handleDeleteTransaction = async (transactionId: string) => {
-    try {
-      await dispatch(deleteTransaction(transactionId)).unwrap();
-      Alert.alert("Successo", "Transazione eliminata con successo");
-      onRefresh();
-    } catch (error) {
-      console.error("Errore durante l'eliminazione:", error);
-      Alert.alert("Errore", "Impossibile eliminare la transazione");
-    }
-  };
-
-  // Chiede conferma prima di eliminare
-  const confirmDelete = (transactionId: string) => {
-    Alert.alert(
-      "Conferma eliminazione",
-      "Sei sicuro di voler eliminare questa transazione?",
-      [
-        {
-          text: "Annulla",
-          style: "cancel",
-        },
-        {
-          text: "Elimina",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await dispatch(deleteTransaction(transactionId)).unwrap();
-              // Ricarica le transazioni dopo l'eliminazione
-              loadData();
-            } catch (error) {
-              console.error("Errore durante l'eliminazione:", error);
-              Alert.alert("Errore", "Impossibile eliminare la transazione");
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  // Gestisce la selezione/deselezione di una categoria nel filtro
-  const toggleCategorySelection = (categoryId: string) => {
-    setSelectedCategoryIds((prevSelected) =>
-      prevSelected.includes(categoryId)
-        ? prevSelected.filter((id) => id !== categoryId)
-        : [...prevSelected, categoryId]
-    );
-  };
-
-  // Resetta tutti i filtri
-  const resetFilters = () => {
-    setSearchText("");
-    setSelectedMonth(null);
-    setSelectedType(null);
-    setSelectedCategoryIds([]);
-    setFilterModalVisible(false);
-  };
-
-  // Applica i filtri e chiude il modale
-  const applyFilters = () => {
-    // Se è selezionato un tipo, carica le categorie per quel tipo
-    if (selectedType) {
-      dispatch(fetchCategoriesByType(selectedType));
-    } else {
-      // Altrimenti carica tutte le categorie
-      dispatch(fetchCategories());
+  // Renderizza i chip delle categorie dinamicamente dalle categorie caricate dal backend
+  const renderCategoryChips = useCallback(() => {
+    if (isLoadingCategories) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+        </View>
+      );
     }
 
-    setFilterModalVisible(false);
-    loadData();
-  };
+    if (categoryList.length === 0) {
+      return (
+        <Text
+          style={{
+            color: theme.colors.textSecondary,
+            textAlign: "center",
+            padding: 16,
+          }}
+        >
+          Nessuna categoria disponibile
+        </Text>
+      );
+    }
 
-  // Renderizza l'elemento della transazione
-  const renderTransactionItem = (data: { item: Transaction }) => {
-    const transaction = data.item;
-    const amount = transaction.amount || 0;
-    const isExpense = transaction.type === "EXPENSE";
-    const iconName = transaction.category?.icon
-      ? getSafeIcon(transaction.category.icon)
-      : "default";
+    const allCategoriesOption = {
+      id: "",
+      name: "Tutte le categorie",
+      type: "",
+      color: theme.colors.primary,
+    };
+
+    const categoriesWithAll = [allCategoriesOption, ...categoryList];
 
     return (
-      <TouchableOpacity
-        style={[
-          styles.transactionCard,
-          { backgroundColor: theme.colors.surface },
-        ]}
-        onPress={() =>
-          navigation.navigate("EditTransaction", {
-            transactionId: transaction.id,
-          })
-        }
-        onLongPress={() => confirmDelete(transaction.id)}
-        delayLongPress={500}
-      >
-        <View style={styles.transactionIcon}>
-          <View
+      <View style={styles.categoriesGrid}>
+        {categoriesWithAll.map((category) => (
+          <TouchableOpacity
+            key={category.id}
             style={[
-              styles.iconCircle,
-              {
-                backgroundColor:
-                  transaction.category?.color || theme.colors.secondary,
-              },
-            ]}
-          >
-            <Ionicons name={safeIcons[iconName]} size={20} color="white" />
-          </View>
-        </View>
-
-        <View style={styles.transactionDetails}>
-          <Text style={[styles.transactionTitle, { color: theme.colors.text }]}>
-            {transaction.description || "Transazione"}
-          </Text>
-          <View style={styles.transactionSubtitle}>
-            <Text
-              style={[
-                styles.transactionCategory,
-                { color: theme.colors.textSecondary },
-              ]}
-            >
-              {transaction.category?.name || "Non categorizzato"}
-            </Text>
-            {transaction.date && (
-              <Text
-                style={[
-                  styles.transactionDate,
-                  { color: theme.colors.textSecondary },
-                ]}
-              >
-                {formatDate(transaction.date)}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        <Text
-          style={[
-            styles.transactionAmount,
-            {
-              color: isExpense ? theme.colors.error : theme.colors.success,
-            },
-          ]}
-        >
-          {isExpense ? "-" : "+"}
-          {formatCurrency(transaction.amount)}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  // Renderizza l'elemento nascosto per lo swipe
-  const renderHiddenItem = (data: { item: Transaction }) => (
-    <View style={styles.rowBack}>
-      <TouchableOpacity
-        style={[styles.deleteButton, { backgroundColor: theme.colors.error }]}
-        onPress={() => confirmDelete(data.item.id)}
-      >
-        <Ionicons name="trash-outline" size={24} color="white" />
-      </TouchableOpacity>
-    </View>
-  );
-
-  // Renderizza il modale dei filtri
-  const renderFilterModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={filterModalVisible}
-      onRequestClose={() => setFilterModalVisible(false)}
-    >
-      <TouchableWithoutFeedback onPress={() => setFilterModalVisible(false)}>
-        <View style={styles.modalOverlay} />
-      </TouchableWithoutFeedback>
-
-      <View
-        style={[
-          styles.modalContent,
-          { backgroundColor: theme.colors.background },
-        ]}
-      >
-        <View style={styles.modalHeader}>
-          <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-            Filtri
-          </Text>
-          <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
-            <Ionicons name="close" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Filtro per mese */}
-        <Text style={[styles.filterLabel, { color: theme.colors.text }]}>
-          Mese
-        </Text>
-        <View style={styles.monthsContainer}>
-          {months.map((month) => (
-            <TouchableOpacity
-              key={month.value}
-              style={[
-                styles.monthItem,
-                selectedMonth === month.value && {
-                  backgroundColor: theme.colors.primary,
-                },
-              ]}
-              onPress={() =>
-                setSelectedMonth(
-                  selectedMonth === month.value ? null : month.value
-                )
-              }
-            >
-              <Text
-                style={[
-                  styles.monthText,
-                  {
-                    color:
-                      selectedMonth === month.value
-                        ? "white"
-                        : theme.colors.text,
+              styles.categoryChip,
+              selectedCategory === category.id
+                ? { backgroundColor: theme.colors.primary }
+                : {
+                    backgroundColor: theme.colors.background,
+                    borderColor: theme.colors.border,
+                    borderWidth: 1,
                   },
-                ]}
-              >
-                {month.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Filtro per tipo */}
-        <Text style={[styles.filterLabel, { color: theme.colors.text }]}>
-          Tipo
-        </Text>
-        <View style={styles.typeContainer}>
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              selectedType === "EXPENSE" && {
-                backgroundColor: theme.colors.error,
-              },
             ]}
-            onPress={() =>
-              setSelectedType(selectedType === "EXPENSE" ? null : "EXPENSE")
-            }
+            onPress={() => setSelectedCategory(category.id)}
           >
+            <Ionicons
+              name={getCategoryIcon(category.name)}
+              size={18}
+              color={
+                selectedCategory === category.id ? "#fff" : theme.colors.text
+              }
+              style={styles.categoryIcon}
+            />
             <Text
-              style={{
-                color: selectedType === "EXPENSE" ? "white" : theme.colors.text,
-              }}
-            >
-              Spese
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              selectedType === "INCOME" && {
-                backgroundColor: theme.colors.success,
-              },
-            ]}
-            onPress={() =>
-              setSelectedType(selectedType === "INCOME" ? null : "INCOME")
-            }
-          >
-            <Text
-              style={{
-                color: selectedType === "INCOME" ? "white" : theme.colors.text,
-              }}
-            >
-              Entrate
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Filtro per categoria */}
-        <Text style={[styles.filterLabel, { color: theme.colors.text }]}>
-          Categorie
-        </Text>
-        <View style={styles.categoriesContainer}>
-          {categories.map((category) => (
-            <TouchableOpacity
-              key={category.id}
               style={[
-                styles.categoryItem,
-                selectedCategoryIds.includes(category.id) && {
-                  backgroundColor: theme.colors.primary + "30", // 30% opacità
+                styles.categoryText,
+                {
+                  color:
+                    selectedCategory === category.id
+                      ? "#fff"
+                      : theme.colors.text,
                 },
               ]}
-              onPress={() => toggleCategorySelection(category.id)}
             >
-              <View
-                style={[
-                  styles.categoryDot,
-                  { backgroundColor: category.color },
-                ]}
-              />
-              <Text style={[styles.categoryName, { color: theme.colors.text }]}>
-                {category.name}
-              </Text>
-              {selectedCategoryIds.includes(category.id) && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color={theme.colors.primary}
-                  style={styles.checkIcon}
-                />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Pulsanti di azione */}
-        <View style={styles.actionButtons}>
-          <Button
-            title="Reset"
-            variant="outline"
-            onPress={resetFilters}
-            style={{ flex: 1, marginRight: 8 }}
-          />
-          <Button
-            title="Applica"
-            onPress={applyFilters}
-            style={{ flex: 1, marginLeft: 8 }}
-          />
-        </View>
+              {category.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
-    </Modal>
-  );
+    );
+  }, [categoryList, selectedCategory, isLoadingCategories, theme]);
 
-  // Mostra il caricamento se non c'è refresh e sta caricando
-  if (isLoading && !refreshing && filteredTransactions.length === 0) {
-    return <LoadingScreen message="Caricamento transazioni..." />;
-  }
+  // Helper per ottenere l'icona appropriata per ogni categoria
+  const getCategoryIcon = useCallback((categoryName: string): any => {
+    if (!categoryName) return "grid-outline";
+
+    // Cerca prima per corrispondenza esatta (case insensitive)
+    for (const [key, value] of Object.entries(CATEGORY_ICONS)) {
+      if (key.toLowerCase() === categoryName.toLowerCase()) {
+        return value;
+      }
+    }
+
+    // Se non troviamo una corrispondenza esatta, cerchiamo corrispondenze parziali
+    for (const [key, value] of Object.entries(CATEGORY_ICONS)) {
+      if (categoryName.toLowerCase().includes(key.toLowerCase())) {
+        return value;
+      }
+    }
+
+    // Log per debugging
+    console.log("Categoria non riconosciuta:", categoryName);
+
+    // Icona di fallback per default
+    return "ellipsis-horizontal-outline";
+  }, []);
 
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      {/* Barra di ricerca e filtri */}
+      {/* Barra di ricerca */}
       <View style={styles.searchContainer}>
         <View
           style={[
@@ -656,359 +724,564 @@ export default function TransactionsScreen() {
             name="search-outline"
             size={20}
             color={theme.colors.textSecondary}
-            style={styles.searchIcon}
           />
           <TextInput
             style={[styles.searchInput, { color: theme.colors.text }]}
             placeholder="Cerca transazioni..."
             placeholderTextColor={theme.colors.textSecondary}
-            value={searchText}
-            onChangeText={setSearchText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
           />
-          {searchText ? (
-            <TouchableOpacity onPress={() => setSearchText("")}>
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-            </TouchableOpacity>
-          ) : null}
         </View>
         <TouchableOpacity
           style={[
             styles.filterButton,
             { backgroundColor: theme.colors.primary },
           ]}
-          onPress={() => setFilterModalVisible(true)}
+          onPress={() => setShowFilters(true)}
         >
-          <Ionicons name="options-outline" size={20} color="white" />
+          <Ionicons name="options-outline" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Indicatore di filtri attivi */}
-      {(searchText ||
-        selectedMonth ||
-        selectedType ||
-        selectedCategoryIds.length > 0) && (
-        <View style={styles.activeFiltersContainer}>
-          <Text
-            style={[
-              styles.activeFiltersText,
-              { color: theme.colors.textSecondary },
-            ]}
-          >
-            Filtri attivi:
-            {searchText ? " Ricerca" : ""}
-            {selectedMonth
-              ? ` Mese: ${
-                  months.find((m) => m.value === selectedMonth)?.label ||
-                  selectedMonth
-                }`
-              : ""}
-            {selectedType
-              ? ` Tipo: ${selectedType === "INCOME" ? "Entrate" : "Uscite"}`
-              : ""}
-            {selectedCategoryIds.length > 0
-              ? ` Categorie: ${categories
-                  .filter((cat) => selectedCategoryIds.includes(cat.id))
-                  .map((cat) => cat.name)
-                  .join(", ")}`
-              : ""}
-          </Text>
-          <TouchableOpacity onPress={resetFilters}>
-            <Text style={{ color: theme.colors.primary }}>Reset</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Lista delle transazioni */}
-      {filteredTransactions.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text
-            style={[
-              styles.emptyStateText,
-              { color: theme.colors.textSecondary },
-            ]}
-          >
-            Nessuna transazione trovata
-          </Text>
-        </View>
-      ) : (
-        <>
-          <SwipeListView
-            data={filteredTransactions}
-            renderItem={renderTransactionItem}
-            renderHiddenItem={renderHiddenItem}
-            rightOpenValue={-75}
-            disableRightSwipe
-            keyExtractor={(item) => `transaction-${item.id}`}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={[theme.colors.primary]}
-                tintColor={theme.colors.primary}
-              />
-            }
-          />
-          {renderTransactionTotals()}
-        </>
-      )}
-
       {/* Modale dei filtri */}
-      {renderFilterModal()}
-
-      {/* FAB per aggiungere una nuova transazione */}
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        onPress={() => navigation.navigate("AddTransaction")}
+      <Modal
+        visible={showFilters}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFilters(false)}
       >
-        <Ionicons name="add" size={24} color="white" />
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Filtri
+              </Text>
+              <View style={styles.modalHeaderButtons}>
+                <TouchableOpacity
+                  onPress={resetFilters}
+                  style={styles.resetButton}
+                >
+                  <Text
+                    style={[
+                      styles.resetButtonText,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    Reset
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowFilters(false)}>
+                  <Ionicons name="close" size={24} color={theme.colors.text} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <ScrollView
+              style={styles.filtersScrollView}
+              ref={filterScrollViewRef}
+            >
+              {/* Filtro per mese */}
+              <View style={styles.filterSection}>
+                <Text
+                  style={[
+                    styles.filterSectionTitle,
+                    { color: theme.colors.text },
+                  ]}
+                >
+                  MESE
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.chipScroll}
+                  contentContainerStyle={styles.chipScrollContent}
+                  ref={monthsScrollViewRef}
+                >
+                  {months.map((month) => (
+                    <TouchableOpacity
+                      key={month.value}
+                      style={[
+                        styles.optionChip,
+                        selectedMonth === month.value
+                          ? { backgroundColor: theme.colors.primary }
+                          : {
+                              backgroundColor: theme.colors.background,
+                              borderColor: theme.colors.border,
+                              borderWidth: 1,
+                            },
+                      ]}
+                      onPress={() => setSelectedMonth(month.value)}
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          {
+                            color:
+                              selectedMonth === month.value
+                                ? "#fff"
+                                : theme.colors.text,
+                          },
+                        ]}
+                      >
+                        {month.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Filtro per tipo */}
+              <View style={styles.filterSection}>
+                <Text
+                  style={[
+                    styles.filterSectionTitle,
+                    { color: theme.colors.text },
+                  ]}
+                >
+                  TIPO
+                </Text>
+                <View style={styles.typeButtons}>
+                  {types.map((type) => (
+                    <TouchableOpacity
+                      key={type.value}
+                      style={[
+                        styles.typeButton,
+                        selectedType === type.value
+                          ? { backgroundColor: theme.colors.primary }
+                          : {
+                              backgroundColor: theme.colors.background,
+                              borderColor: theme.colors.border,
+                              borderWidth: 1,
+                            },
+                      ]}
+                      onPress={() =>
+                        setSelectedType(type.value as "INCOME" | "EXPENSE" | "")
+                      }
+                    >
+                      {type.value === "INCOME" && (
+                        <Ionicons
+                          name="arrow-up-circle-outline"
+                          size={18}
+                          color={
+                            selectedType === type.value ? "#fff" : "#28a745"
+                          }
+                          style={styles.typeIcon}
+                        />
+                      )}
+                      {type.value === "EXPENSE" && (
+                        <Ionicons
+                          name="arrow-down-circle-outline"
+                          size={18}
+                          color={
+                            selectedType === type.value ? "#fff" : "#dc3545"
+                          }
+                          style={styles.typeIcon}
+                        />
+                      )}
+                      {type.value === "" && (
+                        <Ionicons
+                          name="apps-outline"
+                          size={18}
+                          color={
+                            selectedType === type.value
+                              ? "#fff"
+                              : theme.colors.text
+                          }
+                          style={styles.typeIcon}
+                        />
+                      )}
+                      <Text
+                        style={[
+                          styles.typeText,
+                          {
+                            color:
+                              selectedType === type.value
+                                ? "#fff"
+                                : theme.colors.text,
+                          },
+                        ]}
+                      >
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Filtro per categoria - dinamico dalle categorie del backend */}
+              <View style={styles.filterSection}>
+                <Text
+                  style={[
+                    styles.filterSectionTitle,
+                    { color: theme.colors.text },
+                  ]}
+                >
+                  CATEGORIA
+                </Text>
+                {renderCategoryChips()}
+              </View>
+            </ScrollView>
+
+            <View
+              style={[
+                styles.modalFooter,
+                { borderTopColor: theme.colors.border },
+              ]}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.footerButton,
+                  styles.cancelButton,
+                  { borderColor: theme.colors.border },
+                ]}
+                onPress={() => setShowFilters(false)}
+              >
+                <Text style={[styles.buttonText, { color: theme.colors.text }]}>
+                  Annulla
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.footerButton,
+                  styles.applyButton,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+                onPress={applyFilters}
+              >
+                <Text style={[styles.buttonText, { color: "#fff" }]}>
+                  Applica
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Lista delle transazioni raggruppate per data */}
+      <FlatList
+        data={groupedTransactions}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.date}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+          />
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={styles.emptyContainer}>
+              <Text
+                style={[
+                  styles.emptyText,
+                  { color: theme.colors.textSecondary },
+                ]}
+              >
+                Nessuna transazione trovata
+              </Text>
+            </View>
+          ) : null
+        }
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListHeaderComponent={
+          isLoading && !refreshing && groupedTransactions.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+          ) : null
+        }
+        ListFooterComponentStyle={styles.footerContainer}
+      />
+
+      {/* Riepilogo delle transazioni */}
+      {renderSummary()}
+
+      {/* Pulsante per aggiungere una nuova transazione */}
+      <TouchableOpacity
+        style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+        onPress={() => navigation.navigate("AddTransaction", {})}
+      >
+        <Ionicons name="add" size={30} color="white" />
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   searchContainer: {
     flexDirection: "row",
-    marginBottom: 12,
+    alignItems: "center",
+    padding: 16,
+    paddingBottom: 8,
   },
   searchInputContainer: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    height: 44,
-    borderRadius: 22,
-    marginRight: 8,
-  },
-  searchIcon: {
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    height: 44,
-  },
-  filterButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  activeFiltersContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  activeFiltersText: {
-    fontSize: 12,
-  },
-  transactionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  transactionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  transactionDetails: {
-    flex: 1,
-  },
-  transactionTitle: {
     fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 4,
-  },
-  transactionSubtitle: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  transactionCategory: {
-    fontSize: 14,
-  },
-  transactionDate: {
-    fontSize: 12,
     marginLeft: 8,
   },
-  transactionAmount: {
+  filterButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyContainer: {
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: "center",
+  },
+  loadingContainer: {
+    padding: 24,
+    alignItems: "center",
+  },
+  groupContainer: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  groupHeader: {
+    padding: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  groupDate: {
     fontSize: 16,
     fontWeight: "bold",
+    textTransform: "capitalize",
   },
-  emptyState: {
-    flex: 1,
+  groupSummary: {
+    marginTop: 4,
+  },
+  groupBalance: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  separator: {
+    height: 8,
+  },
+  footerLoader: {
+    padding: 16,
+    alignItems: "center",
+  },
+  footerContainer: {
+    paddingBottom: 72, // Spazio per il pulsante di aggiunta
+  },
+  addButton: {
+    position: "absolute",
+    right: 16,
+    bottom: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
   },
-  emptyStateText: {
-    fontSize: 16,
+  summaryContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  rowBack: {
-    alignItems: "center",
-    backgroundColor: "transparent",
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingRight: 15,
+  summaryTitle: {
+    fontSize: 14,
     marginBottom: 8,
-    borderRadius: 12,
+    opacity: 0.7,
   },
-  deleteButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 75,
-    height: "100%",
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 2,
+  },
+  summaryLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  summaryAmount: {
+    fontWeight: "bold",
   },
   modalOverlay: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
-    height: "80%",
-    maxHeight: 600,
+    padding: 16,
+    maxHeight: "90%", // Aumentato per mostrare più contenuto
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.1)",
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
   },
-  filterLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 12,
-    marginTop: 8,
+  filtersContent: {
+    flex: 1,
   },
-  monthsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 16,
+  filtersScrollView: {
+    maxHeight: 400, // Altezza fissa per assicurarsi che sia visibile
   },
-  monthItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    margin: 4,
+  filterSection: {
+    marginBottom: 20,
   },
-  monthText: {
+  filterSectionTitle: {
     fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 12,
+    letterSpacing: 1,
   },
-  typeContainer: {
+  chipScroll: {
+    paddingBottom: 8,
+  },
+  chipScrollContent: {
+    paddingRight: 16,
+  },
+  optionChip: {
+    marginRight: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    minWidth: 80,
+    alignItems: "center",
+  },
+  optionText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  typeButtons: {
     flexDirection: "row",
-    marginBottom: 16,
+    justifyContent: "space-between",
   },
   typeButton: {
     flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    marginHorizontal: 4,
-    backgroundColor: "#eee",
-  },
-  categoriesContainer: {
-    marginBottom: 16,
-  },
-  categoryItem: {
     flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  categoryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  categoryName: {
-    flex: 1,
-  },
-  checkIcon: {
-    marginLeft: 8,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    marginTop: 16,
-  },
-  fab: {
-    position: "absolute",
-    width: 56,
-    height: 56,
     alignItems: "center",
     justifyContent: "center",
-    right: 20,
-    bottom: 20,
-    borderRadius: 28,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  // Stili per i totali
-  totalsContainer: {
-    padding: 16,
+    paddingVertical: 12,
+    marginHorizontal: 4,
     borderRadius: 12,
-    marginTop: 12,
-    marginBottom: 80, // Spazio per il FAB
   },
-  transactionsCount: {
-    fontSize: 12,
-    marginBottom: 4,
+  typeIcon: {
+    marginRight: 6,
   },
-  totalsSummary: {
-    flexDirection: "column",
-    gap: 4,
-  },
-  totalIncome: {
+  typeText: {
     fontSize: 14,
     fontWeight: "500",
   },
-  totalExpense: {
+  categoriesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -4,
+  },
+  categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "46%",
+    margin: "2%",
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  categoryIcon: {
+    marginRight: 6,
+  },
+  categoryText: {
     fontSize: 14,
     fontWeight: "500",
   },
-  totalBalance: {
-    fontSize: 14,
-    fontWeight: "700",
+  modalFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 16,
+    marginTop: 8,
+    borderTopWidth: 1,
+  },
+  footerButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginHorizontal: 4,
+  },
+  cancelButton: {
+    borderWidth: 1,
+  },
+  applyButton: {
+    elevation: 2,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalHeaderButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  resetButton: {
+    marginRight: 16,
+  },
+  resetButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });
+
+export default TransactionsScreen;
