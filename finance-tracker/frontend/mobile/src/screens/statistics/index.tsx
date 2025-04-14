@@ -3,6 +3,8 @@ import { View, ScrollView, Dimensions } from "react-native";
 import styled from "styled-components/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { PieChart } from "react-native-chart-kit";
+import { Circle, G, Text as SVGText } from "react-native-svg";
 
 import { useAppDispatch, useAppSelector } from "../../store";
 import { Button } from "../../components/common/button";
@@ -78,10 +80,11 @@ function groupTransactionsByCategory(transactions: Transaction[]) {
 
     if (isExpense) {
       expensesByCategory[categoryName] =
-        (expensesByCategory[categoryName] || 0) + amount;
+        Math.round((expensesByCategory[categoryName] || 0) + amount * 100) /
+        100;
     } else {
       incomesByCategory[categoryName] =
-        (incomesByCategory[categoryName] || 0) + amount;
+        Math.round((incomesByCategory[categoryName] || 0) + amount * 100) / 100;
     }
   });
 
@@ -129,6 +132,60 @@ export default function StatisticsScreen() {
     );
   }, [incomesByCategory]);
 
+  // Colori per il grafico a torta - Assicuriamoci che ogni categoria abbia un colore distinto
+  const categoryColors: Record<string, string> = {
+    Grocery: "#4DB6AC",
+    Special: "#F06292",
+    Restaurant: "#4A89DC",
+    Bar: "#FF9800",
+    Technology: "#9C27B0",
+    Taxes: "#78909C",
+    Casa: "#45B7D1",
+    Intrattenimento: "#FFA500",
+    Salute: "#98D8C8",
+    Shopping: "#F06292",
+    Utenze: "#64B5F6",
+    Stipendio: "#66BB6A",
+    Investimenti: "#9575CD",
+    Regali: "#FFD54F",
+    Vendite: "#4DB6AC",
+    Altro: "#90A4AE",
+  };
+
+  // Palette di colori alternativa per assicurarci di avere colori distinti
+  const colorPalette = [
+    "#4DB6AC",
+    "#F06292",
+    "#4A89DC",
+    "#FF9800",
+    "#9C27B0",
+    "#78909C",
+    "#45B7D1",
+    "#FFA500",
+    "#98D8C8",
+    "#66BB6A",
+    "#9575CD",
+    "#FFD54F",
+    "#F44336",
+    "#3F51B5",
+    "#009688",
+  ];
+
+  // Restituisce un colore per una categoria (con fallback per categorie non mappate)
+  const getCategoryColor = (category: string, index: number = 0) => {
+    // Per garantire consistenza nei colori, proviamo prima a vedere se c'è un colore mappato
+    if (categoryColors[category]) {
+      return categoryColors[category];
+    }
+
+    // Per categorie senza mappatura, usiamo un sistema deterministico basato sul nome
+    // Questo garantisce che la stessa categoria riceva sempre lo stesso colore
+    const nameSum = category
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colorPalette[nameSum % colorPalette.length];
+  };
+
   // Prepara i dati per il grafico a torta
   const pieChartData = useMemo(() => {
     const categories =
@@ -137,10 +194,11 @@ export default function StatisticsScreen() {
 
     // Converti l'oggetto in array di oggetti per facilitare la renderizzazione
     return Object.entries(categories)
-      .map(([category, amount]) => ({
+      .map(([category, amount], index) => ({
         category,
         amount: Number(amount),
         percentage: total > 0 ? (Number(amount) / total) * 100 : 0,
+        color: getCategoryColor(category, index), // Passiamo l'indice per assegnare colori unici
       }))
       .sort((a, b) => Number(b.amount) - Number(a.amount)); // Ordina per importo decrescente
   }, [
@@ -159,27 +217,6 @@ export default function StatisticsScreen() {
     }).format(amount);
   };
 
-  // Colori per il grafico a torta
-  const categoryColors: Record<string, string> = {
-    Cibo: "#FF6B6B",
-    Trasporto: "#4ECDC4",
-    Casa: "#45B7D1",
-    Intrattenimento: "#FFA500",
-    Salute: "#98D8C8",
-    Shopping: "#F06292",
-    Utenze: "#64B5F6",
-    Stipendio: "#66BB6A",
-    Investimenti: "#9575CD",
-    Regali: "#FFD54F",
-    Vendite: "#4DB6AC",
-    Altro: "#90A4AE",
-  };
-
-  // Restituisce un colore per una categoria (con fallback per categorie non mappate)
-  const getCategoryColor = (category: string) => {
-    return categoryColors[category] || "#90A4AE";
-  };
-
   // Gestisce il cambio di periodo
   const handlePeriodChange = (period: TimePeriod) => {
     setSelectedPeriod(period);
@@ -195,14 +232,10 @@ export default function StatisticsScreen() {
     // Carica i dati del dashboard quando il componente si monta
     const loadData = async () => {
       try {
-        // Definisci l'intervallo di date per il mese corrente
-        const today = new Date();
-        const startDate = new Date(today.getFullYear(), today.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
-        const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-          .toISOString()
-          .split("T")[0];
+        // Definisci l'intervallo di date in base al periodo selezionato
+        const { start, end } = getDateRange(selectedPeriod);
+        const startDate = start.toISOString().split("T")[0];
+        const endDate = end.toISOString().split("T")[0];
 
         console.log(
           "Caricamento dati statistiche dal",
@@ -216,7 +249,7 @@ export default function StatisticsScreen() {
           fetchTransactions({
             startDate,
             endDate,
-            limit: 100,
+            limit: 500, // Aumento il limite per ottenere più transazioni
           })
         );
 
@@ -227,7 +260,7 @@ export default function StatisticsScreen() {
     };
 
     loadData();
-  }, [dispatch]);
+  }, [dispatch, selectedPeriod]); // Aggiungi selectedPeriod alla dipendenza per ricaricare quando cambia il periodo
 
   // Ensure budget stats are defined before rendering with default safe values
   const safeBudgetStats = useMemo(() => {
@@ -244,6 +277,30 @@ export default function StatisticsScreen() {
         : [],
     };
   }, [stats]);
+
+  // Sincronizziamo i dati mostrati nel grafico con i dati del budget
+  useEffect(() => {
+    if (safeBudgetStats.budgetStatus?.length > 0 && pieChartData.length > 0) {
+      console.log("Syncing budget data with chart data");
+
+      // Log the data from both sources for comparison
+      console.log(
+        "Budget status categories:",
+        safeBudgetStats.budgetStatus.map((b) => ({
+          name: b.categoryName,
+          spent: b.spent,
+        }))
+      );
+
+      console.log(
+        "Chart data categories:",
+        pieChartData.map((p) => ({
+          name: p.category,
+          spent: p.amount,
+        }))
+      );
+    }
+  }, [safeBudgetStats.budgetStatus, pieChartData]);
 
   // Renderizza i budget
   const renderBudgets = () => {
@@ -287,7 +344,7 @@ export default function StatisticsScreen() {
                   backgroundColor:
                     percentage >= 100
                       ? "#ef4444" // rosso
-                      : percentage >= 80
+                      : percentage >= 75
                       ? "#f59e0b" // arancione
                       : "#10b981", // verde
                 }}
@@ -302,6 +359,107 @@ export default function StatisticsScreen() {
         </React.Fragment>
       );
     });
+  };
+
+  // Render the chart
+  const renderChart = () => {
+    if (pieChartData.length === 0) {
+      return (
+        <EmptyState>
+          <EmptyStateText>
+            {`Nessuna ${
+              activeView === "expenses" ? "spesa" : "entrata"
+            } registrata nel periodo selezionato.`}
+          </EmptyStateText>
+        </EmptyState>
+      );
+    }
+
+    // Prepara i dati per il grafico a ciambella con colori fissi e distinti
+    const chartData = pieChartData.map((item, index) => {
+      // Per assicurarci che il colore sia brillante e distinto
+      const color = item.color || colorPalette[index % colorPalette.length];
+
+      return {
+        name: item.category,
+        amount: item.amount,
+        percentage: item.percentage,
+        color: color,
+        legendFontColor: "#7F7F7F",
+        legendFontSize: 12,
+      };
+    });
+
+    const totalAmount = activeView === "expenses" ? totalExpenses : totalIncome;
+
+    return (
+      <View style={{ alignItems: "center" }}>
+        <PieChart
+          data={chartData}
+          width={screenWidth - 60}
+          height={220}
+          chartConfig={{
+            backgroundColor: "#ffffff",
+            backgroundGradientFrom: "#ffffff",
+            backgroundGradientTo: "#ffffff",
+            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+          }}
+          accessor="amount"
+          backgroundColor="transparent"
+          paddingLeft="0"
+          absolute
+          hasLegend={false}
+          center={[screenWidth / 4, 0]}
+          avoidFalseZero
+          style={{
+            marginBottom: 10,
+          }}
+          decorator={() => {
+            return (
+              <View
+                style={{
+                  position: "absolute",
+                  left: screenWidth / 2 - 85,
+                  top: 90,
+                  alignItems: "center",
+                }}
+              >
+                <TotalAmount>{formatCurrency(totalAmount)}</TotalAmount>
+              </View>
+            );
+          }}
+        />
+
+        <Legend>
+          {pieChartData
+            .slice(0, 5)
+            .map(({ category, amount, percentage, color }, index) => (
+              <LegendItem key={category}>
+                <ColorIndicator
+                  style={{
+                    backgroundColor:
+                      color || colorPalette[index % colorPalette.length],
+                  }}
+                />
+                <LegendText>
+                  {`${category}: ${formatCurrency(
+                    amount
+                  )} (${percentage.toFixed(1)}%)`}
+                </LegendText>
+              </LegendItem>
+            ))}
+          {pieChartData.length > 5 && (
+            <LegendItem>
+              <ColorIndicator style={{ backgroundColor: "#90A4AE" }} />
+              <LegendText>
+                Altri: {pieChartData.length - 5} categorie
+              </LegendText>
+            </LegendItem>
+          )}
+        </Legend>
+      </View>
+    );
   };
 
   return (
@@ -407,45 +565,7 @@ export default function StatisticsScreen() {
           </ViewButton>
         </ViewSelector>
 
-        <ChartContainer>
-          {pieChartData.length > 0 ? (
-            <>
-              <PieChartVisual>
-                {/* Qui potremmo renderizzare un vero grafico a torta con una libreria come 'react-native-svg-charts' */}
-                {/* Per ora, mostriamo una rappresentazione visiva semplificata */}
-                <PieChartPlaceholder>
-                  <Ionicons name="pie-chart" size={120} color="primary" />
-                  <TotalAmount>
-                    {formatCurrency(
-                      activeView === "expenses" ? totalExpenses : totalIncome
-                    )}
-                  </TotalAmount>
-                </PieChartPlaceholder>
-
-                <Legend>
-                  {pieChartData.map(({ category, amount, percentage }) => (
-                    <LegendItem key={category}>
-                      <ColorIndicator color={getCategoryColor(category)} />
-                      <LegendText>
-                        {`${category}: ${formatCurrency(
-                          amount
-                        )} (${percentage.toFixed(1)}%)`}
-                      </LegendText>
-                    </LegendItem>
-                  ))}
-                </Legend>
-              </PieChartVisual>
-            </>
-          ) : (
-            <EmptyState>
-              <EmptyStateText>
-                {`Nessuna ${
-                  activeView === "expenses" ? "spesa" : "entrata"
-                } registrata nel periodo selezionato.`}
-              </EmptyStateText>
-            </EmptyState>
-          )}
-        </ChartContainer>
+        <ChartContainer>{renderChart()}</ChartContainer>
 
         {/* Aggiungi la sezione budget */}
         <SectionTitle>Stato budget</SectionTitle>
@@ -643,13 +763,6 @@ const ChartContainer = styled.View`
 `;
 
 const PieChartVisual = styled.View`
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const PieChartPlaceholder = styled.View`
-  flex: 1;
   align-items: center;
   justify-content: center;
 `;
@@ -658,31 +771,33 @@ const TotalAmount = styled.Text`
   font-size: ${({ theme }) => theme.typography.fontSizes.md}px;
   font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
   color: ${({ theme }) => theme.colors.text};
-  margin-top: ${({ theme }) => theme.spacing.md}px;
+  text-align: center;
 `;
 
 const Legend = styled.View`
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
+  width: 100%;
   margin-top: ${({ theme }) => theme.spacing.md}px;
+  padding-horizontal: 5px;
 `;
 
 const LegendItem = styled.View`
   flex-direction: row;
   align-items: center;
+  margin-bottom: ${({ theme }) => theme.spacing.xs}px;
 `;
 
 const ColorIndicator = styled.View`
-  width: 12px;
-  height: 12px;
-  border-radius: 6px;
-  margin-right: ${({ theme }) => theme.spacing.md}px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  margin-right: 8px;
 `;
 
 const LegendText = styled.Text`
   font-size: ${({ theme }) => theme.typography.fontSizes.sm}px;
   color: ${({ theme }) => theme.colors.text};
+  flex: 1;
+  flex-wrap: wrap;
 `;
 
 const EmptyState = styled.View`
@@ -742,12 +857,14 @@ const CategoryDot = styled.View`
 const BudgetCategory = styled.Text`
   font-size: ${({ theme }) => theme.typography.fontSizes.sm}px;
   color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
 `;
 
 const BudgetPercentage = styled.Text<{ percentage: boolean }>`
-  font-size: ${({ theme }) => theme.typography.fontSizes.sm}px;
+  font-size: ${({ theme }) => theme.typography.fontSizes.md}px;
   color: ${({ theme, percentage }) =>
     percentage ? theme.colors.error : theme.colors.success};
+  font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
 `;
 
 const ProgressBarContainer = styled.View`

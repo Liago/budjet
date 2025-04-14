@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  Animated,
 } from "react-native";
 import { useTheme } from "styled-components/native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -20,6 +22,7 @@ import {
   createTransaction,
   updateTransaction,
   fetchTransactionById,
+  deleteTransaction,
 } from "../../store/slices/transactionSlice";
 import {
   fetchCategories,
@@ -78,6 +81,11 @@ export default function AddTransactionScreen() {
   const [descriptionError, setDescriptionError] = useState("");
   const [amountError, setAmountError] = useState("");
   const [categoryError, setCategoryError] = useState("");
+
+  // Stato per la modale di conferma eliminazione
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.8));
 
   // Carica tutte le categorie all'inizio - useEffect sempre eseguito
   useEffect(() => {
@@ -432,6 +440,64 @@ export default function AddTransactionScreen() {
     }
   };
 
+  // Gestione apertura modale di eliminazione
+  const showDeleteModal = () => {
+    setIsDeleteModalVisible(true);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  // Gestione chiusura modale di eliminazione
+  const hideDeleteModal = (callback?: () => void) => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 0.8,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setIsDeleteModalVisible(false);
+      if (callback) callback();
+    });
+  };
+
+  // Funzione per eliminare la transazione
+  const handleDeleteTransaction = async () => {
+    try {
+      if (isEditMode && transactionId) {
+        await dispatch(deleteTransaction(transactionId)).unwrap();
+        hideDeleteModal(() => {
+          navigation.goBack();
+        });
+      }
+    } catch (error: any) {
+      hideDeleteModal();
+      console.error("Errore eliminazione transazione:", error);
+      Alert.alert(
+        "Errore",
+        error?.message ||
+          "Si è verificato un errore durante l'eliminazione della transazione."
+      );
+    }
+  };
+
   // Invece di un return precoce, renderizziamo un componente di caricamento se necessario
   if (
     isLoading ||
@@ -446,6 +512,75 @@ export default function AddTransactionScreen() {
       />
     );
   }
+
+  // Rendering della modale di conferma eliminazione
+  const renderDeleteConfirmationModal = () => {
+    return (
+      <Modal
+        transparent
+        visible={isDeleteModalVisible}
+        onRequestClose={() => hideDeleteModal()}
+        animationType="none"
+      >
+        <View style={styles.modalOverlay}>
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <View style={styles.modalIconContainer}>
+              <View style={styles.modalIconCircle}>
+                <Ionicons name="trash-outline" size={28} color="#fff" />
+              </View>
+            </View>
+
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              Elimina transazione
+            </Text>
+
+            <Text
+              style={[
+                styles.modalDescription,
+                { color: theme.colors.textSecondary },
+              ]}
+            >
+              Sei sicuro di voler eliminare questa transazione? Questa azione
+              non può essere annullata.
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  styles.cancelButton,
+                  { borderColor: theme.colors.border },
+                ]}
+                onPress={() => hideDeleteModal()}
+              >
+                <Text style={[styles.buttonText, { color: theme.colors.text }]}>
+                  Annulla
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.deleteButton]}
+                onPress={handleDeleteTransaction}
+              >
+                <Text style={[styles.buttonText, { color: "#fff" }]}>
+                  Elimina
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
+    );
+  };
 
   // Il rendering principale ora avviene sempre, con gli stessi hooks eseguiti in ogni caso
   return (
@@ -649,21 +784,35 @@ export default function AddTransactionScreen() {
           </View>
         )}
 
-        <View style={styles.buttonsContainer}>
+        <View style={styles.buttonContainer}>
           <Button
-            title="Annulla"
-            variant="outline"
-            onPress={() => navigation.goBack()}
-            style={{ flex: 1, marginRight: 8 }}
-          />
-          <Button
-            title={isEditMode ? "Aggiorna" : "Salva"}
-            isLoading={isTransactionLoading}
+            title={isEditMode ? "Aggiorna" : "Aggiungi"}
             onPress={handleSubmit}
-            style={{ flex: 1, marginLeft: 8 }}
+            style={{ marginBottom: 12 }}
           />
+
+          {isEditMode && (
+            <TouchableOpacity
+              style={[
+                styles.deleteButton,
+                { backgroundColor: theme.colors.error },
+              ]}
+              onPress={showDeleteModal}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={20}
+                color="#fff"
+                style={styles.deleteButtonIcon}
+              />
+              <Text style={styles.deleteButtonText}>Elimina transazione</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
+
+      {/* Rendering della modale di conferma eliminazione */}
+      {renderDeleteConfirmationModal()}
     </KeyboardAvoidingView>
   );
 }
@@ -752,9 +901,85 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  buttonsContainer: {
+  buttonContainer: {
+    marginVertical: 24,
+  },
+  deleteButton: {
     flexDirection: "row",
-    marginTop: 16,
-    marginBottom: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "#dc3545",
+  },
+  deleteButtonIcon: {
+    marginRight: 8,
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  // Stili per la modale di conferma
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "85%",
+    padding: 24,
+    borderRadius: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalIconContainer: {
+    marginBottom: 20,
+  },
+  modalIconCircle: {
+    backgroundColor: "#dc3545",
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  modalDescription: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginHorizontal: 6,
+  },
+  cancelButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
