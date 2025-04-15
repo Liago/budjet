@@ -1,4 +1,3 @@
-```markdown
 # Tech Stack & Step-by-Step Development Process
 
 ## Recommended Tech Stack
@@ -89,13 +88,13 @@
 ### 5. Containerization & Deployment
 - **Dockerization:**  
   - Write a Dockerfile for the backend (Node.js/NestJS) that copies the code, installs dependencies, and starts the server.
-  - If needed, create a Dockerfile for serving the web app (e.g., using Nginx to serve static files).
+  - Create a Dockerfile for serving the frontend web app (e.g., using Nginx to serve static files).
 - **Docker Compose:**  
   - Create a `docker-compose.yml` file to define and run multi-container applications (backend, PostgreSQL, and optionally a reverse proxy).
 - **CI/CD Pipeline:**  
-  - Set up automated workflows (using GitHub Actions, GitLab CI, or Jenkins) to build, test, and deploy your application.
+  - Set up automated workflows using GitHub Actions to build, test, and deploy your application.
 - **Deployment:**  
-  - Deploy to a cloud provider such as AWS, DigitalOcean, or Heroku.
+  - Deploy to the cloud provider DigitalOcean.
   - Maintain separate staging and production environments.
 
 ### 6. Quality Assurance & Maintenance
