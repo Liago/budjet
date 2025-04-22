@@ -1,0 +1,5 @@
+build:
+  docker:
+    web: finance-tracker/backend/Dockerfile
+  config:
+    WORKDIR: finance-tracker/backend
