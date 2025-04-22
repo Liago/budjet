@@ -8,17 +8,14 @@ COPY package*.json ./
 # Copy Prisma schema
 COPY prisma ./prisma/
 
-# Install dependencies
-RUN npm install
+# Install dependencies (skipping postinstall script)
+RUN npm install --ignore-scripts
 
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build the application
-RUN npm run build
+# Now run Prisma generate and build manually
+RUN npx prisma generate && npm run build
 
 # Production stage
 FROM node:18-alpine
@@ -31,8 +28,8 @@ COPY package*.json ./
 # Copy Prisma schema
 COPY prisma ./prisma/
 
-# Install production dependencies only
-RUN npm install --only=production
+# Install production dependencies only (skipping postinstall script)
+RUN npm install --only=production --ignore-scripts
 
 # Generate Prisma client
 RUN npx prisma generate
