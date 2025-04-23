@@ -1,1 +1,1 @@
-web: npm run start:prod
+web: NODE_ENV=production node config-env.js && npm run start:prod

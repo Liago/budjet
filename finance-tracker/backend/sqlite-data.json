@@ -1,0 +1,4597 @@
+{
+  "_prisma_migrations": [
+    {
+      "id": "888937a7-7996-42f4-9639-2795c573e7a0",
+      "checksum": "221c24d5468c48bae903133cfc6616376f4b638d4682f28b9a5a0da1f13eb128",
+      "finished_at": 1743005213883,
+      "migration_name": "20250302085903_init",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": 1743005213871,
+      "applied_steps_count": 1
+    },
+    {
+      "id": "405ef372-860a-43f2-ba7f-99f66e3b78a9",
+      "checksum": "2d199508e60c32b3f5c7cbcc57e8ca207ff22ddc23792a1fc7783460a3b462e7",
+      "finished_at": 1743005213888,
+      "migration_name": "20250313155800_add_recurrent_payments",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": 1743005213884,
+      "applied_steps_count": 1
+    },
+    {
+      "id": "38c4c4d5-6b0d-4bf3-9563-f592ced8a00b",
+      "checksum": "524d8f464c827206c970e0ce8936f00cec72c007b40c51194f88010147463a0b",
+      "finished_at": 1743005213890,
+      "migration_name": "20250314161831_add_budget_to_category",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": 1743005213888,
+      "applied_steps_count": 1
+    },
+    {
+      "id": "dcfa747a-ebef-4137-bf20-502caceacb48",
+      "checksum": "69046d9958f6ef16311f06bd2e928329efaa940c70b506e20df4a1a13db886e3",
+      "finished_at": 1743005213894,
+      "migration_name": "20250321161842_add_savings_goals",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": 1743005213890,
+      "applied_steps_count": 1
+    },
+    {
+      "id": "170bbecb-65bd-4c78-9fe4-85ef93d5e888",
+      "checksum": "f50fd98d96382bbadb3870dca6676bc54eec8fdc9b16a75de9ba5e006619cb52",
+      "finished_at": 1743174059048,
+      "migration_name": "20250328150059_add_notifications_and_execution_log",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": 1743174059045,
+      "applied_steps_count": 1
+    },
+    {
+      "id": "a8001b6d-797f-4641-8449-b126a381ffcc",
+      "checksum": "d7391f74bbbced378ead1e9764ce3805e9f5f31f2366342c312878e7c5d4577e",
+      "finished_at": 1743176348940,
+      "migration_name": "20250328153908_add_transaction_execution_log_relation",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": 1743176348931,
+      "applied_steps_count": 1
+    },
+    {
+      "id": "e3161fd7-1f8e-41de-99bd-9fa3c580f217",
+      "checksum": "c5038bf71972b209fe2dcfc83926d95acc9357b9ef37cd8eca22a33cd88c33e9",
+      "finished_at": 1743600592875,
+      "migration_name": "20250402132952_add_notification_preferences",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": 1743600592872,
+      "applied_steps_count": 1
+    }
+  ],
+  "User": [
+    {
+      "id": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "email": "andrea.zampierolo@me.com",
+      "password": "$2b$10$o2iRTireWLEjIgmLH7FLbOIcW7RcN2fgfYM9yJz48inwe4OM/bNO2",
+      "firstName": "Andrea",
+      "lastName": "Zampierolo",
+      "createdAt": 1743005823944,
+      "updatedAt": 1743005823944
+    }
+  ],
+  "Category": [
+    {
+      "id": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "name": "Grocery",
+      "icon": "ShoppingCart",
+      "color": "#FF5733",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1743517615983,
+      "budget": 600
+    },
+    {
+      "id": "047afefd-ed28-47aa-91ef-19c7290e6a12",
+      "name": "Car",
+      "icon": "Car",
+      "color": "#F59E0B",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1743007278378,
+      "budget": 40
+    },
+    {
+      "id": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "name": "Home",
+      "icon": "HomeIcon2",
+      "color": "#F97316",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1743007346998,
+      "budget": 800
+    },
+    {
+      "id": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "name": "Restaurant",
+      "icon": "Utensils",
+      "color": "#3B82F6",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1745418042247,
+      "budget": 150
+    },
+    {
+      "id": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "name": "Technology",
+      "icon": "Laptop",
+      "color": "#6366F1",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1743517789213,
+      "budget": 110
+    },
+    {
+      "id": "0a52d276-a3b3-4f3d-9342-10bad4586bac",
+      "name": "Utilities",
+      "icon": "Newspaper",
+      "color": "#EC4899",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1743517626321,
+      "budget": 0
+    },
+    {
+      "id": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "name": "Health",
+      "icon": "Heart",
+      "color": "#8B5CF6",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1743006982859,
+      "budget": 50
+    },
+    {
+      "id": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "name": "Salary",
+      "icon": "DollarSign",
+      "color": "#33FF33",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1743007066242,
+      "budget": 0
+    },
+    {
+      "id": "2d9f77af-f7f2-4e74-9d4c-04bda5cf39f8",
+      "name": "Taxes",
+      "icon": "Wallet",
+      "color": "#6B7280",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1744727521838,
+      "budget": 250
+    },
+    {
+      "id": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "name": "Special",
+      "icon": "Globe",
+      "color": "#14B8A6",
+      "isDefault": 1,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743005823949,
+      "updatedAt": 1743007368974,
+      "budget": 100
+    },
+    {
+      "id": "da0c622d-cc19-483d-ab07-921e5dc0a438",
+      "name": "Uncategorized",
+      "icon": "question-mark",
+      "color": "#808080",
+      "isDefault": 0,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150342,
+      "updatedAt": 1743007356930,
+      "budget": 0
+    },
+    {
+      "id": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "name": "Pets",
+      "icon": "Dog",
+      "color": "#F59E0B",
+      "isDefault": 0,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743007213861,
+      "updatedAt": 1743007213861,
+      "budget": 100
+    },
+    {
+      "id": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "name": "Bar",
+      "icon": "Beer",
+      "color": "#EC4899",
+      "isDefault": 0,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743007313394,
+      "updatedAt": 1744270581988,
+      "budget": 90
+    },
+    {
+      "id": "53022bcd-2f80-4c1a-b383-d493f9f382ab",
+      "name": "Shopping",
+      "icon": "ShoppingBag",
+      "color": "#F59E0B",
+      "isDefault": 0,
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743083266556,
+      "updatedAt": 1743083266556,
+      "budget": 100
+    }
+  ],
+  "Tag": [
+    {
+      "id": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "name": "pescheria",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150387,
+      "updatedAt": 1743006150387
+    },
+    {
+      "id": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "name": "fruttivendolo",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150392,
+      "updatedAt": 1743006150392
+    },
+    {
+      "id": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "name": "conad",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150397,
+      "updatedAt": 1743006150397
+    },
+    {
+      "id": "a66f31ec-ec43-4bf4-8eba-cc66c84570c9",
+      "name": "terraesole",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150401,
+      "updatedAt": 1743006150401
+    },
+    {
+      "id": "7d1d3a31-e517-4861-9d95-fc521feb099b",
+      "name": "caffe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150405,
+      "updatedAt": 1743006150405
+    },
+    {
+      "id": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "name": "saporifelici",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150422,
+      "updatedAt": 1743006150422
+    },
+    {
+      "id": "0122d7a6-6677-47a8-af05-54e2ae5aed45",
+      "name": "tinto",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150426,
+      "updatedAt": 1743006150426
+    },
+    {
+      "id": "1ed10a8f-b0ba-4ed8-b255-9fdfc977750f",
+      "name": "pasticceria",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150441,
+      "updatedAt": 1743006150441
+    },
+    {
+      "id": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "name": "macelleria",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150474,
+      "updatedAt": 1743006150474
+    },
+    {
+      "id": "d233ad77-b4b1-42de-8cf7-3e2161f167d5",
+      "name": "pizza",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150480,
+      "updatedAt": 1743006150480
+    },
+    {
+      "id": "bbd2ddea-272d-4436-bc3b-4c061b87f9c3",
+      "name": "luce",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150508,
+      "updatedAt": 1743006150508
+    },
+    {
+      "id": "beca9c5a-f63d-41d6-bba2-24d45ad757d5",
+      "name": "gas",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150512,
+      "updatedAt": 1743006150512
+    },
+    {
+      "id": "fbf7d2c5-028e-454a-905e-e19d011e78dc",
+      "name": "swiffer",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150526,
+      "updatedAt": 1743006150526
+    },
+    {
+      "id": "c83068d5-3258-42da-93e9-19eb9049935a",
+      "name": "tim",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150548,
+      "updatedAt": 1743006150548
+    },
+    {
+      "id": "4cfb9f9b-0007-4720-9658-fbd680df7331",
+      "name": "icloudstorage",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150555,
+      "updatedAt": 1743006150555
+    },
+    {
+      "id": "dc70fbb5-7724-45e5-9be3-df4f19175b62",
+      "name": "satispay",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150560,
+      "updatedAt": 1743006150560
+    },
+    {
+      "id": "2ee728ea-7c31-471c-b195-27c95e9c1948",
+      "name": "spendibene",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150564,
+      "updatedAt": 1743006150564
+    },
+    {
+      "id": "afcd586c-ca44-4226-9c13-2db96cb48bcb",
+      "name": "ottica",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150571,
+      "updatedAt": 1743006150571
+    },
+    {
+      "id": "0a860cdb-f3d6-4233-a94e-fbd00c6869f4",
+      "name": "nowtv",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150605,
+      "updatedAt": 1743006150605
+    },
+    {
+      "id": "b8e17944-0e66-4d4e-9a69-ca265d151d80",
+      "name": "pec",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150614,
+      "updatedAt": 1743006150614
+    },
+    {
+      "id": "f2342449-73ec-4b5d-b723-5a211789ef3b",
+      "name": "mutuo",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150618,
+      "updatedAt": 1743006150618
+    },
+    {
+      "id": "97a65b7c-e006-4418-b336-f4b3fa7c73ad",
+      "name": "inps",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150621,
+      "updatedAt": 1743006150621
+    },
+    {
+      "id": "e53633b6-649a-4bf8-b1f6-2472c5980e48",
+      "name": "appleone",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150626,
+      "updatedAt": 1743006150626
+    },
+    {
+      "id": "269ebd53-f2ec-4184-bcee-028ad2294509",
+      "name": "benzina",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150634,
+      "updatedAt": 1743006150634
+    },
+    {
+      "id": "f5b6da6a-6cf6-4c2e-8837-bb7ae09ab0fd",
+      "name": "reico",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150653,
+      "updatedAt": 1743006150653
+    },
+    {
+      "id": "cbb30ed3-baa6-4b55-b2b6-19786d48cbb2",
+      "name": "rosticceria",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150657,
+      "updatedAt": 1743006150657
+    },
+    {
+      "id": "9ac67b09-870a-4e4a-aa6a-968473d9f28a",
+      "name": "soundcloud",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150665,
+      "updatedAt": 1743006150665
+    },
+    {
+      "id": "222ae313-e055-4901-9994-718c9cca5e47",
+      "name": "cartadicredito",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150739,
+      "updatedAt": 1743006150739
+    },
+    {
+      "id": "fddc0281-3e66-494b-a24f-6152eb60a78b",
+      "name": "acqua",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150743,
+      "updatedAt": 1743006150743
+    },
+    {
+      "id": "7c7e25aa-9ee7-419b-a048-9cbd8f2b2e84",
+      "name": "paccofacile",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150767,
+      "updatedAt": 1743006150767
+    },
+    {
+      "id": "deb21e7c-b591-47ff-9936-c5d5590405de",
+      "name": "adriano",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150796,
+      "updatedAt": 1743006150796
+    },
+    {
+      "id": "1dcbe79e-543b-44fd-99b8-f5c3152cd788",
+      "name": "iliad",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150800,
+      "updatedAt": 1743006150800
+    },
+    {
+      "id": "5bc3ef36-5e4a-4ced-8973-ad439d67ae3d",
+      "name": "condominio",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150812,
+      "updatedAt": 1743006150812
+    },
+    {
+      "id": "6c655e2d-bfee-4842-b64c-fa15a1e36a36",
+      "name": "claude",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150828,
+      "updatedAt": 1743006150828
+    },
+    {
+      "id": "8344b248-7a94-4e98-b216-63d82cad2703",
+      "name": "telepass",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150862,
+      "updatedAt": 1743006150862
+    },
+    {
+      "id": "300a2e79-1505-48ae-a2fa-1e0323bc1994",
+      "name": "CONAD",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150922,
+      "updatedAt": 1743006150922
+    },
+    {
+      "id": "25aeef23-6b97-4e5a-a5e1-82f2365a3142",
+      "name": "piastra",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743006150945,
+      "updatedAt": 1743006150945
+    },
+    {
+      "id": "e253768f-79a2-4b89-ba40-29d2af9ef775",
+      "name": "piadina",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743492819150,
+      "updatedAt": 1743492819150
+    },
+    {
+      "id": "ee1a74ef-0d28-4c9b-9ca3-d93a30185339",
+      "name": "itunes",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743493051622,
+      "updatedAt": 1743493051622
+    },
+    {
+      "id": "490b078f-2271-461d-8d5b-9df9c115f7a6",
+      "name": "pastamadre",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743585901253,
+      "updatedAt": 1743585901253
+    },
+    {
+      "id": "ec87aa6d-477f-4cff-b94b-3e32a74256ab",
+      "name": "cursor",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743940165247,
+      "updatedAt": 1743940165247
+    },
+    {
+      "id": "633bf40b-8d54-4443-a95d-d55a5f3916ec",
+      "name": "caffè",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1744030407303,
+      "updatedAt": 1744030407303
+    },
+    {
+      "id": "35fc0086-017f-4f96-a3a8-bb858f5088db",
+      "name": "banca",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1744030618622,
+      "updatedAt": 1744030618622
+    },
+    {
+      "id": "5bd3e1e4-1fe3-42d2-aeca-67a5d9150bbd",
+      "name": "imma",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1744030662624,
+      "updatedAt": 1744030662624
+    },
+    {
+      "id": "766a1781-3982-4caf-8063-782c1e0c2b5b",
+      "name": "gift",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1744557391509,
+      "updatedAt": 1744557391509
+    },
+    {
+      "id": "9b342bb6-f74e-4388-92f3-edd52a7327b7",
+      "name": "movierental",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1744641995718,
+      "updatedAt": 1744641995718
+    },
+    {
+      "id": "b7d9ef61-3a0d-4eec-b9ab-6bafed2fdae0",
+      "name": "ladispensadiirma",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1745076911952,
+      "updatedAt": 1745076911952
+    },
+    {
+      "id": "550abe64-63c8-4ef0-ba92-5e78e1e8c8e9",
+      "name": "farmacia",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1745082455233,
+      "updatedAt": 1745082455233
+    },
+    {
+      "id": "55812019-4689-481c-a340-a884b49c5163",
+      "name": "amazon",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1745334470799,
+      "updatedAt": 1745334470799
+    },
+    {
+      "id": "c1507ac5-c99c-4231-bf82-8e1d885ef15d",
+      "name": "pasticceriaDuomo",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1745415219222,
+      "updatedAt": 1745415219222
+    }
+  ],
+  "_TagToTransaction": [
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "fe15df5c-78cb-48d0-a21a-e73cbf5c7a2a"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "e9a0b70f-542f-4625-a1cb-902dff503236"
+    },
+    {
+      "A": "a66f31ec-ec43-4bf4-8eba-cc66c84570c9",
+      "B": "337c9876-b62d-411a-afac-f88d959efa7b"
+    },
+    {
+      "A": "7d1d3a31-e517-4861-9d95-fc521feb099b",
+      "B": "1de4172b-737b-4b8a-906b-8f3413258c29"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "403f9112-9579-4eac-b78e-da6cc2dcfa03"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "28acea7e-22bb-4f56-adb9-0632904014ab"
+    },
+    {
+      "A": "0122d7a6-6677-47a8-af05-54e2ae5aed45",
+      "B": "311cebb5-8892-469e-9169-e88e165c34c3"
+    },
+    {
+      "A": "1ed10a8f-b0ba-4ed8-b255-9fdfc977750f",
+      "B": "9aef7cf5-6d7d-4e71-b8df-810d2a723826"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "087c9ea7-919a-4435-b512-4ec7129a7bdf"
+    },
+    {
+      "A": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "B": "fa3cd150-930c-429b-9796-b65125a5beb9"
+    },
+    {
+      "A": "d233ad77-b4b1-42de-8cf7-3e2161f167d5",
+      "B": "d4f19a1e-1fa6-4b55-9b10-423e6fb154e8"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "9ef93fe7-5cd4-4e1f-9dca-b6db809f65ee"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "58bad7b7-ff1e-45f5-8f54-97dba8d54e25"
+    },
+    {
+      "A": "bbd2ddea-272d-4436-bc3b-4c061b87f9c3",
+      "B": "feabc125-33d8-4ccf-925b-b966e1a840f5"
+    },
+    {
+      "A": "beca9c5a-f63d-41d6-bba2-24d45ad757d5",
+      "B": "4c8d1975-9a0d-4dd6-a549-de8b8f75b20e"
+    },
+    {
+      "A": "fbf7d2c5-028e-454a-905e-e19d011e78dc",
+      "B": "03520b06-d37e-4a4a-880b-4d8e8aac5a06"
+    },
+    {
+      "A": "a66f31ec-ec43-4bf4-8eba-cc66c84570c9",
+      "B": "e111f7e9-a5b2-4424-9142-73b6eb0983c9"
+    },
+    {
+      "A": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "B": "66339278-1197-4fbc-8602-5275a75329f7"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "7411cdd1-79d3-4e87-b8a4-49c2769969a0"
+    },
+    {
+      "A": "dc70fbb5-7724-45e5-9be3-df4f19175b62",
+      "B": "50f104e5-5782-49cb-8472-7bc7043772c1"
+    },
+    {
+      "A": "2ee728ea-7c31-471c-b195-27c95e9c1948",
+      "B": "54a59369-3a7a-4c9e-a99c-14d69c2ff5d8"
+    },
+    {
+      "A": "afcd586c-ca44-4226-9c13-2db96cb48bcb",
+      "B": "a5a4f71e-e743-4329-a794-e928122bba1f"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "8b3b77f4-906b-4b7f-8498-9cac7f612d11"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "883d0a50-e305-44c3-92af-77bcd8f33fea"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "b69a718b-9de2-4836-923d-d7e4af0355d7"
+    },
+    {
+      "A": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "B": "1ea78788-c9ff-4c3b-b35a-93934e9309ba"
+    },
+    {
+      "A": "7d1d3a31-e517-4861-9d95-fc521feb099b",
+      "B": "a73d71f9-f4f8-49f6-bf4c-1f01e1424b75"
+    },
+    {
+      "A": "f2342449-73ec-4b5d-b723-5a211789ef3b",
+      "B": "117c1bf9-8816-4cfb-b019-583a56cb3465"
+    },
+    {
+      "A": "97a65b7c-e006-4418-b336-f4b3fa7c73ad",
+      "B": "d44583db-e112-42b0-a8dc-feedb6d05ed1"
+    },
+    {
+      "A": "269ebd53-f2ec-4184-bcee-028ad2294509",
+      "B": "34cbc6fe-aa73-41ad-92a5-dcda3c76b2b7"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "bba7d369-b0a7-4491-be70-6517fbf98898"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "bed40df9-b7bd-479c-9cc6-1a380249c023"
+    },
+    {
+      "A": "f5b6da6a-6cf6-4c2e-8837-bb7ae09ab0fd",
+      "B": "0f13c9e2-e5ec-4ebd-a3d5-71debd21be8e"
+    },
+    {
+      "A": "cbb30ed3-baa6-4b55-b2b6-19786d48cbb2",
+      "B": "9eac0338-b0c6-4f40-8695-72a2d046cb68"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "32842077-1484-4ca6-abe2-b0a402e083a9"
+    },
+    {
+      "A": "d233ad77-b4b1-42de-8cf7-3e2161f167d5",
+      "B": "0641a70f-297a-4f3d-8ff1-7a009aa06b26"
+    },
+    {
+      "A": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "B": "df3965fc-23a6-4d67-8385-5055570ca18f"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "4a742088-5676-432e-88d9-ffb007411d5d"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "e59f64ff-c3c7-4b59-8004-42dc7873b611"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "1d2a2ae6-8051-4859-8144-37f71a3016f0"
+    },
+    {
+      "A": "d233ad77-b4b1-42de-8cf7-3e2161f167d5",
+      "B": "97f1e90f-e20f-444b-b549-26b374917cba"
+    },
+    {
+      "A": "f5b6da6a-6cf6-4c2e-8837-bb7ae09ab0fd",
+      "B": "d77d56f0-e6a8-470f-875b-ddf288a9e86e"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "8e96ce3a-c3ee-435a-9b60-9ebaffc60d01"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "e472693f-458b-4240-a0bd-0745b3d63afc"
+    },
+    {
+      "A": "7d1d3a31-e517-4861-9d95-fc521feb099b",
+      "B": "ecad7e19-4450-4a0f-9e21-0e67e4f7f951"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "738b91cd-38e4-4ca9-8ea5-b79f221fbd7d"
+    },
+    {
+      "A": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "B": "56364d62-f7d3-4323-85c2-49f2a45581cd"
+    },
+    {
+      "A": "fddc0281-3e66-494b-a24f-6152eb60a78b",
+      "B": "caa8fc6c-a721-4977-ab2e-d865d34b92be"
+    },
+    {
+      "A": "0122d7a6-6677-47a8-af05-54e2ae5aed45",
+      "B": "c875acaa-55b9-43f2-9336-6b26a8bc2c68"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "085cd933-ec29-4a3d-ac1a-c1fc3ea7dc52"
+    },
+    {
+      "A": "0122d7a6-6677-47a8-af05-54e2ae5aed45",
+      "B": "df2cf0e2-160d-42e9-93ed-5c3ba27aa35d"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "61fe8267-b3cb-43cf-9d26-39af821a7127"
+    },
+    {
+      "A": "d233ad77-b4b1-42de-8cf7-3e2161f167d5",
+      "B": "45d82ef2-6173-4046-b9e2-88a8849df584"
+    },
+    {
+      "A": "7c7e25aa-9ee7-419b-a048-9cbd8f2b2e84",
+      "B": "760a1e6d-befa-4b37-b5af-70bcb4c9d55b"
+    },
+    {
+      "A": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "B": "6c3cd248-f7c5-47f0-9762-0abf2c9be489"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "fcac3121-cc53-4fd5-a316-166bd539d41c"
+    },
+    {
+      "A": "deb21e7c-b591-47ff-9936-c5d5590405de",
+      "B": "8c5dfe59-9f14-476c-a41f-deb44757935a"
+    },
+    {
+      "A": "afcd586c-ca44-4226-9c13-2db96cb48bcb",
+      "B": "009c2a5d-f083-4b27-becd-18758b19b03a"
+    },
+    {
+      "A": "5bc3ef36-5e4a-4ced-8973-ad439d67ae3d",
+      "B": "2dc5a6b1-64ff-4eef-91d5-ed02811f227a"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "e972582e-0ca0-40be-bd68-8fc3b8978cbc"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "634b1a63-8557-4739-84d9-a9594a62f508"
+    },
+    {
+      "A": "dc70fbb5-7724-45e5-9be3-df4f19175b62",
+      "B": "130edb39-36da-4922-b90c-35fa42baf77c"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "82f3b767-0d42-4f9c-9bbb-bf3c6e016491"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "484478ee-75a1-4faf-8075-08dfbb814cf6"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "13dbc000-c3b2-434c-9d23-d9f9af5f7893"
+    },
+    {
+      "A": "f5b6da6a-6cf6-4c2e-8837-bb7ae09ab0fd",
+      "B": "5d90d1a5-115b-4006-88d2-7bd65a3f48d3"
+    },
+    {
+      "A": "0a860cdb-f3d6-4233-a94e-fbd00c6869f4",
+      "B": "85266455-964f-4cee-9931-abfb7e040f2c"
+    },
+    {
+      "A": "8344b248-7a94-4e98-b216-63d82cad2703",
+      "B": "aef34b2b-8866-48c3-a669-87e3015d38ad"
+    },
+    {
+      "A": "e53633b6-649a-4bf8-b1f6-2472c5980e48",
+      "B": "d794ab02-56d7-4795-9c8f-3d733666985a"
+    },
+    {
+      "A": "97a65b7c-e006-4418-b336-f4b3fa7c73ad",
+      "B": "bb8e7e7d-cbd4-40f9-8b65-6a5a1757230c"
+    },
+    {
+      "A": "d233ad77-b4b1-42de-8cf7-3e2161f167d5",
+      "B": "ebcba1d7-1752-4f12-84d3-0f657730d524"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "dde68998-112a-4a4a-b3df-2e40fbb5f3e1"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "7b40ad0d-27e9-469a-a48f-41bf41113bdb"
+    },
+    {
+      "A": "f2342449-73ec-4b5d-b723-5a211789ef3b",
+      "B": "561cdbb4-caca-452f-9728-f2dd0530db85"
+    },
+    {
+      "A": "a66f31ec-ec43-4bf4-8eba-cc66c84570c9",
+      "B": "0c276619-5c40-43e6-bdf3-8f8b9608d174"
+    },
+    {
+      "A": "dc70fbb5-7724-45e5-9be3-df4f19175b62",
+      "B": "84b2bee0-6b4e-46ea-848b-bac9ff3ffae5"
+    },
+    {
+      "A": "269ebd53-f2ec-4184-bcee-028ad2294509",
+      "B": "033cb6a6-8fcf-48fc-9283-b77718110178"
+    },
+    {
+      "A": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "B": "af8f7850-dd23-457d-a289-9cdec8e6322d"
+    },
+    {
+      "A": "1ed10a8f-b0ba-4ed8-b255-9fdfc977750f",
+      "B": "97ee737e-fdaf-4c68-9b44-72116df0546c"
+    },
+    {
+      "A": "300a2e79-1505-48ae-a2fa-1e0323bc1994",
+      "B": "0d401b56-01f3-4230-8943-8f24cd4b5e21"
+    },
+    {
+      "A": "0122d7a6-6677-47a8-af05-54e2ae5aed45",
+      "B": "5978f00e-ae3b-4a43-909b-b9d1f296271a"
+    },
+    {
+      "A": "7d1d3a31-e517-4861-9d95-fc521feb099b",
+      "B": "13147789-524e-4f38-873d-38b683822d8e"
+    },
+    {
+      "A": "9ac67b09-870a-4e4a-aa6a-968473d9f28a",
+      "B": "ac57e852-94f6-48e5-91e2-1fb8ec128ef0"
+    },
+    {
+      "A": "9ac67b09-870a-4e4a-aa6a-968473d9f28a",
+      "B": "ea01ccec-8007-40e2-8842-a23050b438be"
+    },
+    {
+      "A": "25aeef23-6b97-4e5a-a5e1-82f2365a3142",
+      "B": "160e09a1-9e3c-471b-9a23-76abdf290afb"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "aaa391b8-f08c-450e-a6f2-52bcc43fe2a6"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "d93d41d3-f1b8-40ca-8233-b40cf4d98ca3"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "2508d43d-ac8d-4447-a311-63ef7bb2d36e"
+    },
+    {
+      "A": "9ac67b09-870a-4e4a-aa6a-968473d9f28a",
+      "B": "0c0940a7-246c-4afb-bd82-87eeaa18efeb"
+    },
+    {
+      "A": "c83068d5-3258-42da-93e9-19eb9049935a",
+      "B": "d199482e-64d1-4aa8-acea-f9ea4e799a9b"
+    },
+    {
+      "A": "4cfb9f9b-0007-4720-9658-fbd680df7331",
+      "B": "a866986d-cd31-4bae-a284-e9d6620f8db4"
+    },
+    {
+      "A": "0a860cdb-f3d6-4233-a94e-fbd00c6869f4",
+      "B": "ec970025-a7e7-4217-a9dd-1fa316df2e65"
+    },
+    {
+      "A": "b8e17944-0e66-4d4e-9a69-ca265d151d80",
+      "B": "cd99ad3b-af93-41c0-b5c4-ef2c875f586f"
+    },
+    {
+      "A": "e53633b6-649a-4bf8-b1f6-2472c5980e48",
+      "B": "96ee7a78-25a3-4d68-8fad-eb429fc01450"
+    },
+    {
+      "A": "222ae313-e055-4901-9994-718c9cca5e47",
+      "B": "9c0f26e8-2a5b-4257-848e-88a916a2162d"
+    },
+    {
+      "A": "c83068d5-3258-42da-93e9-19eb9049935a",
+      "B": "60d57313-7dbd-4266-9e69-c77963f2653a"
+    },
+    {
+      "A": "4cfb9f9b-0007-4720-9658-fbd680df7331",
+      "B": "3e6e740c-e343-45d5-be96-3454e1116894"
+    },
+    {
+      "A": "1dcbe79e-543b-44fd-99b8-f5c3152cd788",
+      "B": "8c9c042c-32a6-4e76-bdf9-a7ee46e20585"
+    },
+    {
+      "A": "6c655e2d-bfee-4842-b64c-fa15a1e36a36",
+      "B": "3f06a563-476e-48da-8e55-d4cd8d0da468"
+    },
+    {
+      "A": "4cfb9f9b-0007-4720-9658-fbd680df7331",
+      "B": "762fdb3c-aef7-4f0f-879e-f61cfe67da25"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "47f0d9b3-bb77-4561-8ca2-276d26de4e33"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "4667cdbe-0159-4a9e-a361-ff6b2ad3aad2"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "9537e8c3-ec68-426e-a0a7-10cb387b84ea"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "2199e458-9625-461f-b2af-dab2d49442b8"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "d1660523-beea-4087-bf8e-6a432a9d4e9c"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "9dadd501-c5f7-4879-9512-53038ed938e8"
+    },
+    {
+      "A": "f5b6da6a-6cf6-4c2e-8837-bb7ae09ab0fd",
+      "B": "0a907f5a-6c7c-4930-85a6-d60672737953"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "cm8u2mkes0003pyxn2bqek2hx"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "cm8wsw9gc000dpyxn81wc7hvf"
+    },
+    {
+      "A": "fddc0281-3e66-494b-a24f-6152eb60a78b",
+      "B": "cm8wsybgl000fpyxn7vqwom80"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "cm8y6h0lb0002py6suq8yycpz"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "cm8y6i9cq0004py6s0nzvioem"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "cm8y6iy1c0006py6sft01ivwb"
+    },
+    {
+      "A": "e253768f-79a2-4b89-ba40-29d2af9ef775",
+      "B": "cm8y6lx3h0008py6scai9cpg1"
+    },
+    {
+      "A": "490b078f-2271-461d-8d5b-9df9c115f7a6",
+      "B": "cm8zq0zph0002pyzc0buwx98z"
+    },
+    {
+      "A": "2ee728ea-7c31-471c-b195-27c95e9c1948",
+      "B": "cm92jqw3e0009pyvnzu64r8xh"
+    },
+    {
+      "A": "ee1a74ef-0d28-4c9b-9ca3-d93a30185339",
+      "B": "cm92wplo80001pypvb3z2fw8o"
+    },
+    {
+      "A": "ec87aa6d-477f-4cff-b94b-3e32a74256ab",
+      "B": "cm95ky3k30006pypvdbnvb6g2"
+    },
+    {
+      "A": "5a8ea73b-e1fb-43d6-8c67-7735ef7b9e00",
+      "B": "cm95l064n000cpypvjiyewcyh"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "cm95kyopb0008pypvhpc347m5"
+    },
+    {
+      "A": "633bf40b-8d54-4443-a95d-d55a5f3916ec",
+      "B": "cm972oarr0001pyj4mtd22sk8"
+    },
+    {
+      "A": "35fc0086-017f-4f96-a3a8-bb858f5088db",
+      "B": "cm972sttq0003pyj4zsfg51dl"
+    },
+    {
+      "A": "5bd3e1e4-1fe3-42d2-aeca-67a5d9150bbd",
+      "B": "cm972trs00005pyj4kuqyh3zt"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "cm987ba1e0006pylld6vi88h4"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "cm987c1di0008pyllejykn0xd"
+    },
+    {
+      "A": "bbd2ddea-272d-4436-bc3b-4c061b87f9c3",
+      "B": "05a09431-d8be-4945-848e-7515cb7b5218"
+    },
+    {
+      "A": "beca9c5a-f63d-41d6-bba2-24d45ad757d5",
+      "B": "fab438e5-9acb-4cb0-b42e-a359b4ed92de"
+    },
+    {
+      "A": "7c7e25aa-9ee7-419b-a048-9cbd8f2b2e84",
+      "B": "cm9b1dxsw000jpyvo0gin5cdk"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "cm9cjpm810006pyya33vbkrnj"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "cm9fsdsuq000apyyar1glkoll"
+    },
+    {
+      "A": "766a1781-3982-4caf-8063-782c1e0c2b5b",
+      "B": "cm9fsf3u2000epyyad7bk7m9s"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "cm9gvk1ph000hpyyaipcozc6z"
+    },
+    {
+      "A": "9b342bb6-f74e-4388-92f3-edd52a7327b7",
+      "B": "cm9h6srf0000jpyyagrogyhxs"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "cm9i6murd000qpyya9cwpeb2a"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "cm9i6na9d000spyyab07hgdhw"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "cm9i6nniy000upyyaq3agf7jn"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "cm9jmk7ga0011pyyamok9nvsa"
+    },
+    {
+      "A": "633bf40b-8d54-4443-a95d-d55a5f3916ec",
+      "B": "cm9jpkghw0013pyya6p6nb8uc"
+    },
+    {
+      "A": "29c72ba1-08f0-4fed-bc98-4a51e5d587ea",
+      "B": "cm9mtqn1j0005pykckucoyu53"
+    },
+    {
+      "A": "b7d9ef61-3a0d-4eec-b9ab-6bafed2fdae0",
+      "B": "cm9odqixd000cpykcn03oum11"
+    },
+    {
+      "A": "550abe64-63c8-4ef0-ba92-5e78e1e8c8e9",
+      "B": "cm9oh1c5d000epykc06dtjx4x"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "cm9oh1up4000gpykc6w7hwwm0"
+    },
+    {
+      "A": "e3969aed-fa19-4481-8fda-1e177e45cd86",
+      "B": "cm9psbm2c000jpykcewka3z1f"
+    },
+    {
+      "A": "346c7b75-9e3e-4e94-8a39-7fee541eefcf",
+      "B": "cm9s5bq3a000npykc2t3l0l4e"
+    },
+    {
+      "A": "55812019-4689-481c-a340-a884b49c5163",
+      "B": "cm8y72ges000mpy6swsfs4e20"
+    },
+    {
+      "A": "6b81684a-61db-4d8a-8128-ee28f8ae9f51",
+      "B": "cm9tz0zc30003pyg4qa6bxysv"
+    },
+    {
+      "A": "c1507ac5-c99c-4231-bf82-8e1d885ef15d",
+      "B": "cm9tz5mhi0007pyg422qji9rm"
+    },
+    {
+      "A": "d233ad77-b4b1-42de-8cf7-3e2161f167d5",
+      "B": "cm9tz692o0009pyg41fbzk0bl"
+    },
+    {
+      "A": "d233ad77-b4b1-42de-8cf7-3e2161f167d5",
+      "B": "cm9tz48v30005pyg4jlcisfgc"
+    }
+  ],
+  "RecurrentPayment": [
+    {
+      "id": "e3babef6-961a-4466-a502-5601e9e2642c",
+      "name": "Mutuo Casa",
+      "amount": 720,
+      "description": "bonifico continuativo verso Mediobanca Premier",
+      "interval": "monthly",
+      "dayOfMonth": 28,
+      "dayOfWeek": null,
+      "startDate": 1743120000000,
+      "endDate": null,
+      "nextPaymentDate": 1745791200000,
+      "isActive": 1,
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743088664719,
+      "updatedAt": 1743203578172
+    },
+    {
+      "id": "868bd239-a45b-4e08-8e2f-578eeca27152",
+      "name": "Restituzione INPS",
+      "amount": 221.65,
+      "description": "",
+      "interval": "monthly",
+      "dayOfMonth": 30,
+      "dayOfWeek": null,
+      "startDate": 1743292800000,
+      "endDate": 1748563200000,
+      "nextPaymentDate": 1745967600000,
+      "isActive": 1,
+      "categoryId": "2d9f77af-f7f2-4e74-9d4c-04bda5cf39f8",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743089992598,
+      "updatedAt": 1743290228733
+    },
+    {
+      "id": "62c2facc-c0ae-4b00-944c-50a4031ea440",
+      "name": "AppleOne",
+      "amount": 25.95,
+      "description": "Tutti i servizi di AppleOne: Music, iCloud etc",
+      "interval": "monthly",
+      "dayOfMonth": 30,
+      "dayOfWeek": null,
+      "startDate": 1743292800000,
+      "endDate": null,
+      "nextPaymentDate": 1745967600000,
+      "isActive": 1,
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743090067524,
+      "updatedAt": 1743290228813
+    },
+    {
+      "id": "c1228f6f-69c4-4e1b-b445-5d3df8c04431",
+      "name": "PayPal paga in 3 rate",
+      "amount": 38.5,
+      "description": "Ottica Lotito: lenti a contatto + liquidi",
+      "interval": "monthly",
+      "dayOfMonth": 5,
+      "dayOfWeek": null,
+      "startDate": 1743811200000,
+      "endDate": 1743811200000,
+      "nextPaymentDate": 1746403200000,
+      "isActive": 1,
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743090133656,
+      "updatedAt": 1743810863250
+    },
+    {
+      "id": "70ea3168-47e7-4be0-aba4-c012c07b8fef",
+      "name": "Linea Internet",
+      "amount": 31.9,
+      "description": "TIM",
+      "interval": "monthly",
+      "dayOfMonth": 8,
+      "dayOfWeek": null,
+      "startDate": 1744070400000,
+      "endDate": null,
+      "nextPaymentDate": 1746662400000,
+      "isActive": 1,
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743090181363,
+      "updatedAt": 1744068961170
+    },
+    {
+      "id": "d3f7df1a-69d2-41a1-956c-7fd1eb59fb12",
+      "name": "PayPal Paga in 3 rate",
+      "amount": 38.2,
+      "description": "Ordine pappa c/o Reico",
+      "interval": "monthly",
+      "dayOfMonth": 27,
+      "dayOfWeek": null,
+      "startDate": 1743033600000,
+      "endDate": 1748304000000,
+      "nextPaymentDate": 1745704800000,
+      "isActive": 1,
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743175707852,
+      "updatedAt": 1743599745378
+    },
+    {
+      "id": "476e0f68-1b79-4c45-8586-87a1710d45a1",
+      "name": "Antica Farmacia Orlandi",
+      "amount": 21.78,
+      "description": "- BioArginina flaconcini orali\n- GSH-VA Glutatione Boost 30 stick\n- Apropos Rino Defens 10 fialoidi\n- Vitamin C 1000 - 60 compresse",
+      "interval": "monthly",
+      "dayOfMonth": 8,
+      "dayOfWeek": null,
+      "startDate": 1744070400000,
+      "endDate": 1746662400000,
+      "nextPaymentDate": 1746662400000,
+      "isActive": 1,
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743599924171,
+      "updatedAt": 1744068961289
+    },
+    {
+      "id": "f5bae0d0-8d03-445d-8c1b-cca88b3dfa85",
+      "name": "Abbonamento NOW TV",
+      "amount": 29.99,
+      "description": "splittato in due con Spliit",
+      "interval": "monthly",
+      "dayOfMonth": 1,
+      "dayOfWeek": null,
+      "startDate": 1746057600000,
+      "endDate": null,
+      "nextPaymentDate": 1746057600000,
+      "isActive": 1,
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743664493772,
+      "updatedAt": 1743664493772
+    },
+    {
+      "id": "6f28ef87-7c15-43e8-a4eb-1fe9401d926a",
+      "name": "iCloud 2TB",
+      "amount": 9.99,
+      "description": "iCloud additional storage",
+      "interval": "monthly",
+      "dayOfMonth": 6,
+      "dayOfWeek": null,
+      "startDate": 1746489600000,
+      "endDate": null,
+      "nextPaymentDate": 1746489600000,
+      "isActive": 1,
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1743947503240,
+      "updatedAt": 1743947503240
+    },
+    {
+      "id": "a2294378-2fdb-4173-bb43-c796a6d62663",
+      "name": "Abbonamento Iliad",
+      "amount": 9.99,
+      "description": "Andrea - 120GB ",
+      "interval": "monthly",
+      "dayOfMonth": 7,
+      "dayOfWeek": null,
+      "startDate": 1746576000000,
+      "endDate": null,
+      "nextPaymentDate": 1746576000000,
+      "isActive": 1,
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1744030535324,
+      "updatedAt": 1744030535324
+    },
+    {
+      "id": "50b48e1d-ec47-4cfd-88dc-fa7ea5dbfe91",
+      "name": "PayPal Paga in 3 rate",
+      "amount": 51.95,
+      "description": "Reico",
+      "interval": "monthly",
+      "dayOfMonth": 23,
+      "dayOfWeek": null,
+      "startDate": 1745366400000,
+      "endDate": 1750636800000,
+      "nextPaymentDate": 1747951200000,
+      "isActive": 1,
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "createdAt": 1745417151460,
+      "updatedAt": 1745417169383
+    }
+  ],
+  "SavingsGoal": [],
+  "Notification": [
+    {
+      "id": "379d9f5e-f75c-4946-b656-7f1d85043efe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "title": "Transazione Automatica Creata",
+      "message": "È stata creata una nuova transazione di 720€ per il pagamento ricorrente \"Mutuo Casa\". Prossimo pagamento: 4/1/2025",
+      "type": "info",
+      "isRead": 1,
+      "createdAt": 1743177114653
+    },
+    {
+      "id": "32705dad-5acd-4325-a14a-e6169055bc05",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "title": "Transazione Automatica Creata",
+      "message": "È stata creata una nuova transazione di 720€ per il pagamento ricorrente \"Mutuo Casa\". Prossimo pagamento: 4/28/2025",
+      "type": "info",
+      "isRead": 1,
+      "createdAt": 1743203578264
+    },
+    {
+      "id": "331aa5bc-397f-4dd1-8fbc-f1172830284b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "title": "Transazione Automatica Creata",
+      "message": "È stata creata una nuova transazione di 221.65€ per il pagamento ricorrente \"Restituzione INPS\". Prossimo pagamento: 4/30/2025",
+      "type": "info",
+      "isRead": 1,
+      "createdAt": 1743290228770
+    },
+    {
+      "id": "f0ff0baa-dfda-4d67-ae4a-2e8062619861",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "title": "Transazione Automatica Creata",
+      "message": "È stata creata una nuova transazione di 25.95€ per il pagamento ricorrente \"AppleOne\". Prossimo pagamento: 4/30/2025",
+      "type": "info",
+      "isRead": 1,
+      "createdAt": 1743290228828
+    },
+    {
+      "id": "7b50af22-a3a7-467a-a5b5-47f2da62572e",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "title": "Transazione Automatica Creata",
+      "message": "È stata creata una nuova transazione di 38.5€ per il pagamento ricorrente \"PayPal paga in 3 rate\". Prossimo pagamento: 5/5/2025",
+      "type": "info",
+      "isRead": 1,
+      "createdAt": 1743810863294
+    },
+    {
+      "id": "0fd08c89-57cc-479b-a4b7-7d2464bc6dd8",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "title": "Transazione Automatica Creata",
+      "message": "È stata creata una nuova transazione di 31.9€ per il pagamento ricorrente \"Linea Internet\". Prossimo pagamento: 5/8/2025",
+      "type": "info",
+      "isRead": 1,
+      "createdAt": 1744068961265
+    },
+    {
+      "id": "202d816b-e10a-4f25-af9a-7fe9827fd834",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "title": "Transazione Automatica Creata",
+      "message": "È stata creata una nuova transazione di 21.78€ per il pagamento ricorrente \"Antica Farmacia Orlandi\". Prossimo pagamento: 5/8/2025",
+      "type": "info",
+      "isRead": 1,
+      "createdAt": 1744068961310
+    },
+    {
+      "id": "c56962f8-1417-4cd6-873d-1009c813b059",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "title": "Transazione Automatica Creata",
+      "message": "È stata creata una nuova transazione di 51.95€ per il pagamento ricorrente \"PayPal Paga in 3 rate\". Prossimo pagamento: 5/23/2025",
+      "type": "info",
+      "isRead": 0,
+      "createdAt": 1745417169398
+    }
+  ],
+  "AutomaticExecutionLog": [
+    {
+      "id": "cm8syh2gb0000pyvhtdtpfrc5",
+      "executionDate": 1743176824994,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1743176825004,
+      "updatedAt": 1743176825004
+    },
+    {
+      "id": "cm8syn9xm0000pyb18t08twzr",
+      "executionDate": 1743177114624,
+      "processedPayments": 1,
+      "createdTransactions": 1,
+      "totalAmount": 720,
+      "details": "[{\"paymentName\":\"Mutuo Casa\",\"amount\":720,\"nextDate\":\"2025-03-31T23:00:00.000Z\"}]",
+      "createdAt": 1743177114634,
+      "updatedAt": 1743177114657
+    },
+    {
+      "id": "cm8teehaq0000pyxnts2rjgvn",
+      "executionDate": 1743203577332,
+      "processedPayments": 1,
+      "createdTransactions": 1,
+      "totalAmount": 720,
+      "details": "[{\"paymentName\":\"Mutuo Casa\",\"amount\":720,\"nextDate\":\"2025-04-27T22:00:00.000Z\"}]",
+      "createdAt": 1743203578131,
+      "updatedAt": 1743203579492
+    },
+    {
+      "id": "cm8utzpa10008pyxn5op8uron",
+      "executionDate": 1743290228403,
+      "processedPayments": 2,
+      "createdTransactions": 2,
+      "totalAmount": 247.6,
+      "details": "[{\"paymentName\":\"Restituzione INPS\",\"amount\":221.65,\"nextDate\":\"2025-04-29T23:00:00.000Z\"},{\"paymentName\":\"AppleOne\",\"amount\":25.95,\"nextDate\":\"2025-04-29T23:00:00.000Z\"}]",
+      "createdAt": 1743290228665,
+      "updatedAt": 1743290230013
+    },
+    {
+      "id": "cm8wef0bn000bpyxncp9gbs7a",
+      "executionDate": 1743385000982,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1743385001315,
+      "updatedAt": 1743385001315
+    },
+    {
+      "id": "cm8xpm3jd0000py6s7uru4ltd",
+      "executionDate": 1743464273766,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1743464274025,
+      "updatedAt": 1743464274025
+    },
+    {
+      "id": "cm8z5fniu0000pyzcs01vg4ny",
+      "executionDate": 1743551313074,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1743551313367,
+      "updatedAt": 1743551313367
+    },
+    {
+      "id": "cm90os6o70000pyvnqt591bbt",
+      "executionDate": 1743644276662,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1743644276935,
+      "updatedAt": 1743644276935
+    },
+    {
+      "id": "cm91zidvh0003pyvnkg484t4w",
+      "executionDate": 1743722761482,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1743722761662,
+      "updatedAt": 1743722761662
+    },
+    {
+      "id": "cm93fypgy0002pypvrdjc5heh",
+      "executionDate": 1743810863013,
+      "processedPayments": 1,
+      "createdTransactions": 1,
+      "totalAmount": 38.5,
+      "details": "[{\"paymentName\":\"PayPal paga in 3 rate\",\"amount\":38.5,\"nextDate\":\"2025-05-05T00:00:00.000Z\"}]",
+      "createdAt": 1743810863217,
+      "updatedAt": 1743810864470
+    },
+    {
+      "id": "cm94s07d50004pypvwkgkphoc",
+      "executionDate": 1743891554518,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1743891554629,
+      "updatedAt": 1743891554629
+    },
+    {
+      "id": "cm967ochp000jpypv4183qccz",
+      "executionDate": 1743978341050,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1743978341437,
+      "updatedAt": 1743978341437
+    },
+    {
+      "id": "cm97pmn2r0000pyllvzz4aov7",
+      "executionDate": 1744068960603,
+      "processedPayments": 2,
+      "createdTransactions": 2,
+      "totalAmount": 53.68,
+      "details": "[{\"paymentName\":\"Linea Internet\",\"amount\":31.9,\"nextDate\":\"2025-05-08T00:00:00.000Z\"},{\"paymentName\":\"Antica Farmacia Orlandi\",\"amount\":21.78,\"nextDate\":\"2025-05-08T00:00:00.000Z\"}]",
+      "createdAt": 1744068961107,
+      "updatedAt": 1744068964754
+    },
+    {
+      "id": "cm9935ixc0006pyvofww1cslm",
+      "executionDate": 1744152143050,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744152143376,
+      "updatedAt": 1744152143376
+    },
+    {
+      "id": "cm9ahbe7c000hpyvoahole85e",
+      "executionDate": 1744236397697,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744236397993,
+      "updatedAt": 1744236397993
+    },
+    {
+      "id": "cm9bwoycf0000pyyakdq4lu2u",
+      "executionDate": 1744322690958,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744322691039,
+      "updatedAt": 1744322691039
+    },
+    {
+      "id": "cm9diuwl00007pyyays8j6wo8",
+      "executionDate": 1744420385961,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744420386420,
+      "updatedAt": 1744420386420
+    },
+    {
+      "id": "cm9ervw1v0008pyya5w8423qs",
+      "executionDate": 1744496014901,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744496015107,
+      "updatedAt": 1744496015107
+    },
+    {
+      "id": "cm9g99i0c000fpyyat12zh4vd",
+      "executionDate": 1744585669637,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744585669740,
+      "updatedAt": 1744585669740
+    },
+    {
+      "id": "cm9hq9mhj000opyyagsj8suin",
+      "executionDate": 1744674693256,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744674695182,
+      "updatedAt": 1744674695182
+    },
+    {
+      "id": "cm9j4u7br000zpyyaon9x7d52",
+      "executionDate": 1744759636010,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744759636119,
+      "updatedAt": 1744759636119
+    },
+    {
+      "id": "cm9kiul8q0000pykcl2h4vppr",
+      "executionDate": 1744843634740,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744843634954,
+      "updatedAt": 1744843634954
+    },
+    {
+      "id": "cm9ly10ha0003pykcbq10im5t",
+      "executionDate": 1744929594485,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1744929595054,
+      "updatedAt": 1744929595054
+    },
+    {
+      "id": "cm9nfjgkr0008pykcfultbiw0",
+      "executionDate": 1745019475041,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1745019475371,
+      "updatedAt": 1745019475371
+    },
+    {
+      "id": "cm9oty5ro000hpykccjaw5fly",
+      "executionDate": 1745104141628,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1745104142003,
+      "updatedAt": 1745104142003
+    },
+    {
+      "id": "cm9qakp2d000kpykcdm6f360q",
+      "executionDate": 1745192533237,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1745192533476,
+      "updatedAt": 1745192533476
+    },
+    {
+      "id": "cm9s5awyc000lpykc2l2lmi6o",
+      "executionDate": 1745304610701,
+      "processedPayments": 0,
+      "createdTransactions": 0,
+      "totalAmount": 0,
+      "details": "[]",
+      "createdAt": 1745304611412,
+      "updatedAt": 1745304611412
+    },
+    {
+      "id": "cm9u0bf81000apyg49js786l2",
+      "executionDate": 1745417169340,
+      "processedPayments": 1,
+      "createdTransactions": 1,
+      "totalAmount": 51.95,
+      "details": "[{\"paymentName\":\"PayPal Paga in 3 rate\",\"amount\":51.95,\"nextDate\":\"2025-05-22T22:00:00.000Z\"}]",
+      "createdAt": 1745417169361,
+      "updatedAt": 1745417170532
+    }
+  ],
+  "Transaction": [
+    {
+      "id": "a8739da4-a038-4280-b5b2-d47d73f077b0",
+      "amount": 18,
+      "description": "Crema viso",
+      "date": 1742860800000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580310,
+      "updatedAt": 1743083075393
+    },
+    {
+      "id": "fe15df5c-78cb-48d0-a21a-e73cbf5c7a2a",
+      "amount": 13,
+      "description": "Filetti di Branzino (il Corallo)",
+      "date": 1742860800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580315,
+      "updatedAt": 1743086213615
+    },
+    {
+      "id": "e9a0b70f-542f-4625-a1cb-902dff503236",
+      "amount": 30.5,
+      "description": "Frutta e Verdura",
+      "date": 1742860800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580319,
+      "updatedAt": 1743086033891
+    },
+    {
+      "id": "4667cdbe-0159-4a9e-a361-ff6b2ad3aad2",
+      "amount": 52.42,
+      "description": "Spesa CONAD",
+      "date": 1742601600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580324,
+      "updatedAt": 1743085767883
+    },
+    {
+      "id": "337c9876-b62d-411a-afac-f88d959efa7b",
+      "amount": 21.24,
+      "description": "piada, stracchino e rucola",
+      "date": 1742428800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580328,
+      "updatedAt": 1743082580328
+    },
+    {
+      "id": "1de4172b-737b-4b8a-906b-8f3413258c29",
+      "amount": 17.5,
+      "description": "Caffè 300gr di Decaffeinato e altrettanti di Robusta (Il Coloniale)",
+      "date": 1742342400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580332,
+      "updatedAt": 1743086150902
+    },
+    {
+      "id": "403f9112-9579-4eac-b78e-da6cc2dcfa03",
+      "amount": 31,
+      "description": "Frutta e Verdura",
+      "date": 1742256000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580336,
+      "updatedAt": 1743086033898
+    },
+    {
+      "id": "28acea7e-22bb-4f56-adb9-0632904014ab",
+      "amount": 14,
+      "description": "Filetti di Branzino (il Corallo)",
+      "date": 1742256000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580340,
+      "updatedAt": 1743086213623
+    },
+    {
+      "id": "d5b2bbf7-7c73-424a-b088-62db6ed66a86",
+      "amount": 2133,
+      "description": "Stipendio",
+      "date": 1742169600000,
+      "type": "INCOME",
+      "categoryId": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580344,
+      "updatedAt": 1743082580344
+    },
+    {
+      "id": "9dadd501-c5f7-4879-9512-53038ed938e8",
+      "amount": 32.77,
+      "description": "Petti di pollo e fesa di tacchino",
+      "date": 1742169600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580348,
+      "updatedAt": 1743086014984
+    },
+    {
+      "id": "311cebb5-8892-469e-9169-e88e165c34c3",
+      "amount": 16,
+      "description": "Imported expense",
+      "date": 1742083200000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580351,
+      "updatedAt": 1743082580351
+    },
+    {
+      "id": "3388b726-e0d7-430c-af44-9e7a6b529e4a",
+      "amount": 33,
+      "description": "Rosticceria pesce",
+      "date": 1741996800000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580355,
+      "updatedAt": 1743082580355
+    },
+    {
+      "id": "9aef7cf5-6d7d-4e71-b8df-810d2a723826",
+      "amount": 4.5,
+      "description": "forno piastra",
+      "date": 1741996800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580359,
+      "updatedAt": 1743082580359
+    },
+    {
+      "id": "087c9ea7-919a-4435-b512-4ec7129a7bdf",
+      "amount": 67.64,
+      "description": "Spesa CONAD",
+      "date": 1741996800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580363,
+      "updatedAt": 1743085767894
+    },
+    {
+      "id": "fb3fe82a-3531-47df-a151-035e602e2e40",
+      "amount": 17.71,
+      "description": "Dental floss",
+      "date": 1741910400000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580367,
+      "updatedAt": 1743082580367
+    },
+    {
+      "id": "ffeb1ed4-a82d-42c4-950e-211960ac43f2",
+      "amount": 10,
+      "description": "Salviette Penny",
+      "date": 1741910400000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580370,
+      "updatedAt": 1743082580370
+    },
+    {
+      "id": "fa3cd150-930c-429b-9796-b65125a5beb9",
+      "amount": 16.85,
+      "description": "Imported expense",
+      "date": 1741910400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580373,
+      "updatedAt": 1743082580373
+    },
+    {
+      "id": "d4f19a1e-1fa6-4b55-9b10-423e6fb154e8",
+      "amount": 22.6,
+      "description": "Imported expense",
+      "date": 1741824000000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580377,
+      "updatedAt": 1743082580377
+    },
+    {
+      "id": "9ef93fe7-5cd4-4e1f-9dca-b6db809f65ee",
+      "amount": 17,
+      "description": "Filetti di Branzino (il Corallo)",
+      "date": 1741651200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580381,
+      "updatedAt": 1743086213629
+    },
+    {
+      "id": "58bad7b7-ff1e-45f5-8f54-97dba8d54e25",
+      "amount": 37.5,
+      "description": "Frutta e Verdura",
+      "date": 1741651200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580385,
+      "updatedAt": 1743086033904
+    },
+    {
+      "id": "317dd598-0111-4717-8243-ef3b813cc8be",
+      "amount": 13.4,
+      "description": "Panificio dell’arco",
+      "date": 1741651200000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580390,
+      "updatedAt": 1743082580390
+    },
+    {
+      "id": "80a84eba-5ce6-4b5a-a936-d48b747cf466",
+      "amount": 47.06,
+      "description": "Spazzolini x2 elettrici",
+      "date": 1741564800000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580393,
+      "updatedAt": 1743082580393
+    },
+    {
+      "id": "feabc125-33d8-4ccf-925b-b966e1a840f5",
+      "amount": 166.67,
+      "description": "Imported expense",
+      "date": 1741564800000,
+      "type": "EXPENSE",
+      "categoryId": "0a52d276-a3b3-4f3d-9342-10bad4586bac",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580396,
+      "updatedAt": 1743082580396
+    },
+    {
+      "id": "4c8d1975-9a0d-4dd6-a549-de8b8f75b20e",
+      "amount": 482.29,
+      "description": "Imported expense",
+      "date": 1741564800000,
+      "type": "EXPENSE",
+      "categoryId": "0a52d276-a3b3-4f3d-9342-10bad4586bac",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580400,
+      "updatedAt": 1743082580400
+    },
+    {
+      "id": "6a165b5c-db34-40c0-b315-4289c7c5e737",
+      "amount": 5.99,
+      "description": "Top11",
+      "date": 1741564800000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580404,
+      "updatedAt": 1743083292132
+    },
+    {
+      "id": "c34de177-1a43-40ac-9773-9142fc84dd5a",
+      "amount": 65.87,
+      "description": "Leva graffi",
+      "date": 1741564800000,
+      "type": "EXPENSE",
+      "categoryId": "047afefd-ed28-47aa-91ef-19c7290e6a12",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580408,
+      "updatedAt": 1743082580408
+    },
+    {
+      "id": "7504acb9-4f23-49de-9a9a-b751ec423a02",
+      "amount": 9.09,
+      "description": "Invio cartaceo contratto editoriale",
+      "date": 1741564800000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580411,
+      "updatedAt": 1743082580411
+    },
+    {
+      "id": "03520b06-d37e-4a4a-880b-4d8e8aac5a06",
+      "amount": 9.99,
+      "description": "Imported expense",
+      "date": 1741564800000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580415,
+      "updatedAt": 1743082580415
+    },
+    {
+      "id": "1a330266-b019-481a-820e-726aceb17ddb",
+      "amount": 12,
+      "description": "Vineria 400",
+      "date": 1741478400000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580420,
+      "updatedAt": 1743082580420
+    },
+    {
+      "id": "1067e37d-6b96-4e28-8cca-bd362d1c4493",
+      "amount": 8.3,
+      "description": "Panificio dell’arco",
+      "date": 1741478400000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580423,
+      "updatedAt": 1743082580423
+    },
+    {
+      "id": "e111f7e9-a5b2-4424-9142-73b6eb0983c9",
+      "amount": 24.33,
+      "description": "Imported expense",
+      "date": 1741478400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580426,
+      "updatedAt": 1743082580426
+    },
+    {
+      "id": "66339278-1197-4fbc-8602-5275a75329f7",
+      "amount": 22.26,
+      "description": "pollo e fesa tacchino",
+      "date": 1741478400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580430,
+      "updatedAt": 1743082580430
+    },
+    {
+      "id": "7411cdd1-79d3-4e87-b8a4-49c2769969a0",
+      "amount": 59.08,
+      "description": "Spesa CONAD",
+      "date": 1741478400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580434,
+      "updatedAt": 1743085767899
+    },
+    {
+      "id": "d199482e-64d1-4aa8-acea-f9ea4e799a9b",
+      "amount": 31.9,
+      "description": "Internet",
+      "date": 1741392000000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580438,
+      "updatedAt": 1743083301157
+    },
+    {
+      "id": "34d5fef2-3aa0-410e-adf4-6d92151bfa80",
+      "amount": 21.78,
+      "description": "Farmacia Orlandi",
+      "date": 1741392000000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580442,
+      "updatedAt": 1743082580442
+    },
+    {
+      "id": "a866986d-cd31-4bae-a284-e9d6620f8db4",
+      "amount": 9.99,
+      "description": "iCloud 2TB",
+      "date": 1741219200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580447,
+      "updatedAt": 1743083310550
+    },
+    {
+      "id": "50f104e5-5782-49cb-8472-7bc7043772c1",
+      "amount": 28,
+      "description": "Imported expense",
+      "date": 1741132800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580452,
+      "updatedAt": 1743082580452
+    },
+    {
+      "id": "54a59369-3a7a-4c9e-a99c-14d69c2ff5d8",
+      "amount": 12.82,
+      "description": "Imported expense",
+      "date": 1741132800000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580457,
+      "updatedAt": 1743082580457
+    },
+    {
+      "id": "dca2ec5b-edac-4a8e-b68a-2d007d119386",
+      "amount": 11.9,
+      "description": "Chiacchiere e frittelle da Pozzi",
+      "date": 1741132800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580462,
+      "updatedAt": 1743082580462
+    },
+    {
+      "id": "a5a4f71e-e743-4329-a794-e928122bba1f",
+      "amount": 38.5,
+      "description": "Imported expense",
+      "date": 1741132800000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580467,
+      "updatedAt": 1743082580467
+    },
+    {
+      "id": "8b3b77f4-906b-4b7f-8498-9cac7f612d11",
+      "amount": 15,
+      "description": "Filetti di Branzino",
+      "date": 1741046400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580471,
+      "updatedAt": 1743086175739
+    },
+    {
+      "id": "883d0a50-e305-44c3-92af-77bcd8f33fea",
+      "amount": 35,
+      "description": "Frutta e Verdura",
+      "date": 1741046400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580476,
+      "updatedAt": 1743086033955
+    },
+    {
+      "id": "3c527b58-c630-4568-9fda-e3561160d529",
+      "amount": 22,
+      "description": "Carta di identità",
+      "date": 1740960000000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580481,
+      "updatedAt": 1743083321473
+    },
+    {
+      "id": "e737232d-7f8f-4a2c-89d9-6a3a9356f660",
+      "amount": 367.28,
+      "description": "Pensione",
+      "date": 1740960000000,
+      "type": "INCOME",
+      "categoryId": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580496,
+      "updatedAt": 1743083335365
+    },
+    {
+      "id": "93f3b585-56f4-45ee-a9f0-201408ede05b",
+      "amount": 25,
+      "description": "Replit",
+      "date": 1740873600000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580504,
+      "updatedAt": 1743083346299
+    },
+    {
+      "id": "b981f338-71c5-47de-9988-f3f89d58c559",
+      "amount": 47,
+      "description": "Imma",
+      "date": 1740787200000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580519,
+      "updatedAt": 1743082580519
+    },
+    {
+      "id": "a7e716d4-bc8c-47ed-8922-86ec9e5f60bc",
+      "amount": 20,
+      "description": "Parafanghi",
+      "date": 1740787200000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580523,
+      "updatedAt": 1743083359150
+    },
+    {
+      "id": "b69a718b-9de2-4836-923d-d7e4af0355d7",
+      "amount": 78.1,
+      "description": "Spesa CONAD",
+      "date": 1740787200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580526,
+      "updatedAt": 1743085767906
+    },
+    {
+      "id": "1ea78788-c9ff-4c3b-b35a-93934e9309ba",
+      "amount": 12.28,
+      "description": "Imported expense",
+      "date": 1740787200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580531,
+      "updatedAt": 1743082580531
+    },
+    {
+      "id": "ec970025-a7e7-4217-a9dd-1fa316df2e65",
+      "amount": 29.99,
+      "description": "NOW Tv",
+      "date": 1740787200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580536,
+      "updatedAt": 1743083374541
+    },
+    {
+      "id": "a73d71f9-f4f8-49f6-bf4c-1f01e1424b75",
+      "amount": 21.5,
+      "description": "Caffè 300gr di Decaffeinato e altrettanti di Robusta (Il Coloniale)",
+      "date": 1740700800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580548,
+      "updatedAt": 1743086150913
+    },
+    {
+      "id": "cd99ad3b-af93-41c0-b5c4-ef2c875f586f",
+      "amount": 12.08,
+      "description": "Rinnovo posta PEC",
+      "date": 1740700800000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580552,
+      "updatedAt": 1743083385706
+    },
+    {
+      "id": "117c1bf9-8816-4cfb-b019-583a56cb3465",
+      "amount": 720,
+      "description": "Imported expense",
+      "date": 1740700800000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580556,
+      "updatedAt": 1743082580556
+    },
+    {
+      "id": "d44583db-e112-42b0-a8dc-feedb6d05ed1",
+      "amount": 221.65,
+      "description": "Imported expense",
+      "date": 1740700800000,
+      "type": "EXPENSE",
+      "categoryId": "2d9f77af-f7f2-4e74-9d4c-04bda5cf39f8",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580560,
+      "updatedAt": 1743082580560
+    },
+    {
+      "id": "96ee7a78-25a3-4d68-8fad-eb429fc01450",
+      "amount": 25.95,
+      "description": "AppleOne",
+      "date": 1740700800000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580564,
+      "updatedAt": 1743083394536
+    },
+    {
+      "id": "2199e458-9625-461f-b2af-dab2d49442b8",
+      "amount": 6.17,
+      "description": "Fesa di tacchino",
+      "date": 1740614400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580568,
+      "updatedAt": 1743085985149
+    },
+    {
+      "id": "34cbc6fe-aa73-41ad-92a5-dcda3c76b2b7",
+      "amount": 25,
+      "description": "Imported expense",
+      "date": 1740528000000,
+      "type": "EXPENSE",
+      "categoryId": "047afefd-ed28-47aa-91ef-19c7290e6a12",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580571,
+      "updatedAt": 1743082580571
+    },
+    {
+      "id": "f13b4bfa-57e6-429f-8f2c-0a3a5ca458b0",
+      "amount": 51.98,
+      "description": "Pipette x6",
+      "date": 1740441600000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580575,
+      "updatedAt": 1743082580575
+    },
+    {
+      "id": "bba7d369-b0a7-4491-be70-6517fbf98898",
+      "amount": 34,
+      "description": "Frutta e Verdura",
+      "date": 1740441600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580579,
+      "updatedAt": 1743086033972
+    },
+    {
+      "id": "bed40df9-b7bd-479c-9cc6-1a380249c023",
+      "amount": 13,
+      "description": "Filetti di Branzino",
+      "date": 1740441600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580582,
+      "updatedAt": 1743086175744
+    },
+    {
+      "id": "734e857a-5f56-4f50-b4f9-9ab34a390768",
+      "amount": 13.5,
+      "description": "Olio pasquinoni",
+      "date": 1740355200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580586,
+      "updatedAt": 1743082580586
+    },
+    {
+      "id": "0f13c9e2-e5ec-4ebd-a3d5-71debd21be8e",
+      "amount": 121.79,
+      "description": "Imported expense",
+      "date": 1740355200000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580589,
+      "updatedAt": 1743082580589
+    },
+    {
+      "id": "9eac0338-b0c6-4f40-8695-72a2d046cb68",
+      "amount": 41,
+      "description": "di pesce del borgo",
+      "date": 1740182400000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580593,
+      "updatedAt": 1743082580593
+    },
+    {
+      "id": "32842077-1484-4ca6-abe2-b0a402e083a9",
+      "amount": 55.93,
+      "description": "Spesa CONAD",
+      "date": 1740182400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580596,
+      "updatedAt": 1743085767912
+    },
+    {
+      "id": "0c0940a7-246c-4afb-bd82-87eeaa18efeb",
+      "amount": 10.99,
+      "description": "SoundCloud",
+      "date": 1740182400000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580600,
+      "updatedAt": 1743083232564
+    },
+    {
+      "id": "3fe25aa6-5c60-47da-83fd-8f74e672c197",
+      "amount": 12.4,
+      "description": "Biscotti Pasta Madre",
+      "date": 1740096000000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580604,
+      "updatedAt": 1743082580604
+    },
+    {
+      "id": "0641a70f-297a-4f3d-8ff1-7a009aa06b26",
+      "amount": 23.9,
+      "description": "Imported expense",
+      "date": 1740009600000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580607,
+      "updatedAt": 1743082580607
+    },
+    {
+      "id": "dee7bcca-0b2f-4b3b-b93a-58b3c6058916",
+      "amount": 40,
+      "description": "Scarpe Adidas",
+      "date": 1740009600000,
+      "type": "EXPENSE",
+      "categoryId": "53022bcd-2f80-4c1a-b383-d493f9f382ab",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580610,
+      "updatedAt": 1743083415281
+    },
+    {
+      "id": "df3965fc-23a6-4d67-8385-5055570ca18f",
+      "amount": 16.96,
+      "description": "Imported expense",
+      "date": 1739923200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580613,
+      "updatedAt": 1743082580613
+    },
+    {
+      "id": "4a742088-5676-432e-88d9-ffb007411d5d",
+      "amount": 24.5,
+      "description": "Frutta e Verdura",
+      "date": 1739836800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580617,
+      "updatedAt": 1743086033977
+    },
+    {
+      "id": "e59f64ff-c3c7-4b59-8004-42dc7873b611",
+      "amount": 13,
+      "description": "Filetti di Branzino",
+      "date": 1739836800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580621,
+      "updatedAt": 1743086175749
+    },
+    {
+      "id": "d1660523-beea-4087-bf8e-6a432a9d4e9c",
+      "amount": 7.38,
+      "description": "Fesa di tacchino",
+      "date": 1739750400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580624,
+      "updatedAt": 1743085994914
+    },
+    {
+      "id": "1d2a2ae6-8051-4859-8144-37f71a3016f0",
+      "amount": 75.61,
+      "description": "Spesa CONAD",
+      "date": 1739664000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580628,
+      "updatedAt": 1743085767917
+    },
+    {
+      "id": "97f1e90f-e20f-444b-b549-26b374917cba",
+      "amount": 38.3,
+      "description": "Imported expense",
+      "date": 1739577600000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580632,
+      "updatedAt": 1743082580632
+    },
+    {
+      "id": "d77d56f0-e6a8-470f-875b-ddf288a9e86e",
+      "amount": 38.59,
+      "description": "ultima rata",
+      "date": 1739577600000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580636,
+      "updatedAt": 1743082580636
+    },
+    {
+      "id": "d62823e7-80a0-47ac-8c17-e2fdac39fd10",
+      "amount": 5.99,
+      "description": "Top11",
+      "date": 1739491200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580640,
+      "updatedAt": 1743083439235
+    },
+    {
+      "id": "8e96ce3a-c3ee-435a-9b60-9ebaffc60d01",
+      "amount": 9.35,
+      "description": "Frutta e Verdura",
+      "date": 1739491200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580643,
+      "updatedAt": 1743086033984
+    },
+    {
+      "id": "e05ae2b7-7860-4932-b8dd-0018e234888d",
+      "amount": 2133,
+      "description": "Imported income",
+      "date": 1739491200000,
+      "type": "INCOME",
+      "categoryId": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580647,
+      "updatedAt": 1743082580647
+    },
+    {
+      "id": "158d517f-6052-4617-8326-35c731d02a9d",
+      "amount": 50,
+      "description": "Revolut",
+      "date": 1739318400000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580650,
+      "updatedAt": 1743082580650
+    },
+    {
+      "id": "ae8c2e2e-fda3-4884-b57d-e99e76f56046",
+      "amount": 8.34,
+      "description": "Pietra viso",
+      "date": 1739232000000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580652,
+      "updatedAt": 1743083444885
+    },
+    {
+      "id": "e472693f-458b-4240-a0bd-0745b3d63afc",
+      "amount": 23.8,
+      "description": "Filetti di Branzino",
+      "date": 1739232000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580655,
+      "updatedAt": 1743086175755
+    },
+    {
+      "id": "ecad7e19-4450-4a0f-9e21-0e67e4f7f951",
+      "amount": 19.2,
+      "description": "Caffè 300gr di Decaffeinato e altrettanti di Robusta (Il Coloniale)",
+      "date": 1739145600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580659,
+      "updatedAt": 1743086150918
+    },
+    {
+      "id": "738b91cd-38e4-4ca9-8ea5-b79f221fbd7d",
+      "amount": 38,
+      "description": "Frutta e Verdura",
+      "date": 1739145600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580664,
+      "updatedAt": 1743086033989
+    },
+    {
+      "id": "56364d62-f7d3-4323-85c2-49f2a45581cd",
+      "amount": 11.3,
+      "description": "Imported expense",
+      "date": 1739145600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580667,
+      "updatedAt": 1743082580667
+    },
+    {
+      "id": "9c0f26e8-2a5b-4257-848e-88a916a2162d",
+      "amount": 1039.23,
+      "description": "Carta di credito",
+      "date": 1739145600000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580671,
+      "updatedAt": 1743083469122
+    },
+    {
+      "id": "caa8fc6c-a721-4977-ab2e-d865d34b92be",
+      "amount": 119.66,
+      "description": "Imported expense",
+      "date": 1739145600000,
+      "type": "EXPENSE",
+      "categoryId": "0a52d276-a3b3-4f3d-9342-10bad4586bac",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580675,
+      "updatedAt": 1743082580675
+    },
+    {
+      "id": "c875acaa-55b9-43f2-9336-6b26a8bc2c68",
+      "amount": 25,
+      "description": "Imported expense",
+      "date": 1739059200000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580680,
+      "updatedAt": 1743082580680
+    },
+    {
+      "id": "085cd933-ec29-4a3d-ac1a-c1fc3ea7dc52",
+      "amount": 68.17,
+      "description": "Spesa CONAD",
+      "date": 1739059200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580684,
+      "updatedAt": 1743085767923
+    },
+    {
+      "id": "df2cf0e2-160d-42e9-93ed-5c3ba27aa35d",
+      "amount": 20,
+      "description": "Imported expense",
+      "date": 1738972800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580687,
+      "updatedAt": 1743082580687
+    },
+    {
+      "id": "61fe8267-b3cb-43cf-9d26-39af821a7127",
+      "amount": 68.17,
+      "description": "Spesa CONAD",
+      "date": 1738972800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580691,
+      "updatedAt": 1743085767928
+    },
+    {
+      "id": "45d82ef2-6173-4046-b9e2-88a8849df584",
+      "amount": 24.6,
+      "description": "Imported expense",
+      "date": 1738972800000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580695,
+      "updatedAt": 1743082580695
+    },
+    {
+      "id": "760a1e6d-befa-4b37-b5af-70bcb4c9d55b",
+      "amount": 7.98,
+      "description": "Imported expense",
+      "date": 1738972800000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580698,
+      "updatedAt": 1743082580698
+    },
+    {
+      "id": "b5ba2bd4-5913-4c94-9c80-f507dc47b876",
+      "amount": 14.5,
+      "description": "Shampoo da Serena",
+      "date": 1738972800000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580702,
+      "updatedAt": 1743083477322
+    },
+    {
+      "id": "a54e290a-7fb0-4796-8292-660dcf332da4",
+      "amount": 23,
+      "description": "Barbiere",
+      "date": 1738972800000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580705,
+      "updatedAt": 1743083489316
+    },
+    {
+      "id": "7f24fb70-beaf-4345-918e-215002d25f4e",
+      "amount": 3.6,
+      "description": "Alise",
+      "date": 1738972800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580708,
+      "updatedAt": 1743082580708
+    },
+    {
+      "id": "60d57313-7dbd-4266-9e69-c77963f2653a",
+      "amount": 31.9,
+      "description": "Internet",
+      "date": 1738972800000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580711,
+      "updatedAt": 1743083497402
+    },
+    {
+      "id": "6c3cd248-f7c5-47f0-9762-0abf2c9be489",
+      "amount": 11.8,
+      "description": "Imported expense",
+      "date": 1738886400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580715,
+      "updatedAt": 1743082580715
+    },
+    {
+      "id": "fcac3121-cc53-4fd5-a316-166bd539d41c",
+      "amount": 13,
+      "description": "Filetti di Branzino",
+      "date": 1738886400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580719,
+      "updatedAt": 1743086175761
+    },
+    {
+      "id": "3e6e740c-e343-45d5-be96-3454e1116894",
+      "amount": 9.99,
+      "description": "iCloud 2TB",
+      "date": 1738800000000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580722,
+      "updatedAt": 1743083519534
+    },
+    {
+      "id": "8c5dfe59-9f14-476c-a41f-deb44757935a",
+      "amount": 14.5,
+      "description": "Imported expense",
+      "date": 1738713600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580726,
+      "updatedAt": 1743082580726
+    },
+    {
+      "id": "8c9c042c-32a6-4e76-bdf9-a7ee46e20585",
+      "amount": 9.99,
+      "description": "Abbonamento Cellulare",
+      "date": 1738713600000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580730,
+      "updatedAt": 1743083534932
+    },
+    {
+      "id": "009c2a5d-f083-4b27-becd-18758b19b03a",
+      "amount": 38.5,
+      "description": "Imported expense",
+      "date": 1738713600000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580734,
+      "updatedAt": 1743082580734
+    },
+    {
+      "id": "2d729fc9-ca00-4955-84ae-d424787a0938",
+      "amount": 25,
+      "description": "Prelevamento",
+      "date": 1738627200000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580737,
+      "updatedAt": 1743082580737
+    },
+    {
+      "id": "2dc5a6b1-64ff-4eef-91d5-ed02811f227a",
+      "amount": 45.15,
+      "description": "Imported expense",
+      "date": 1738627200000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580740,
+      "updatedAt": 1743082580740
+    },
+    {
+      "id": "e972582e-0ca0-40be-bd68-8fc3b8978cbc",
+      "amount": 13,
+      "description": "Filetti di Branzino",
+      "date": 1738627200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580745,
+      "updatedAt": 1743086175767
+    },
+    {
+      "id": "634b1a63-8557-4739-84d9-a9594a62f508",
+      "amount": 12.29,
+      "description": "Spesa CONAD",
+      "date": 1738627200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580750,
+      "updatedAt": 1743085767933
+    },
+    {
+      "id": "130edb39-36da-4922-b90c-35fa42baf77c",
+      "amount": 10,
+      "description": "Imported expense",
+      "date": 1738540800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580753,
+      "updatedAt": 1743082580753
+    },
+    {
+      "id": "3f06a563-476e-48da-8e55-d4cd8d0da468",
+      "amount": 21.96,
+      "description": "Abbonamento Claude",
+      "date": 1738540800000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580757,
+      "updatedAt": 1743083543183
+    },
+    {
+      "id": "82f3b767-0d42-4f9c-9bbb-bf3c6e016491",
+      "amount": 41,
+      "description": "Frutta e Verdura",
+      "date": 1738540800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580762,
+      "updatedAt": 1743086033995
+    },
+    {
+      "id": "9e9b5019-21dd-433a-9841-dedb5c7cbf08",
+      "amount": 367.28,
+      "description": "Pensione",
+      "date": 1738540800000,
+      "type": "INCOME",
+      "categoryId": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580767,
+      "updatedAt": 1743086295572
+    },
+    {
+      "id": "17f18602-4452-409e-96bc-f95d71992722",
+      "amount": 3.99,
+      "description": "Noleggio film",
+      "date": 1738368000000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580770,
+      "updatedAt": 1743087950103
+    },
+    {
+      "id": "1bcc2ba7-ce77-4610-aee5-f1706424f58d",
+      "amount": 12,
+      "description": "Grucce Amazon",
+      "date": 1738368000000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580773,
+      "updatedAt": 1743086555650
+    },
+    {
+      "id": "484478ee-75a1-4faf-8075-08dfbb814cf6",
+      "amount": 13.05,
+      "description": "Petti di pollo",
+      "date": 1738368000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580776,
+      "updatedAt": 1743085940320
+    },
+    {
+      "id": "13dbc000-c3b2-434c-9d23-d9f9af5f7893",
+      "amount": 57.22,
+      "description": "Spesa CONAD",
+      "date": 1738368000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580783,
+      "updatedAt": 1743085767940
+    },
+    {
+      "id": "5d90d1a5-115b-4006-88d2-7bd65a3f48d3",
+      "amount": 103.97,
+      "description": "Imported expense",
+      "date": 1738368000000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580787,
+      "updatedAt": 1743082580787
+    },
+    {
+      "id": "85266455-964f-4cee-9931-abfb7e040f2c",
+      "amount": 29.99,
+      "description": "Imported expense",
+      "date": 1738368000000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580791,
+      "updatedAt": 1743086555659
+    },
+    {
+      "id": "aef34b2b-8866-48c3-a669-87e3015d38ad",
+      "amount": 27.76,
+      "description": "Imported expense",
+      "date": 1738281600000,
+      "type": "EXPENSE",
+      "categoryId": "047afefd-ed28-47aa-91ef-19c7290e6a12",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580795,
+      "updatedAt": 1743082580795
+    },
+    {
+      "id": "9537e8c3-ec68-426e-a0a7-10cb387b84ea",
+      "amount": 46.19,
+      "description": "Petti di pollo, fesa e erbette",
+      "date": 1738195200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580800,
+      "updatedAt": 1743085970956
+    },
+    {
+      "id": "d794ab02-56d7-4795-9c8f-3d733666985a",
+      "amount": 25.95,
+      "description": "Imported expense",
+      "date": 1738195200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580803,
+      "updatedAt": 1743086555664
+    },
+    {
+      "id": "bb8e7e7d-cbd4-40f9-8b65-6a5a1757230c",
+      "amount": 221.65,
+      "description": "Imported expense",
+      "date": 1738195200000,
+      "type": "EXPENSE",
+      "categoryId": "2d9f77af-f7f2-4e74-9d4c-04bda5cf39f8",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580807,
+      "updatedAt": 1743082580807
+    },
+    {
+      "id": "ebcba1d7-1752-4f12-84d3-0f657730d524",
+      "amount": 24.9,
+      "description": "Imported expense",
+      "date": 1738108800000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580812,
+      "updatedAt": 1743082580812
+    },
+    {
+      "id": "ac4defc7-0c0e-4be9-bf12-3e731f1a2fe2",
+      "amount": 45,
+      "description": "Aperitivo al teatro Galli",
+      "date": 1738022400000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580816,
+      "updatedAt": 1743082580816
+    },
+    {
+      "id": "dde68998-112a-4a4a-b3df-2e40fbb5f3e1",
+      "amount": 31.5,
+      "description": "Frutta e Verdura",
+      "date": 1738022400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580821,
+      "updatedAt": 1743086034001
+    },
+    {
+      "id": "7b40ad0d-27e9-469a-a48f-41bf41113bdb",
+      "amount": 15,
+      "description": "Filetti di Branzino",
+      "date": 1738022400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580829,
+      "updatedAt": 1743086175772
+    },
+    {
+      "id": "561cdbb4-caca-452f-9728-f2dd0530db85",
+      "amount": 720,
+      "description": "Imported expense",
+      "date": 1738022400000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580833,
+      "updatedAt": 1743082580833
+    },
+    {
+      "id": "0c276619-5c40-43e6-bdf3-8f8b9608d174",
+      "amount": 16.06,
+      "description": "Imported expense",
+      "date": 1737936000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580837,
+      "updatedAt": 1743082580837
+    },
+    {
+      "id": "84b2bee0-6b4e-46ea-848b-bac9ff3ffae5",
+      "amount": 15,
+      "description": "Imported expense",
+      "date": 1737936000000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580841,
+      "updatedAt": 1743082580841
+    },
+    {
+      "id": "005a466f-39a6-4e2e-9037-9cabed2c746b",
+      "amount": 73.33,
+      "description": "Antichità Galliera, regalo Natale",
+      "date": 1737936000000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580846,
+      "updatedAt": 1743087950112
+    },
+    {
+      "id": "341a2c78-bb32-4379-9e2a-ed49bed5d6fc",
+      "amount": 5,
+      "description": "Autolavaggio",
+      "date": 1737849600000,
+      "type": "EXPENSE",
+      "categoryId": "047afefd-ed28-47aa-91ef-19c7290e6a12",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580849,
+      "updatedAt": 1743082580849
+    },
+    {
+      "id": "033cb6a6-8fcf-48fc-9283-b77718110178",
+      "amount": 20,
+      "description": "Imported expense",
+      "date": 1737849600000,
+      "type": "EXPENSE",
+      "categoryId": "047afefd-ed28-47aa-91ef-19c7290e6a12",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580852,
+      "updatedAt": 1743082580852
+    },
+    {
+      "id": "af8f7850-dd23-457d-a289-9cdec8e6322d",
+      "amount": 12.6,
+      "description": "Imported expense",
+      "date": 1737763200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580855,
+      "updatedAt": 1743082580855
+    },
+    {
+      "id": "97ee737e-fdaf-4c68-9b44-72116df0546c",
+      "amount": 10.2,
+      "description": "Imported expense",
+      "date": 1737763200000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580860,
+      "updatedAt": 1743082580860
+    },
+    {
+      "id": "0d401b56-01f3-4230-8943-8f24cd4b5e21",
+      "amount": 66.35,
+      "description": "Spesa CONAD",
+      "date": 1737763200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580864,
+      "updatedAt": 1743085767946
+    },
+    {
+      "id": "5978f00e-ae3b-4a43-909b-b9d1f296271a",
+      "amount": 15,
+      "description": "Imported expense",
+      "date": 1737676800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580868,
+      "updatedAt": 1743082580868
+    },
+    {
+      "id": "13147789-524e-4f38-873d-38b683822d8e",
+      "amount": 20.5,
+      "description": "Caffè 300gr di Decaffeinato e altrettanti di Robusta (Il Coloniale)",
+      "date": 1737590400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580871,
+      "updatedAt": 1743086150924
+    },
+    {
+      "id": "ac57e852-94f6-48e5-91e2-1fb8ec128ef0",
+      "amount": 11.53,
+      "description": "SoundCloud",
+      "date": 1737590400000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580875,
+      "updatedAt": 1743086347464
+    },
+    {
+      "id": "8fff5c26-3273-4f9b-8d30-fcce5234234d",
+      "amount": 5.99,
+      "description": "Top11",
+      "date": 1737504000000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580879,
+      "updatedAt": 1743087933765
+    },
+    {
+      "id": "ea01ccec-8007-40e2-8842-a23050b438be",
+      "amount": 10.99,
+      "description": "SoundCloud",
+      "date": 1737504000000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580882,
+      "updatedAt": 1743086347481
+    },
+    {
+      "id": "160e09a1-9e3c-471b-9a23-76abdf290afb",
+      "amount": 8.15,
+      "description": "Forno piastra",
+      "date": 1737417600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580885,
+      "updatedAt": 1743082580885
+    },
+    {
+      "id": "f3a83f0c-ddc1-4688-a56a-c269aa8ef5e9",
+      "amount": 20.16,
+      "description": "Terza rata pettorina",
+      "date": 1737417600000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580889,
+      "updatedAt": 1743082580889
+    },
+    {
+      "id": "e8cc6029-d6e8-4b70-a6a4-4404fc7eb0d1",
+      "amount": 21.16,
+      "description": "Ilmiolibro,it",
+      "date": 1737417600000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580893,
+      "updatedAt": 1743087950120
+    },
+    {
+      "id": "aaa391b8-f08c-450e-a6f2-52bcc43fe2a6",
+      "amount": 15,
+      "description": "Filetti di Branzino",
+      "date": 1737417600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580896,
+      "updatedAt": 1743086175777
+    },
+    {
+      "id": "d93d41d3-f1b8-40ca-8233-b40cf4d98ca3",
+      "amount": 40,
+      "description": "Frutta e Verdura",
+      "date": 1737417600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580900,
+      "updatedAt": 1743086034006
+    },
+    {
+      "id": "43d8c1e9-817f-4780-83a6-36ae34014588",
+      "amount": 238,
+      "description": "IMU Ceriano anno 2021",
+      "date": 1737417600000,
+      "type": "EXPENSE",
+      "categoryId": "2d9f77af-f7f2-4e74-9d4c-04bda5cf39f8",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580904,
+      "updatedAt": 1743082580904
+    },
+    {
+      "id": "2c5ae6bc-b0e1-4b21-8b26-13392d076985",
+      "amount": 5.1,
+      "description": "Caffè Cavour",
+      "date": 1737244800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580907,
+      "updatedAt": 1743082580907
+    },
+    {
+      "id": "2508d43d-ac8d-4447-a311-63ef7bb2d36e",
+      "amount": 73.58,
+      "description": "Spesa CONAD",
+      "date": 1737158400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580911,
+      "updatedAt": 1743085767951
+    },
+    {
+      "id": "21bae112-218e-47e9-b59f-e1b6226066f1",
+      "amount": 56.55,
+      "description": "Terza rata reico e sacchetti cacca",
+      "date": 1737158400000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580915,
+      "updatedAt": 1743082580915
+    },
+    {
+      "id": "a2cb117b-950e-4635-b31a-058092175233",
+      "amount": 7.7,
+      "description": "Imported expense",
+      "date": 1737158400000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580918,
+      "updatedAt": 1743082580918
+    },
+    {
+      "id": "35bd5862-dadc-4ae1-9090-4e6b486357a3",
+      "amount": 1983,
+      "description": "Stipendio",
+      "date": 1736812800000,
+      "type": "INCOME",
+      "categoryId": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580921,
+      "updatedAt": 1744099557151
+    },
+    {
+      "id": "05a09431-d8be-4945-848e-7515cb7b5218",
+      "amount": 134.76,
+      "description": "Bolletta Luce",
+      "date": 1736208000000,
+      "type": "EXPENSE",
+      "categoryId": "0a52d276-a3b3-4f3d-9342-10bad4586bac",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580924,
+      "updatedAt": 1744099529053
+    },
+    {
+      "id": "fab438e5-9acb-4cb0-b42e-a359b4ed92de",
+      "amount": 228.73,
+      "description": "Bolletta Gas",
+      "date": 1736208000000,
+      "type": "EXPENSE",
+      "categoryId": "0a52d276-a3b3-4f3d-9342-10bad4586bac",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580929,
+      "updatedAt": 1744099542016
+    },
+    {
+      "id": "762fdb3c-aef7-4f0f-879e-f61cfe67da25",
+      "amount": 9.99,
+      "description": "iCloud 2TB",
+      "date": 1736121600000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580933,
+      "updatedAt": 1743083559466
+    },
+    {
+      "id": "d0ccb078-0d64-420f-b43b-77e9e9feb7c7",
+      "amount": 367.28,
+      "description": "Pensione",
+      "date": 1735862400000,
+      "type": "INCOME",
+      "categoryId": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743082580936,
+      "updatedAt": 1743083573467
+    },
+    {
+      "id": "47f0d9b3-bb77-4561-8ca2-276d26de4e33",
+      "amount": 15.5,
+      "description": "Petti di pollo",
+      "date": 1743033600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743083645048,
+      "updatedAt": 1743085940288
+    },
+    {
+      "id": "0a907f5a-6c7c-4930-85a6-d60672737953",
+      "amount": 38.2,
+      "description": "PayPal paga in 3 rate",
+      "date": 1743033600000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743175751511,
+      "updatedAt": 1743175751511
+    },
+    {
+      "id": "cm8teehb70001pyxni609s1x4",
+      "amount": 720,
+      "description": "Mutuo Casa - Pagamento automatico",
+      "date": 1743202800000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": "cm8teehaq0000pyxnts2rjgvn",
+      "createdAt": 1743203578147,
+      "updatedAt": 1743203578147
+    },
+    {
+      "id": "cm8u2mkes0003pyxn2bqek2hx",
+      "amount": 10.25,
+      "description": "Fesa di tacchino e guanciale",
+      "date": 1743206400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743244266196,
+      "updatedAt": 1743244266196
+    },
+    {
+      "id": "cm8u9uddt0005pyxnxc0azrc3",
+      "amount": 25,
+      "description": "Gasolio + autolavaggio",
+      "date": 1743206400000,
+      "type": "EXPENSE",
+      "categoryId": "047afefd-ed28-47aa-91ef-19c7290e6a12",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743256387649,
+      "updatedAt": 1743256387649
+    },
+    {
+      "id": "cm8uf2w0k0007pyxnp2p1gxax",
+      "amount": 24.9,
+      "description": "Pizza a domicilio da Biagio",
+      "date": 1743206400000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743265183124,
+      "updatedAt": 1743265183124
+    },
+    {
+      "id": "cm8utzpay0009pyxnjudrc95d",
+      "amount": 221.65,
+      "description": "Restituzione INPS - Pagamento automatico",
+      "date": 1743379200000,
+      "type": "EXPENSE",
+      "categoryId": "2d9f77af-f7f2-4e74-9d4c-04bda5cf39f8",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": "cm8utzpa10008pyxn5op8uron",
+      "createdAt": 1743290228698,
+      "updatedAt": 1743327255025
+    },
+    {
+      "id": "cm8utzpdi000apyxn8t88ukc4",
+      "amount": 25.95,
+      "description": "AppleOne - Pagamento automatico",
+      "date": 1743289200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": "cm8utzpa10008pyxn5op8uron",
+      "createdAt": 1743290228789,
+      "updatedAt": 1743290228789
+    },
+    {
+      "id": "cm8wsw9gc000dpyxn81wc7hvf",
+      "amount": 34.36,
+      "description": "Petti di pollo, patate e erbette",
+      "date": 1743379200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743409320924,
+      "updatedAt": 1743409320924
+    },
+    {
+      "id": "cm8wsybgl000fpyxn7vqwom80",
+      "amount": 71.87,
+      "description": "Bolletta Acqua",
+      "date": 1743379200000,
+      "type": "EXPENSE",
+      "categoryId": "0a52d276-a3b3-4f3d-9342-10bad4586bac",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743409416837,
+      "updatedAt": 1743409437298
+    },
+    {
+      "id": "cm8y6h0lb0002py6suq8yycpz",
+      "amount": 26.5,
+      "description": "Frutta e Verdura",
+      "date": 1743465600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743492590400,
+      "updatedAt": 1743492590400
+    },
+    {
+      "id": "cm8y6i9cq0004py6s0nzvioem",
+      "amount": 13.35,
+      "description": "2 yogurt, idraulico liquido, marmellata, riso integrale",
+      "date": 1743465600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743492648410,
+      "updatedAt": 1743492648410
+    },
+    {
+      "id": "cm8y6iy1c0006py6sft01ivwb",
+      "amount": 14,
+      "description": "Filetti di Branzino (il Corallo)",
+      "date": 1743465600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743492680400,
+      "updatedAt": 1743492680400
+    },
+    {
+      "id": "cm8y6lx3h0008py6scai9cpg1",
+      "amount": 4.5,
+      "description": "Piada della Lella ",
+      "date": 1743465600000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743492819150,
+      "updatedAt": 1743492819150
+    },
+    {
+      "id": "cm8y6mkbo000apy6s4jkqvptk",
+      "amount": 367.28,
+      "description": "Pensione",
+      "date": 1743465600000,
+      "type": "INCOME",
+      "categoryId": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743492849235,
+      "updatedAt": 1743493343630
+    },
+    {
+      "id": "cm8y6rf0t000gpy6suclytavm",
+      "amount": 65,
+      "description": "Pranzo al Retroborgo",
+      "date": 1744243200000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743493075661,
+      "updatedAt": 1744124918369
+    },
+    {
+      "id": "cm8y6ue1m000kpy6sznvm32d7",
+      "amount": 178.69,
+      "description": "Carta di credito",
+      "date": 1744243200000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743493214362,
+      "updatedAt": 1743493214362
+    },
+    {
+      "id": "cm8y72ges000mpy6swsfs4e20",
+      "amount": 9.99,
+      "description": "Swiffer",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743493590676,
+      "updatedAt": 1745334470799
+    },
+    {
+      "id": "cm8zq0zph0002pyzc0buwx98z",
+      "amount": 17.8,
+      "description": "Pane, tortini e biscotti",
+      "date": 1743552000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743585901253,
+      "updatedAt": 1743585901253
+    },
+    {
+      "id": "cm910sjxi0002pyvnfnp0zh1f",
+      "amount": 29.99,
+      "description": "NOW TV",
+      "date": 1743638400000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743664449507,
+      "updatedAt": 1743664449507
+    },
+    {
+      "id": "cm92ily6h0005pyvnqgmneic7",
+      "amount": 20,
+      "description": "Aperitivo Belvedere San Leo",
+      "date": 1743638400000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743754840649,
+      "updatedAt": 1743754840649
+    },
+    {
+      "id": "cm92imm500007pyvn71thpzwf",
+      "amount": 81,
+      "description": "Cena ristorante La Rocca San Leo",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743754871701,
+      "updatedAt": 1743754871701
+    },
+    {
+      "id": "cm92jqw3e0009pyvnzu64r8xh",
+      "amount": 11.07,
+      "description": "Coccolino, sapone, detersivo piatti e sacchetti spazzatura",
+      "date": 1743724800000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743756750842,
+      "updatedAt": 1743756750842
+    },
+    {
+      "id": "cm92wplo80001pypvb3z2fw8o",
+      "amount": 2.49,
+      "description": "Top11",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743778525685,
+      "updatedAt": 1743778525685
+    },
+    {
+      "id": "cm93fyphd0003pypvc2pt9gik",
+      "amount": 38.5,
+      "description": "PayPal paga in 3 rate - Pagamento automatico",
+      "date": 1743804000000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": "cm93fypgy0002pypvrdjc5heh",
+      "createdAt": 1743810863233,
+      "updatedAt": 1743810863233
+    },
+    {
+      "id": "cm95ky3k30006pypvdbnvb6g2",
+      "amount": 3.87,
+      "description": "Cursor AI - uso Marzo",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743940165247,
+      "updatedAt": 1743940165247
+    },
+    {
+      "id": "cm95kyopb0008pypvhpc347m5",
+      "amount": 55.85,
+      "description": "Spesa CONAD",
+      "date": 1743897600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743940192656,
+      "updatedAt": 1744030299780
+    },
+    {
+      "id": "cm95kzcqb000apypva8lx9l0v",
+      "amount": 6.1,
+      "description": "Tortini salati, acqua minelare 0.50L",
+      "date": 1743897600000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743940223796,
+      "updatedAt": 1743940223796
+    },
+    {
+      "id": "cm95l064n000cpypvjiyewcyh",
+      "amount": 13,
+      "description": "Petti di pollo (Migani, macelleria Borgo)",
+      "date": 1743811200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743940261895,
+      "updatedAt": 1743940261895
+    },
+    {
+      "id": "cm95l0z51000epypvt6rpd4ki",
+      "amount": 3.99,
+      "description": "Rivista digitale Le Scienze",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743940299493,
+      "updatedAt": 1743940299493
+    },
+    {
+      "id": "cm95p9zvr000gpypvy4ge4z7s",
+      "amount": 9.99,
+      "description": "iCloud 2TB",
+      "date": 1743897600000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743947438823,
+      "updatedAt": 1743947438823
+    },
+    {
+      "id": "cm95us3r5000ipypvngnsz2l8",
+      "amount": 21.96,
+      "description": "Abbonamento Claude",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1743956681725,
+      "updatedAt": 1743956681725
+    },
+    {
+      "id": "cm972oarr0001pyj4mtd22sk8",
+      "amount": 12,
+      "description": "Caffè 300gr di miscela Ducale",
+      "date": 1743984000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744030407303,
+      "updatedAt": 1744030407303
+    },
+    {
+      "id": "cm972sttq0003pyj4zsfg51dl",
+      "amount": 10,
+      "description": "Addebito imposta di bollo Dossier: 503655",
+      "date": 1743984000000,
+      "type": "EXPENSE",
+      "categoryId": "2d9f77af-f7f2-4e74-9d4c-04bda5cf39f8",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744030618622,
+      "updatedAt": 1744030618622
+    },
+    {
+      "id": "cm972trs00005pyj4kuqyh3zt",
+      "amount": 45,
+      "description": "Aperitivo Imma",
+      "date": 1743897600000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744030662624,
+      "updatedAt": 1744030662624
+    },
+    {
+      "id": "cm97pmn420001pyllt5q5mqic",
+      "amount": 31.9,
+      "description": "Linea Internet - Pagamento automatico",
+      "date": 1744063200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": "cm97pmn2r0000pyllvzz4aov7",
+      "createdAt": 1744068961154,
+      "updatedAt": 1744068961154
+    },
+    {
+      "id": "cm97pmn7d0002pyllpfphe0d0",
+      "amount": 21.78,
+      "description": "Antica Farmacia Orlandi - Pagamento automatico",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": "cm97pmn2r0000pyllvzz4aov7",
+      "createdAt": 1744068961274,
+      "updatedAt": 1744098740770
+    },
+    {
+      "id": "cm987aveq0004pyllisrugxqo",
+      "amount": 13.89,
+      "description": "Spesa CONAD",
+      "date": 1744070400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744098645120,
+      "updatedAt": 1744098645120
+    },
+    {
+      "id": "cm987ba1e0006pylld6vi88h4",
+      "amount": 30,
+      "description": "Frutta e Verdura",
+      "date": 1744070400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744098664083,
+      "updatedAt": 1744098664083
+    },
+    {
+      "id": "cm987c1di0008pyllejykn0xd",
+      "amount": 14,
+      "description": "Filetti di Branzino (il Corallo)",
+      "date": 1744070400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744098699511,
+      "updatedAt": 1744098699511
+    },
+    {
+      "id": "cm987gs7b000apyllg6iltwwq",
+      "amount": 10.57,
+      "description": "Contributo bonifica acque",
+      "date": 1745971200000,
+      "type": "EXPENSE",
+      "categoryId": "2d9f77af-f7f2-4e74-9d4c-04bda5cf39f8",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744098920904,
+      "updatedAt": 1744098920904
+    },
+    {
+      "id": "cm99mqv790008pyvoqnv6fa4z",
+      "amount": 12,
+      "description": "Satispay top-up",
+      "date": 1744156800000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744185051764,
+      "updatedAt": 1744185051764
+    },
+    {
+      "id": "cm99mramu000apyvoy7xdarxm",
+      "amount": 5.99,
+      "description": "Top11",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744185071766,
+      "updatedAt": 1744185071766
+    },
+    {
+      "id": "cm99p2sx8000cpyvoip98oteb",
+      "amount": 6.46,
+      "description": "Telegramma",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744188967916,
+      "updatedAt": 1744188967916
+    },
+    {
+      "id": "cm9a8mzpw000epyvookv0plc3",
+      "amount": 20,
+      "description": "Gasolio",
+      "date": 1744156800000,
+      "type": "EXPENSE",
+      "categoryId": "047afefd-ed28-47aa-91ef-19c7290e6a12",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744221822546,
+      "updatedAt": 1744221822546
+    },
+    {
+      "id": "cm9a8nhgt000gpyvou7xdcjcy",
+      "amount": 53.25,
+      "description": "Spese condominiali",
+      "date": 1744156800000,
+      "type": "EXPENSE",
+      "categoryId": "8520fbaf-6cf3-4add-8e7a-974919bd3200",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744221845550,
+      "updatedAt": 1744221845550
+    },
+    {
+      "id": "cm9b1dxsw000jpyvo0gin5cdk",
+      "amount": 7.7,
+      "description": "Paccofacile: libro a Cammareri ",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "8e338be5-a81c-438f-b4a1-7b5b888b934b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744270109024,
+      "updatedAt": 1744270109024
+    },
+    {
+      "id": "cm9cjnupp0002pyyaugyf79k4",
+      "amount": 13.5,
+      "description": "Olio",
+      "date": 1744329600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744361270843,
+      "updatedAt": 1744361270843
+    },
+    {
+      "id": "cm9cjowbg0004pyyae5nd73r2",
+      "amount": 17.4,
+      "description": "Shampoo + Balsamo",
+      "date": 1744329600000,
+      "type": "EXPENSE",
+      "categoryId": "53022bcd-2f80-4c1a-b383-d493f9f382ab",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744361319580,
+      "updatedAt": 1744361319580
+    },
+    {
+      "id": "cm9cjpm810006pyya33vbkrnj",
+      "amount": 16.2,
+      "description": "Petti di pollo",
+      "date": 1744329600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744361353153,
+      "updatedAt": 1744361353153
+    },
+    {
+      "id": "cm9fsdsuq000apyyar1glkoll",
+      "amount": 71.97,
+      "description": "Spesa CONAD",
+      "date": 1744416000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744557316946,
+      "updatedAt": 1744557316946
+    },
+    {
+      "id": "cm9fsenlb000cpyyaie53duws",
+      "amount": 33.4,
+      "description": "Pranzo al Barafonda",
+      "date": 1744416000000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744557356783,
+      "updatedAt": 1744557356783
+    },
+    {
+      "id": "cm9fsf3u2000epyyad7bk7m9s",
+      "amount": 27,
+      "description": "Fiori (ai Girasoli)",
+      "date": 1744502400000,
+      "type": "EXPENSE",
+      "categoryId": "53022bcd-2f80-4c1a-b383-d493f9f382ab",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744557377835,
+      "updatedAt": 1744557391509
+    },
+    {
+      "id": "cm9gvk1ph000hpyyaipcozc6z",
+      "amount": 5.89,
+      "description": "Fesa di tacchino",
+      "date": 1744588800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744623113380,
+      "updatedAt": 1744623113380
+    },
+    {
+      "id": "cm9h6srf0000jpyyagrogyhxs",
+      "amount": 3.99,
+      "description": "Noleggio film",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744641995718,
+      "updatedAt": 1744641995718
+    },
+    {
+      "id": "cm9h6v5d9000lpyyaurnl4hse",
+      "amount": 18.88,
+      "description": "Abbonamento Cursor AI",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744642107117,
+      "updatedAt": 1744642107117
+    },
+    {
+      "id": "cm9i6murd000qpyya9cwpeb2a",
+      "amount": 13.27,
+      "description": "Yogurt, pane, ricottine e granetti",
+      "date": 1744675200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744702186297,
+      "updatedAt": 1744702186297
+    },
+    {
+      "id": "cm9i6na9d000spyyab07hgdhw",
+      "amount": 7.5,
+      "description": "Filetti di Branzino",
+      "date": 1744675200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744702206385,
+      "updatedAt": 1744702206385
+    },
+    {
+      "id": "cm9i6nniy000upyyaq3agf7jn",
+      "amount": 39,
+      "description": "Frutta e Verdura",
+      "date": 1744675200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744702223578,
+      "updatedAt": 1744702223578
+    },
+    {
+      "id": "cm9ilp6up000wpyyae2a5cf2x",
+      "amount": 26.99,
+      "description": "Docking HUB per Mac (HDMI, USB-C)",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744727489520,
+      "updatedAt": 1744727489520
+    },
+    {
+      "id": "cm9ilrekz000ypyyajjcxpyhx",
+      "amount": 2125,
+      "description": "Stipendio",
+      "date": 1744761600000,
+      "type": "INCOME",
+      "categoryId": "74a76d4e-5f02-4175-a90e-c4869cf5ba0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744727592851,
+      "updatedAt": 1744727592851
+    },
+    {
+      "id": "cm9jmk7ga0011pyyamok9nvsa",
+      "amount": 14,
+      "description": "Filetti di Branzino",
+      "date": 1744761600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744789402810,
+      "updatedAt": 1744789431951
+    },
+    {
+      "id": "cm9jpkghw0013pyya6p6nb8uc",
+      "amount": 10.9,
+      "description": "Caffè 300gr di Decaffeinato",
+      "date": 1744761600000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744794453380,
+      "updatedAt": 1744794453380
+    },
+    {
+      "id": "cm9ll49k30002pykc1wsixjbn",
+      "amount": 100,
+      "description": "Regalo Cri (PP)",
+      "date": 1744848000000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744907911777,
+      "updatedAt": 1744907911777
+    },
+    {
+      "id": "cm9mtqn1j0005pykckucoyu53",
+      "amount": 28.2,
+      "description": "Petti di pollo x 970gr",
+      "date": 1744934400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744982858790,
+      "updatedAt": 1744982858790
+    },
+    {
+      "id": "cm9mttlhz0007pykcy6h040wz",
+      "amount": 150.39,
+      "description": "Bolletta Luce",
+      "date": 1746403200000,
+      "type": "EXPENSE",
+      "categoryId": "0a52d276-a3b3-4f3d-9342-10bad4586bac",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1744982996759,
+      "updatedAt": 1744982996759
+    },
+    {
+      "id": "cm9nx6h73000apykcax6y05kz",
+      "amount": 29.98,
+      "description": "Calzini x12 paia",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "53022bcd-2f80-4c1a-b383-d493f9f382ab",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745049102733,
+      "updatedAt": 1745049102733
+    },
+    {
+      "id": "cm9odqixd000cpykcn03oum11",
+      "amount": 15,
+      "description": "Patate, crocchetta, paninetti",
+      "date": 1745020800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745076911952,
+      "updatedAt": 1745076911952
+    },
+    {
+      "id": "cm9oh1c5d000epykc06dtjx4x",
+      "amount": 25.38,
+      "description": "Redcare: Beacid + bagnoschiuma",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "1fe45dfd-2147-44bc-82e5-7f93a11d84fe",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745082455233,
+      "updatedAt": 1745082455233
+    },
+    {
+      "id": "cm9oh1up4000gpykc6w7hwwm0",
+      "amount": 69.74,
+      "description": "Spesa CONAD",
+      "date": 1745020800000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745082479272,
+      "updatedAt": 1745082479272
+    },
+    {
+      "id": "cm9psbm2c000jpykcewka3z1f",
+      "amount": 74.48,
+      "description": "Spesa CONAD",
+      "date": 1745107200000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745161876594,
+      "updatedAt": 1745161876594
+    },
+    {
+      "id": "cm9s5bq3a000npykc2t3l0l4e",
+      "amount": 32,
+      "description": "Frutta e Verdura",
+      "date": 1745280000000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745304649174,
+      "updatedAt": 1745304649174
+    },
+    {
+      "id": "cm9s9c4kh000ppykcjjwz4nak",
+      "amount": 10.99,
+      "description": "SoundCloud",
+      "date": 1746835200000,
+      "type": "EXPENSE",
+      "categoryId": "6aa1907a-6631-4e6e-815a-21a231e0b117",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745311386401,
+      "updatedAt": 1745311386401
+    },
+    {
+      "id": "cm9tz08t60001pyg4vjqpr9ar",
+      "amount": 14.2,
+      "description": "Mirador Cafè (aperitivo)",
+      "date": 1745193600000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745414968218,
+      "updatedAt": 1745414968218
+    },
+    {
+      "id": "cm9tz0zc30003pyg4qa6bxysv",
+      "amount": 15.31,
+      "description": "Filetti di Branzino (il Corallo)",
+      "date": 1745366400000,
+      "type": "EXPENSE",
+      "categoryId": "d04cca6d-319b-48f0-b686-0336bacebfeb",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745415002595,
+      "updatedAt": 1745415002595
+    },
+    {
+      "id": "cm9tz48v30005pyg4jlcisfgc",
+      "amount": 24,
+      "description": "Pizza a domicilio da Lievità (cena con Marcella)",
+      "date": 1744675200000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745415154911,
+      "updatedAt": 1745415269374
+    },
+    {
+      "id": "cm9tz5mhi0007pyg422qji9rm",
+      "amount": 6,
+      "description": "Quattro brioches",
+      "date": 1745107200000,
+      "type": "EXPENSE",
+      "categoryId": "3b5a3896-3f78-40af-bbc3-3a67409124b7",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745415219222,
+      "updatedAt": 1745415219222
+    },
+    {
+      "id": "cm9tz692o0009pyg41fbzk0bl",
+      "amount": 18,
+      "description": "Pizza a domicilio da Lievità",
+      "date": 1745107200000,
+      "type": "EXPENSE",
+      "categoryId": "15d16de6-ad1b-4b73-bb28-8c621d8e4859",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": null,
+      "createdAt": 1745415248497,
+      "updatedAt": 1745415248497
+    },
+    {
+      "id": "cm9u0bf8h000bpyg42vvy7q5n",
+      "amount": 51.95,
+      "description": "PayPal Paga in 3 rate - Pagamento automatico",
+      "date": 1745359200000,
+      "type": "EXPENSE",
+      "categoryId": "c6dbc0b4-0839-4c49-bc0f-101618e1b29a",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "executionLogId": "cm9u0bf81000apyg49js786l2",
+      "createdAt": 1745417169377,
+      "updatedAt": 1745417169377
+    }
+  ],
+  "NotificationPreference": [
+    {
+      "id": "d64875d0-3381-4d67-bd9b-32718a16bb66",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "type": "BUDGET_ALERT",
+      "enabled": 1,
+      "channels": "{\"email\":true,\"app\":true}",
+      "createdAt": 1743607109069,
+      "updatedAt": 1743607109069
+    },
+    {
+      "id": "ff763020-dcfb-4199-a6fc-abe4367da47b",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "type": "PERIOD_SUMMARY",
+      "enabled": 1,
+      "channels": "{\"email\":true,\"app\":true}",
+      "createdAt": 1743607109070,
+      "updatedAt": 1743607109070
+    },
+    {
+      "id": "70a2a265-9814-426b-8788-c672299f5fe5",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "type": "NEW_FEATURE",
+      "enabled": 1,
+      "channels": "{\"email\":true,\"app\":true}",
+      "createdAt": 1743607109070,
+      "updatedAt": 1743607109070
+    },
+    {
+      "id": "c0bd1d9b-1b04-424d-9a78-53716ed03498",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "type": "PAYMENT_REMINDER",
+      "enabled": 1,
+      "channels": "{\"email\":true,\"app\":true}",
+      "createdAt": 1743607109071,
+      "updatedAt": 1743607109071
+    },
+    {
+      "id": "eeb4f679-1fb0-4602-8ff5-c36372aa7efa",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "type": "TRANSACTION_ALERT",
+      "enabled": 1,
+      "channels": "{\"email\":true,\"app\":true}",
+      "createdAt": 1743607109071,
+      "updatedAt": 1743607109071
+    },
+    {
+      "id": "cb1d95f4-c389-404f-a062-0e43bbd3c58f",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "type": "MILESTONE_REACHED",
+      "enabled": 1,
+      "channels": "{\"email\":true,\"app\":true}",
+      "createdAt": 1743607109071,
+      "updatedAt": 1743607109071
+    },
+    {
+      "id": "1016f279-f812-440f-b19f-1583ce296f0c",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "type": "PERSONALIZED_TIP",
+      "enabled": 1,
+      "channels": "{\"email\":true,\"app\":true}",
+      "createdAt": 1743607109071,
+      "updatedAt": 1743607109071
+    },
+    {
+      "id": "e6a08cde-2cb8-4f7c-942f-70b74e0cf396",
+      "userId": "4e386ff4-924f-477d-9126-f55bbe0cde81",
+      "type": "TAX_DEADLINE",
+      "enabled": 1,
+      "channels": "{\"email\":true,\"app\":true}",
+      "createdAt": 1743607109071,
+      "updatedAt": 1743607109071
+    }
+  ]
+}

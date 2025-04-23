@@ -43,6 +43,61 @@ NestJS backend for the Finance Tracker application.
    npm run start:dev
    ```
 
+## Environment Configuration
+
+This project supports both development and production environments:
+
+### Development Environment (Local SQLite)
+
+To run the application in development mode using SQLite:
+
+```bash
+# Run with development environment
+npm run start:dev
+
+# Or manually configure and run
+NODE_ENV=development node config-env.js
+npm run start
+```
+
+### Production Environment (PostgreSQL)
+
+To run the application in production mode using PostgreSQL:
+
+```bash
+# Run with production environment
+npm run start:prod
+
+# Or manually configure and run
+NODE_ENV=production node config-env.js
+npm run start
+```
+
+### Data Migration
+
+To migrate data from SQLite (development) to PostgreSQL (production):
+
+1. Extract data from SQLite:
+
+   ```bash
+   node migrate-data.js
+   ```
+
+2. This creates a `sqlite-data.json` file with all your data.
+
+3. Update your `.env.production` file with PostgreSQL connection string.
+
+4. Create PostgreSQL migrations:
+
+   ```bash
+   node recreate-migrations.js
+   ```
+
+5. Import data to PostgreSQL:
+   ```bash
+   node import-pg-data.js
+   ```
+
 ## API Documentation
 
 The API documentation is available at `/api/docs` when the server is running.
