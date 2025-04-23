@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
-import { RegisterDto } from './dto/register.dto';
+import { Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { UsersService } from "../users/users.service";
+import * as bcrypt from "bcryptjs";
+import { RegisterDto } from "./dto/register.dto";
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService,
+    private jwtService: JwtService
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -32,4 +32,4 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     return this.usersService.create(registerDto);
   }
-} 
+}
