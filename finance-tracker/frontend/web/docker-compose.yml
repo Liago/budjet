@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - API_URL=https://api.your-production-domain.com
+      - BASE_PATH=/budjet
+    restart: unless-stopped 

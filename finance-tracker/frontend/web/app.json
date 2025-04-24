@@ -1,0 +1,25 @@
+{
+  "name": "Finance Tracker Web",
+  "description": "Finance Tracker Web Application",
+  "repository": "https://github.com/yourusername/finance-tracker",
+  "keywords": ["node", "express", "react", "vite"],
+  "env": {
+    "BASE_PATH": {
+      "description": "Base path for the application",
+      "value": "/budjet"
+    },
+    "API_URL": {
+      "description": "URL of the API backend",
+      "value": "https://your-backend-api.herokuapp.com"
+    },
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+} 
