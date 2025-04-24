@@ -30,9 +30,9 @@ async function importData() {
     const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
     console.log('✅ Dati caricati da sqlite-data.json');
     
-    // Verifica che il file .env contenga l'URL PostgreSQL
-    if (!process.env.DATABASE_URL.includes('postgres')) {
-      console.error('❌ Il DATABASE_URL deve puntare a PostgreSQL');
+    // Verifica che DATABASE_URL punti a PostgreSQL
+    if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.includes('postgres')) {
+      console.error('❌ DATABASE_URL non impostato o non punta a PostgreSQL');
       console.error('Assicurati di usare l\'ambiente di produzione');
       process.exit(1);
     }
@@ -67,23 +67,15 @@ async function importData() {
       'AutomaticExecutionLog': 'automaticExecutionLog'
     };
     
-    // Verifica che le tabelle esistano nel database PostgreSQL
-    console.log('🔍 Verifica delle tabelle nel database PostgreSQL...');
-    try {
-      // Eseguiamo una semplice query per verificare che tutto funzioni
-      const userCount = await prisma.user.count();
-      console.log(`✅ Tabella User verificata, contiene ${userCount} record`);
-    } catch (error) {
-      console.error('❌ Errore durante la verifica delle tabelle:', error.message);
-      console.error('Assicurati che lo schema del database sia stato creato correttamente.');
-      console.error('Prova a eseguire: node recreate-migrations.js');
-      throw error;
-    }
-    
-    // Tieni traccia dei record importati correttamente
-    const successfulImports = {
-      Transaction: [],
-      Tag: []
+    // Relazioni molti-a-molti
+    const manyToManyRelations = {
+      'Transaction': {
+        'tags': {
+          throughTable: '_TagToTransaction',
+          localField: 'A',
+          foreignField: 'B'
+        }
+      }
     };
     
     // Importa i dati nell'ordine corretto
@@ -95,7 +87,6 @@ async function importData() {
       
       console.log(`📥 Importazione ${table}...`);
       const prismaModel = tableMap[table];
-      let successCount = 0;
       
       for (const item of data[table]) {
         // Rimuovi campi relazionali che verranno gestiti separatamente
@@ -116,13 +107,6 @@ async function importData() {
             itemCopy[key] = new Date(itemCopy[key]);
           }
           
-          // Converti decimali da string a Decimal
-          if (key === 'amount' || key === 'targetAmount' || key === 'currentAmount' || key === 'budget' || key === 'totalAmount') {
-            if (typeof itemCopy[key] === 'string') {
-              itemCopy[key] = parseFloat(itemCopy[key]);
-            }
-          }
-          
           // Converti numeri interi 0/1 in booleani per PostgreSQL
           if (key === 'isActive' || key === 'isDefault' || key === 'isCompleted' || key === 'isRead' || key === 'enabled') {
             if (itemCopy[key] === 1 || itemCopy[key] === "1") {
@@ -134,65 +118,46 @@ async function importData() {
         });
         
         try {
-          const result = await prisma[prismaModel].upsert({
+          await prisma[prismaModel].upsert({
             where: { id: item.id },
             update: itemCopy,
             create: itemCopy
           });
-          
-          // Salva l'ID del record importato con successo
-          if (table === 'Transaction' || table === 'Tag') {
-            successfulImports[table].push(item.id);
-          }
-          
-          successCount++;
         } catch (error) {
           console.error(`❌ Errore importando ${table} con id ${item.id}:`, error.message);
           console.log('Continuo con il prossimo record...');
         }
       }
       
-      console.log(`✅ ${successCount} record importati con successo su ${data[table].length} in ${table}`);
+      console.log(`✅ ${data[table].length} righe importate in ${table}`);
     }
     
-    // Gestisci relazioni molti-a-molti per tag e transazioni
-    if (data['_TagToTransaction'] && data['_TagToTransaction'].length > 0 && 
-        successfulImports.Transaction.length > 0 && successfulImports.Tag.length > 0) {
-        
-      console.log(`📥 Importazione relazioni tag-transaction...`);
-      let relationCount = 0;
-      
-      // Converti array in Set per lookup veloce
-      const validTransactionIds = new Set(successfulImports.Transaction);
-      const validTagIds = new Set(successfulImports.Tag);
-      
-      // Filtra solo le relazioni valide
-      const validRelations = data['_TagToTransaction'].filter(relation => 
-        validTransactionIds.has(relation.A) && validTagIds.has(relation.B)
-      );
-      
-      console.log(`🔍 Trovate ${validRelations.length} relazioni valide da importare`);
-      
-      // Importa una alla volta per evitare errori
-      for (const relation of validRelations) {
-        try {
-          await prisma.transaction.update({
-            where: { id: relation.A },
-            data: {
-              tags: {
-                connect: [{ id: relation.B }]
-              }
-            }
-          });
-          relationCount++;
-        } catch (error) {
-          console.error(`❌ Errore collegando tag ${relation.B} alla transazione ${relation.A}:`, error.message);
-        }
+    // Gestisci relazioni molti-a-molti
+    for (const [table, relations] of Object.entries(manyToManyRelations)) {
+      if (!data[relations.throughTable]) {
+        console.log(`⚠️ Tabella di relazione ${relations.throughTable} non trovata`);
+        continue;
       }
       
-      console.log(`✅ Importate ${relationCount} relazioni tag-transaction su ${validRelations.length}`);
-    } else {
-      console.log('⚠️ Non è stato possibile importare le relazioni tag-transaction: dati mancanti');
+      console.log(`🔄 Importazione relazioni per ${table}...`);
+      
+      for (const relation of data[relations.throughTable]) {
+        try {
+          // Per esempio, collegare tag alle transazioni
+          if (table === 'Transaction' && relations.tags) {
+            await prisma.transaction.update({
+              where: { id: relation[relations.tags.localField] },
+              data: {
+                tags: {
+                  connect: { id: relation[relations.tags.foreignField] }
+                }
+              }
+            });
+          }
+        } catch (error) {
+          console.error(`❌ Errore importando relazione:`, error);
+        }
+      }
     }
     
     console.log('🎉 Importazione completata con successo!');

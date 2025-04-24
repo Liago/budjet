@@ -5,6 +5,22 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe, Logger } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import * as dotenv from "dotenv";
+import * as fs from "fs";
+import * as path from "path";
+
+// Carica il file .env appropriato in base all'ambiente
+const NODE_ENV = process.env.NODE_ENV || "development";
+const envFile = `.env.${NODE_ENV}`;
+const envPath = path.resolve(__dirname, "..", envFile);
+
+if (fs.existsSync(envPath)) {
+  console.log(`Loading environment from ${envFile}`);
+  dotenv.config({ path: envPath });
+} else {
+  console.log(`Environment file ${envFile} not found, using default .env`);
+  dotenv.config();
+}
 
 async function bootstrap() {
   const logger = new Logger("Bootstrap");
