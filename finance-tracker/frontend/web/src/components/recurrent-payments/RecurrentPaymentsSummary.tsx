@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RecurrentPayment } from "../../utils/types";
+import { isWithinInterval, endOfMonth, startOfDay } from "date-fns";
 
 interface RecurrentPaymentsSummaryProps {
   payments: RecurrentPayment[];
@@ -27,6 +28,36 @@ const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
           : payment.amount;
       return sum + amount;
     }, 0);
+
+  // Calculate remaining payments for the current month
+  const remainingPaymentsForCurrentMonth = useMemo(() => {
+    const today = new Date();
+    const monthEnd = endOfMonth(today);
+
+    return payments
+      .filter((payment) => {
+        // Only include active payments
+        if (!payment.isActive) return false;
+
+        // Check if next payment date is within the current month
+        try {
+          const nextPaymentDate = new Date(payment.nextPaymentDate);
+          return isWithinInterval(nextPaymentDate, {
+            start: startOfDay(today),
+            end: monthEnd,
+          });
+        } catch (e) {
+          return false;
+        }
+      })
+      .reduce((sum, payment) => {
+        const amount =
+          typeof payment.amount === "string"
+            ? parseFloat(payment.amount)
+            : payment.amount;
+        return sum + amount;
+      }, 0);
+  }, [payments]);
 
   // Count active and inactive payments
   const activePayments = payments.filter((payment) => payment.isActive).length;
@@ -67,6 +98,15 @@ const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
             <p className="text-sm text-gray-500 mt-1">
               Totale mensile dei pagamenti attivi
             </p>
+
+            <div className="mt-4">
+              <p className="text-2xl font-semibold text-amber-600">
+                {formatAmount(remainingPaymentsForCurrentMonth)}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Da pagare entro fine mese
+              </p>
+            </div>
           </div>
           <div className="text-right">
             <div className="flex items-center gap-2 justify-end">
