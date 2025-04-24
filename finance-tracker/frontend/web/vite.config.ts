@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
         transformMixedEsModules: true,
       },
       rollupOptions: {
+        makeNativeSite: false,
         external: [],
         onwarn(warning, warn) {
           if (warning.code === "MODULE_NOT_FOUND") return;
