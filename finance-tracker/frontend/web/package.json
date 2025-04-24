@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
-    "heroku-postbuild": "npm run build:prod"
+    "heroku-postbuild": "mkdir -p dist && cp -r public/* dist/"
   },
   "engines": {
     "node": "18.x"
