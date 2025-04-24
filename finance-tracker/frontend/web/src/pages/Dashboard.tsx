@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useAppDispatch, useAppSelector, RootState } from "../store";
 import { useAuth } from "../utils/hooks";
 import { DashboardDateRange } from "../components/dashboard/DashboardDateRange";
@@ -17,6 +17,8 @@ import useDashboardDateRange from "../utils/hooks/useDashboardDateRange";
 import useDashboardCharts from "../utils/hooks/useDashboardCharts";
 import { dashboardService } from "../utils/apiServices";
 import { DashboardStats as DashboardStatsType } from "../utils/types";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 
 // Definizione dell'interfaccia Budget
 interface Budget {
@@ -25,6 +27,30 @@ interface Budget {
   amount: number;
   userId: number;
 }
+
+// Funzione per raggruppare le transazioni per mese
+const getTransactionsPerMonth = (transactions: any[]) => {
+  const result: Record<string, { count: number; month: string }> = {};
+
+  if (!transactions || !Array.isArray(transactions)) return [];
+
+  transactions.forEach((tx) => {
+    try {
+      const date = new Date(tx.date);
+      const monthYear = format(date, "MMM yyyy", { locale: it });
+
+      if (!result[monthYear]) {
+        result[monthYear] = { count: 0, month: monthYear };
+      }
+
+      result[monthYear].count++;
+    } catch (e) {
+      console.error("Errore nel processare la data della transazione:", e, tx);
+    }
+  });
+
+  return Object.values(result).sort((a, b) => a.month.localeCompare(b.month));
+};
 
 const Dashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -90,8 +116,11 @@ const Dashboard: React.FC = () => {
     const filters = {
       startDate: startDateFormatted,
       endDate: endDateFormatted,
-      limit: 100, // Aumentiamo il limite per ottenere più transazioni possibili
+      limit: 1000, // Aumentiamo il limite a 1000 per ottenere tutte le transazioni nel periodo
+      page: 1,
     };
+
+    console.log("Dashboard - Fetching transactions with filters:", filters);
 
     dispatch(fetchTransactions(filters));
     dispatch(fetchCategories());
@@ -136,6 +165,12 @@ const Dashboard: React.FC = () => {
   // Loading state
   const isLoading =
     transactions.isLoading || categories.isLoading || isLoadingDashboard;
+
+  // Calcoliamo le transazioni per mese per debug
+  const transactionsPerMonth = useMemo(
+    () => getTransactionsPerMonth(transactions.transactions),
+    [transactions.transactions]
+  );
 
   return (
     <div className="p-3">
@@ -336,6 +371,24 @@ const Dashboard: React.FC = () => {
                     {categories.categories?.length ?? 0} categorie attive
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Dettaglio transazioni per mese */}
+            <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">
+                Transazioni per mese
+              </h4>
+              <div className="grid grid-cols-4 gap-2">
+                {transactionsPerMonth.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="text-sm bg-white p-2 rounded border border-gray-200"
+                  >
+                    <span className="font-medium">{item.month}:</span>{" "}
+                    {item.count} transazioni
+                  </div>
+                ))}
               </div>
             </div>
 
