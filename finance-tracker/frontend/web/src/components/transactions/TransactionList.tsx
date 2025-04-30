@@ -71,12 +71,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="overflow-x-auto rounded-md border border-border">
+      <table className="min-w-full divide-y divide-border table-fixed">
         <thead className="bg-muted/50">
           <tr>
             {enableMultiSelect && (
-              <th className="text-center p-3">
+              <th className="text-center p-3 w-12">
                 <Checkbox
                   checked={
                     transactions.length > 0 &&
@@ -87,11 +87,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 />
               </th>
             )}
-            <th className="text-left text-xs font-medium p-3 uppercase text-muted-foreground">
+            <th className="text-left text-xs font-medium p-3 uppercase text-muted-foreground w-1/4">
               Description
             </th>
             <th
-              className="text-left text-xs font-medium p-3 uppercase text-muted-foreground cursor-pointer"
+              className="text-left text-xs font-medium p-3 uppercase text-muted-foreground cursor-pointer w-1/6"
               onClick={() => onSort("date")}
             >
               <div className="flex items-center">
@@ -104,11 +104,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   ))}
               </div>
             </th>
-            <th className="text-left text-xs font-medium p-3 uppercase text-muted-foreground">
+            <th className="text-left text-xs font-medium p-3 uppercase text-muted-foreground w-1/6">
               Category
             </th>
             <th
-              className="text-left text-xs font-medium p-3 uppercase text-muted-foreground cursor-pointer"
+              className="text-left text-xs font-medium p-3 uppercase text-muted-foreground cursor-pointer w-1/6"
               onClick={() => onSort("amount")}
             >
               <div className="flex items-center">
@@ -121,7 +121,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   ))}
               </div>
             </th>
-            <th className="text-right text-xs font-medium p-3 uppercase text-muted-foreground">
+            <th className="text-right text-xs font-medium p-3 uppercase text-muted-foreground w-24">
               Actions
             </th>
           </tr>
@@ -141,27 +141,29 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     />
                   </td>
                 )}
-                <td className="p-3 whitespace-nowrap">
-                  <div className="font-medium">{transaction.description}</div>
-                  <div className="text-sm text-muted-foreground">
+                <td className="p-3">
+                  <div className="font-medium truncate">
+                    {transaction.description}
+                  </div>
+                  <div className="text-sm text-muted-foreground truncate">
                     {transaction.tags.map((tag) => tag.name).join(", ")}
                   </div>
                 </td>
-                <td className="p-3 whitespace-nowrap">
+                <td className="p-3">
                   <div>{new Date(transaction.date).toLocaleDateString()}</div>
                 </td>
-                <td className="p-3 whitespace-nowrap">
+                <td className="p-3">
                   <div className="flex items-center">
                     <div
-                      className="h-6 w-6 rounded-full mr-2"
+                      className="h-6 w-6 flex-shrink-0 rounded-full mr-2"
                       style={{
                         backgroundColor: transaction.category.color,
                       }}
                     ></div>
-                    <div>{transaction.category.name}</div>
+                    <div className="truncate">{transaction.category.name}</div>
                   </div>
                 </td>
-                <td className="p-3 whitespace-nowrap">
+                <td className="p-3">
                   <Badge
                     variant={
                       transaction.type === "INCOME" ? "default" : "destructive"
@@ -176,22 +178,24 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     {formatAmount(transaction.amount).substring(2)}
                   </Badge>
                 </td>
-                <td className="p-3 whitespace-nowrap text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(transaction)}
-                  >
-                    <EditIcon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(transaction.id)}
-                    disabled={isDeleting}
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
+                <td className="p-3 text-right">
+                  <div className="flex justify-end space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(transaction)}
+                    >
+                      <EditIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(transaction.id)}
+                      disabled={isDeleting}
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))
@@ -209,16 +213,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
       </table>
 
       {enableMultiSelect && selectedTransactions.length > 0 && (
-        <div className="p-3 border-t flex items-center justify-between bg-muted/20">
+        <div className="p-3 border-t flex items-center justify-between bg-muted/20 flex-wrap gap-2">
           <div className="text-sm font-medium">
             {selectedTransactions.length} transaction
             {selectedTransactions.length !== 1 ? "s" : ""} selected
           </div>
-          <div>
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="ml-2"
               onClick={() => setSelectedTransactions([])}
             >
               Deselect All
@@ -226,7 +229,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
             <Button
               variant="default"
               size="sm"
-              className="ml-2"
               onClick={() => onBulkEdit(getSelectedTransactionsData())}
             >
               Edit Selected

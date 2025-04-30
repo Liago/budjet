@@ -341,9 +341,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         {/* Main content */}
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
+        <main className="flex-1 relative overflow-y-auto focus:outline-none p-4 md:p-6">
           {/* Rendiamo il componente flessibile per mostrare o children o Outlet */}
-          {children ? children : <Outlet />}
+          <div className="container mx-auto max-w-full">
+            {children ? children : <Outlet />}
+          </div>
         </main>
       </div>
 

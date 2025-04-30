@@ -406,7 +406,7 @@ const Transactions = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div>
       <Card className="mb-4">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
@@ -479,16 +479,16 @@ const Transactions = () => {
         />
 
         {/* Totals and Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-          <div className="flex-1 sm:flex sm:items-center sm:justify-between">
-            {/* Transaction Totals */}
-            <TransactionTotals
-              transactions={displayedTransactions}
-              totalItems={totalItems}
-              formatAmount={formatAmount}
-            />
+        <div className="flex flex-col sm:flex-row px-4 py-3 border-t border-border gap-4">
+          {/* Transaction Totals */}
+          <TransactionTotals
+            transactions={displayedTransactions}
+            totalItems={totalItems}
+            formatAmount={formatAmount}
+          />
 
-            {/* Pagination */}
+          {/* Pagination */}
+          <div className="flex-shrink-0 sm:ml-auto">
             <TransactionPagination
               currentPage={currentPage}
               totalPages={totalPages}

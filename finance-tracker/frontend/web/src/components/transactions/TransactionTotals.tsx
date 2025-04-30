@@ -1,5 +1,5 @@
-import React from 'react';
-import { Transaction } from '../../utils/types';
+import React from "react";
+import { Transaction } from "../../utils/types";
 
 interface TransactionTotalsProps {
   transactions: Transaction[];
@@ -16,18 +16,18 @@ interface TotalsData {
 const TransactionTotals: React.FC<TransactionTotalsProps> = ({
   transactions,
   totalItems,
-  formatAmount
+  formatAmount,
 }) => {
   // Calcola i totali delle transazioni filtrate
   const calculateTotals = (): TotalsData => {
     const totals = {
       income: 0,
       expense: 0,
-      balance: 0
+      balance: 0,
     };
 
-    transactions.forEach(transaction => {
-      if (transaction.type === 'INCOME') {
+    transactions.forEach((transaction) => {
+      if (transaction.type === "INCOME") {
         totals.income += Number(transaction.amount);
       } else {
         totals.expense += Number(transaction.amount);
@@ -41,25 +41,29 @@ const TransactionTotals: React.FC<TransactionTotalsProps> = ({
   const transactionTotals = calculateTotals();
 
   return (
-    <div>
-      <p className="text-sm text-muted-foreground">
-        Showing{" "}
-        <span className="font-medium">{transactions.length}</span> of{" "}
-        <span className="font-medium">{totalItems}</span> transactions
+    <div className="sm:flex-1">
+      <p className="text-xs text-muted-foreground">
+        <span className="font-medium">{transactions.length}</span> di{" "}
+        <span className="font-medium">{totalItems}</span> transazioni
       </p>
-      <div className="mt-2 flex flex-wrap gap-x-4 text-sm">
-        <span className="text-green-600 font-medium">
-          Entrate: {formatAmount(transactionTotals.income)}
+      <div className="mt-1 flex space-x-3 text-xs">
+        <span className="text-green-600 font-medium whitespace-nowrap">
+          +{formatAmount(transactionTotals.income)}
         </span>
-        <span className="text-red-600 font-medium">
-          Uscite: {formatAmount(transactionTotals.expense)}
+        <span className="text-red-600 font-medium whitespace-nowrap">
+          -{formatAmount(transactionTotals.expense)}
         </span>
-        <span className={`font-medium ${transactionTotals.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-          Bilancio: {formatAmount(transactionTotals.balance)}
+        <span
+          className={`font-medium whitespace-nowrap ${
+            transactionTotals.balance >= 0 ? "text-blue-600" : "text-red-600"
+          }`}
+        >
+          = {formatAmount(Math.abs(transactionTotals.balance))}{" "}
+          {transactionTotals.balance < 0 ? "🔻" : ""}
         </span>
       </div>
     </div>
   );
 };
 
-export default TransactionTotals; 
+export default TransactionTotals;

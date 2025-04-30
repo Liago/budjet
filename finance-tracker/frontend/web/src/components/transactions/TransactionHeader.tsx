@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, UploadIcon } from '../Icons';
+import { PlusIcon, UploadIcon } from "../Icons";
 
 interface TransactionHeaderProps {
   onAddTransaction: () => void;
@@ -17,18 +17,19 @@ const TransactionHeader: React.FC<TransactionHeaderProps> = ({
   onDeleteAll,
   onManualDeleteAll,
   isDeleting,
-  isLoading
+  isLoading,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <h1 className="text-2xl font-bold text-foreground">Transazioni</h1>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           onClick={onDeleteAll}
           variant="outline"
           className="text-red-700 hover:bg-red-50 border-red-300"
           disabled={isDeleting || isLoading}
+          size="sm"
         >
           {isDeleting ? "Deleting..." : "Delete All"}
         </Button>
@@ -37,14 +38,15 @@ const TransactionHeader: React.FC<TransactionHeaderProps> = ({
           variant="outline"
           className="text-red-700 hover:bg-red-50 border-red-300"
           disabled={isDeleting || isLoading}
+          size="sm"
         >
           Manual Delete All
         </Button>
-        <Button onClick={onImportCsv} variant="outline">
+        <Button onClick={onImportCsv} variant="outline" size="sm">
           <UploadIcon className="h-4 w-4 mr-2" />
           Import CSV
         </Button>
-        <Button onClick={onAddTransaction}>
+        <Button onClick={onAddTransaction} size="sm">
           <PlusIcon className="h-4 w-4 mr-2" />
           Add Transaction
         </Button>
@@ -53,4 +55,4 @@ const TransactionHeader: React.FC<TransactionHeaderProps> = ({
   );
 };
 
-export default TransactionHeader; 
+export default TransactionHeader;

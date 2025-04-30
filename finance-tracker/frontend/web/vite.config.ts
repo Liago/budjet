@@ -77,11 +77,7 @@ export default defineConfig(({ mode }) => {
             name: "ignore-missing-deps",
             setup(build) {
               build.onResolve({ filter: /.*/ }, (args) => {
-                if (
-                  args.path.includes("framer-motion") ||
-                  args.path.includes("recharts") ||
-                  args.path.includes("../../types/")
-                ) {
+                if (args.path.includes("../../types/")) {
                   return { path: args.path, external: true };
                 }
                 return null;
