@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "c9c84e26-5b01-41ce-9f35-8927f38e8e2c"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.liago.budjet",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

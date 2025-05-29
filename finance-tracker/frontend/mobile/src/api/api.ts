@@ -1,15 +1,35 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
 // Rimuovo l'import diretto dello store per evitare il ciclo di dipendenze
 // import { store } from "../store";
 
-// Base URL will be different for local development on different platforms
-const API_BASE_URL =
-  Platform.OS === "ios"
-    ? "http://localhost:3000/api"
-    : "http://10.0.2.2:3000/api"; // Android emulator uses 10.0.2.2 to reach localhost
+// Determinazione dell'URL API basata su variabili d'ambiente o piattaforma
+let API_BASE_URL: string;
+
+// Prima controlla se c'è una variabile d'ambiente EXPO_PUBLIC_API_URL
+const PUBLIC_API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+// Poi controlla le variabili in expoConfig.extra
+const CONFIG_API_URL = Constants.expoConfig?.extra?.API_URL;
+
+// Se abbiamo un URL nelle variabili d'ambiente, usalo
+if (PUBLIC_API_URL) {
+  console.log("Using API URL from EXPO_PUBLIC_API_URL:", PUBLIC_API_URL);
+  API_BASE_URL = PUBLIC_API_URL;
+} else if (CONFIG_API_URL) {
+  console.log("Using API URL from app config:", CONFIG_API_URL);
+  API_BASE_URL = CONFIG_API_URL;
+} else {
+  // Altrimenti usa l'URL di sviluppo locale basato sulla piattaforma
+  API_BASE_URL =
+    Platform.OS === "ios"
+      ? "http://localhost:3000/api"
+      : "http://10.0.2.2:3000/api"; // Android emulator uses 10.0.2.2 to reach localhost
+  console.log("Using default development API URL:", API_BASE_URL);
+}
 
 // Create axios instance
 const axiosInstance: AxiosInstance = axios.create({

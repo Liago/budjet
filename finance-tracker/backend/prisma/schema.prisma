@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // Modificato da sqlite a postgresql per Heroku
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 

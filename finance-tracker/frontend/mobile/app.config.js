@@ -1,4 +1,4 @@
-{
+export default {
   "expo": {
     "name": "BudJet",
     "slug": "budjet",
@@ -10,21 +10,31 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.budjet.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.budjet.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "API_URL": process.env.API_URL || "https://budjet-backend-f1590123e946.herokuapp.com/api",
+      "eas": {
+        "projectId": "c9c84e26-5b01-41ce-9f35-8927f38e8e2c"
+      }
     }
   }
-}
+}; 
