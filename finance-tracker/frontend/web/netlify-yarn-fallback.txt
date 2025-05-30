@@ -1,0 +1,2 @@
+# Alternative build command se npm fallisce ancora
+command = "npm install -g yarn && rm -rf node_modules && yarn install && yarn build:prod"
