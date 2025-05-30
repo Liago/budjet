@@ -1,1 +1,7 @@
+# Asset statici non devono essere reindirizzati
+/assets/*  200
+/favicon.svg  200
+/vite.svg  200
+
+# Tutte le altre richieste per React Router
 /*    /index.html   200
