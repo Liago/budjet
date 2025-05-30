@@ -1,6 +1,6 @@
 [build]
   base = "finance-tracker/frontend/web"
-  command = "rm -rf node_modules && npm install --no-fund --no-audit --include=optional && npm run build:prod"
+  command = "rm -rf node_modules && npm install --include=optional && npm rebuild && npm run build:prod"
   publish = "dist"
 
 [build.environment]
