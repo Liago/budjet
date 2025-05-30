@@ -1,0 +1,10 @@
+legacy-peer-deps=true
+prefer-offline=false
+fund=false
+audit=false
+nodedir=false
+# Abilita dipendenze opzionali per Rollup su Linux
+include=optional
+# Abilita moduli nativi di Rollup
+rollup_node_resolve_use_native=true
+rollup_node_resolve_skip_native=false
