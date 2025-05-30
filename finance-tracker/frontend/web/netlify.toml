@@ -1,10 +1,10 @@
 [build]
   base = "finance-tracker/frontend/web"
-  command = "cp .npmrc.netlify .npmrc && npm install && npm run build:prod"
+  command = "rm -rf node_modules && npm install --no-fund --no-audit --include=optional && npm run build:prod"
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
 
 [[headers]]
   for = "/*"
