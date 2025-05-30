@@ -46,6 +46,7 @@ async function bootstrap() {
       app.enableCors({
         origin: [
           "https://budjet-frontend.herokuapp.com",
+          "https://bud-jet.netlify.app",
           // Add other origins as needed
         ],
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
