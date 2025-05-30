@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const isProd = mode === "production";
 
   return {
-    base: isProd ? "/budjet/" : "/",
+    base: "/",
     plugins: [react()],
     resolve: {
       alias: {

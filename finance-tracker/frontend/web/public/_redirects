@@ -1,5 +1,4 @@
 # Asset statici non devono essere reindirizzati
-/budjet/assets/*  200
 /assets/*  200
 *.js  200
 *.css  200
