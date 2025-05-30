@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 
-// API base URL - should be configured based on environment
-export const API_URL = "http://localhost:3000/api";
+// API base URL - configured based on environment
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 // Create an axios instance with default config
 const api = axios.create({
