@@ -1,3 +1,4 @@
+import { Handler } from '@netlify/functions';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../src/app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -13,11 +14,14 @@ async function createApp() {
   }
 
   const expressApp = express();
+  
+  // Create NestJS app with minimal configuration
   const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
-    logger: ['error', 'warn'], // Ridotto logging per performance
+    logger: ['error', 'warn'],
+    abortOnError: false, // Continue even if optional modules fail
   });
 
-  // No global prefix here - Netlify handles /api routing
+  // No global prefix - Netlify handles /api routing via redirects
   // app.setGlobalPrefix('api');
 
   // Validation pipes
@@ -26,6 +30,7 @@ async function createApp() {
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
+      skipMissingProperties: true,
     })
   );
 
@@ -38,7 +43,9 @@ async function createApp() {
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   });
 
   await app.init();
@@ -49,10 +56,25 @@ async function createApp() {
   return serverlessApp;
 }
 
-export const handler = async (event, context) => {
-  // Netlify function context optimization
+export const handler: Handler = async (event, context) => {
+  // Optimize Netlify function context
   context.callbackWaitsForEmptyEventLoop = false;
   
-  const app = await createApp();
-  return app(event, context);
+  try {
+    const app = await createApp();
+    return await app(event, context);
+  } catch (error) {
+    console.error('Function error:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': 'https://bud-jet.netlify.app',
+      },
+      body: JSON.stringify({
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+      })
+    };
+  }
 };
