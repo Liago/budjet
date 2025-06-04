@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../src/app.module';
 import { ValidationPipe } from '@nestjs/common';
-import serverlessExpress from 'serverless-http';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express';
+import serverlessExpress from 'serverless-http';
+import express from 'express';
 
 let cachedApp;
 
@@ -13,10 +13,12 @@ async function createApp() {
   }
 
   const expressApp = express();
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp));
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
+    logger: ['error', 'warn'], // Ridotto logging per performance
+  });
 
-  // Global prefix
-  app.setGlobalPrefix('api');
+  // No global prefix here - Netlify handles /api routing
+  // app.setGlobalPrefix('api');
 
   // Validation pipes
   app.useGlobalPipes(
@@ -34,8 +36,9 @@ async function createApp() {
       'http://localhost:3000',
       'http://localhost:5173',
     ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   await app.init();
@@ -47,6 +50,9 @@ async function createApp() {
 }
 
 export const handler = async (event, context) => {
+  // Netlify function context optimization
+  context.callbackWaitsForEmptyEventLoop = false;
+  
   const app = await createApp();
   return app(event, context);
 };

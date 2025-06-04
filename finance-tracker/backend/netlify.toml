@@ -1,10 +1,11 @@
 [build]
-  command = "prisma generate && npm run build"
+  command = "chmod +x build-netlify.sh && ./build-netlify.sh"
   functions = "netlify/functions"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
+  NPM_FLAGS = "--production=false"
 
 [functions]
   node_bundler = "esbuild"
