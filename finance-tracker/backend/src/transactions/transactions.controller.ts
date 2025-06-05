@@ -9,8 +9,8 @@ import {
   UseGuards,
   Request,
   Query,
-  UseInterceptors,
-  UploadedFile,
+  // UseInterceptors,
+  // UploadedFile,
   BadRequestException,
 } from "@nestjs/common";
 import { TransactionsService } from "./transactions.service";
@@ -20,17 +20,17 @@ import { QueryTransactionDto } from "./dto/query-transaction.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import {
   ApiBearerAuth,
-  ApiConsumes,
+  // ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { FileInterceptor } from "@nestjs/platform-express";
-import { diskStorage } from "multer";
-import { extname } from "path";
-import { ImportCsvDto } from "./dto/import-csv.dto";
+// import { FileInterceptor } from "@nestjs/platform-express";
+// import { diskStorage } from "multer";
+// import { extname } from "path";
+// import { ImportCsvDto } from "./dto/import-csv.dto";
 
 @ApiTags("transactions")
 @Controller("transactions")
@@ -146,6 +146,9 @@ export class TransactionsController {
     return this.transactionsService.remove(id, req.user.id);
   }
 
+  // TEMPORANEAMENTE DISABILITATO PER NETLIFY FUNCTIONS
+  // Netlify Functions non supportano disk storage - serve cloud storage
+  /*
   @Post("import/csv")
   @ApiOperation({ summary: "Import transactions from CSV file" })
   @ApiConsumes("multipart/form-data")
@@ -187,6 +190,7 @@ export class TransactionsController {
       importCsvDto.defaultCategoryId
     );
   }
+  */
 
   @Post("bulk-update")
   @ApiOperation({ summary: "Update multiple transactions at once" })
