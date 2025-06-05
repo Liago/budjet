@@ -7,26 +7,74 @@ import { EmailTemplate } from "./email.controller";
 
 @Injectable()
 export class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
+  private isEmailConfigured = false;
 
   constructor(private configService: ConfigService) {
-    this.transporter = nodemailer.createTransport({
-      host: this.configService.get<string>("SMTP_HOST"),
-      port: this.configService.get<number>("SMTP_PORT"),
-      secure: false,
-      requireTLS: true,
-      auth: {
-        user: this.configService.get<string>("SMTP_USER"),
-        pass: this.configService.get<string>("SMTP_PASS"),
-      },
-      tls: {
-        ciphers: "SSLv3",
-        rejectUnauthorized: false,
-      },
-    });
+    try {
+      // Controllo sicuro della disponibilità del ConfigService
+      if (!this.configService) {
+        console.warn('[EmailService] ConfigService non disponibile - email disabilitata');
+        return;
+      }
+
+      // Verifica delle environment variables necessarie
+      const smtpHost = this.configService.get<string>("SMTP_HOST");
+      const smtpUser = this.configService.get<string>("SMTP_USER");
+      const smtpPass = this.configService.get<string>("SMTP_PASS");
+      
+      if (!smtpHost || !smtpUser || !smtpPass) {
+        console.warn('[EmailService] Configurazione SMTP incompleta - email disabilitata');
+        console.warn('[EmailService] Variabili mancanti:', {
+          SMTP_HOST: !!smtpHost,
+          SMTP_USER: !!smtpUser,
+          SMTP_PASS: !!smtpPass
+        });
+        return;
+      }
+
+      // Creazione transporter solo se configurazione completa
+      this.transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: this.configService.get<number>("SMTP_PORT") || 587,
+        secure: false,
+        requireTLS: true,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+        tls: {
+          ciphers: "SSLv3",
+          rejectUnauthorized: false,
+        },
+      });
+      
+      this.isEmailConfigured = true;
+      console.log('[EmailService] Configurato con successo');
+    } catch (error) {
+      console.warn('[EmailService] Errore durante inizializzazione:', error.message);
+      this.transporter = null;
+      this.isEmailConfigured = false;
+    }
+  }
+
+  private checkEmailConfiguration(): boolean {
+    if (!this.isEmailConfigured || !this.transporter) {
+      console.warn('[EmailService] Email non configurata - operazione saltata');
+      return false;
+    }
+    return true;
   }
 
   async sendTestEmail(to: string, template: EmailTemplate = "test") {
+    if (!this.checkEmailConfiguration()) {
+      return {
+        success: false,
+        error: 'Email service non configurato',
+        template,
+      };
+    }
+
     try {
       let html: string;
       let subject: string;
@@ -57,8 +105,8 @@ export class EmailService {
           break;
       }
 
-      const info = await this.transporter.sendMail({
-        from: this.configService.get<string>("SMTP_FROM"),
+      const info = await this.transporter!.sendMail({
+        from: this.configService.get<string>("SMTP_FROM") || "noreply@bud-jet.app",
         to,
         subject,
         html,
@@ -80,6 +128,13 @@ export class EmailService {
   }
 
   async testTransactionsEmail(to: string) {
+    if (!this.checkEmailConfiguration()) {
+      return {
+        success: false,
+        error: 'Email service non configurato',
+      };
+    }
+
     // This method specifically tests the transactions email template
     const exampleTransactions = [
       {
@@ -105,8 +160,8 @@ export class EmailService {
         0
       );
 
-      const info = await this.transporter.sendMail({
-        from: this.configService.get<string>("SMTP_FROM"),
+      const info = await this.transporter!.sendMail({
+        from: this.configService.get<string>("SMTP_FROM") || "noreply@bud-jet.app",
         to,
         subject: "Test Email - Transazioni Automatiche",
         html: transactionsEmailTemplate(exampleTransactions, totalAmount),
@@ -134,10 +189,17 @@ export class EmailService {
     }[],
     totalAmount: number
   ) {
+    if (!this.checkEmailConfiguration()) {
+      return {
+        success: false,
+        error: 'Email service non configurato',
+      };
+    }
+
     try {
       // No need to map anymore since the properties already match
-      const info = await this.transporter.sendMail({
-        from: this.configService.get<string>("SMTP_FROM"),
+      const info = await this.transporter!.sendMail({
+        from: this.configService.get<string>("SMTP_FROM") || "noreply@bud-jet.app",
         to,
         subject: "Nuove Transazioni Automatiche Create",
         html: transactionsEmailTemplate(transactions, totalAmount),
