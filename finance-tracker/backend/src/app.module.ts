@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { AppController } from "./app.controller";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { TransactionsModule } from "./transactions/transactions.module";
@@ -33,5 +34,7 @@ import { EmailModule } from "./email/email.module";
     NotificationsModule,
     EmailModule,
   ],
+  controllers: [AppController],
+  providers: [],
 })
 export class AppModule {}
