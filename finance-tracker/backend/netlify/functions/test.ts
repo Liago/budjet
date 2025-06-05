@@ -1,1 +1,22 @@
-import { Handler } from '@netlify/functions';\n\n// Simple test function to verify deployment\nexport const handler: Handler = async (event, context) => {\n  console.log('Test function called:', event.httpMethod, event.path);\n  \n  return {\n    statusCode: 200,\n    headers: {\n      'Content-Type': 'application/json',\n      'Access-Control-Allow-Origin': '*',\n      'Access-Control-Allow-Headers': 'Content-Type, Authorization',\n      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'\n    },\n    body: JSON.stringify({\n      message: 'Backend function is working!',\n      timestamp: new Date().toISOString(),\n      path: event.path,\n      method: event.httpMethod\n    })\n  };\n};
+import { Handler } from '@netlify/functions';
+
+// Simple test function to verify deployment
+export const handler: Handler = async (event, context) => {
+  console.log('Test function called:', event.httpMethod, event.path);
+  
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+    },
+    body: JSON.stringify({
+      message: 'Backend function is working!',
+      timestamp: new Date().toISOString(),
+      path: event.path,
+      method: event.httpMethod
+    })
+  };
+};

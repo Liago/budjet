@@ -1,1 +1,67 @@
-import { Handler } from '@netlify/functions';\n\n// Simplified API function\nexport const handler: Handler = async (event, context) => {\n  console.log('API function called:', event.httpMethod, event.path);\n  \n  // Handle CORS preflight\n  if (event.httpMethod === 'OPTIONS') {\n    return {\n      statusCode: 200,\n      headers: {\n        'Access-Control-Allow-Origin': 'https://bud-jet.netlify.app',\n        'Access-Control-Allow-Headers': 'Content-Type, Authorization',\n        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',\n        'Access-Control-Max-Age': '86400'\n      },\n      body: ''\n    };\n  }\n  \n  // Basic routing\n  const path = event.path.replace('/.netlify/functions/api', '') || '/';\n  \n  let response;\n  \n  if (path === '/' || path === '') {\n    response = {\n      message: 'Finance Tracker API is running!',\n      version: '1.0.0',\n      timestamp: new Date().toISOString(),\n      endpoints: [\n        'GET /' ,\n        'POST /auth/login',\n        'GET /health'\n      ]\n    };\n  } else if (path === '/health') {\n    response = {\n      status: 'healthy',\n      timestamp: new Date().toISOString(),\n      database: 'not connected yet' // TODO: add database check\n    };\n  } else {\n    return {\n      statusCode: 404,\n      headers: {\n        'Content-Type': 'application/json',\n        'Access-Control-Allow-Origin': 'https://bud-jet.netlify.app'\n      },\n      body: JSON.stringify({\n        error: 'Endpoint not found',\n        path: path,\n        message: 'This endpoint is not implemented in the simplified version'\n      })\n    };\n  }\n  \n  return {\n    statusCode: 200,\n    headers: {\n      'Content-Type': 'application/json',\n      'Access-Control-Allow-Origin': 'https://bud-jet.netlify.app',\n      'Access-Control-Allow-Headers': 'Content-Type, Authorization'\n    },\n    body: JSON.stringify(response)\n  };\n};
+import { Handler } from '@netlify/functions';
+
+// Simplified API function
+export const handler: Handler = async (event, context) => {
+  console.log('API function called:', event.httpMethod, event.path);
+  
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': 'https://bud-jet.netlify.app',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Max-Age': '86400'
+      },
+      body: ''
+    };
+  }
+  
+  // Basic routing
+  const path = event.path.replace('/.netlify/functions/api-simple', '') || '/';
+  
+  let response;
+  
+  if (path === '/' || path === '') {
+    response = {
+      message: 'Finance Tracker API is running!',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      endpoints: [
+        'GET /' ,
+        'POST /auth/login',
+        'GET /health'
+      ]
+    };
+  } else if (path === '/health') {
+    response = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      database: 'not connected yet'
+    };
+  } else {
+    return {
+      statusCode: 404,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': 'https://bud-jet.netlify.app'
+      },
+      body: JSON.stringify({
+        error: 'Endpoint not found',
+        path: path,
+        message: 'This endpoint is not implemented in the simplified version'
+      })
+    };
+  }
+  
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': 'https://bud-jet.netlify.app',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    },
+    body: JSON.stringify(response)
+  };
+};
