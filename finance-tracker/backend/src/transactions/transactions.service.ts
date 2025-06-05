@@ -9,10 +9,10 @@ import { UpdateTransactionDto } from "./dto/update-transaction.dto";
 import { QueryTransactionDto } from "./dto/query-transaction.dto";
 import { Prisma } from "@prisma/client";
 import { TransactionType } from "../common/constants";
-import { parse } from "csv-parse";
-import * as fs from "fs";
-import * as iconv from "iconv-lite";
-import { parse as parseDate } from "date-fns";
+// import { parse } from "csv-parse";
+// import * as fs from "fs";
+// import * as iconv from "iconv-lite";
+// import { parse as parseDate } from "date-fns";
 
 @Injectable()
 export class TransactionsService {
@@ -269,6 +269,10 @@ export class TransactionsService {
     }
   }
 
+  // TEMPORANEAMENTE DISABILITATO PER NETLIFY FUNCTIONS
+  // La funzione importFromCsv usa filesystem local che non è supportato
+  // Dovrà essere reimplementata con memory storage o cloud storage
+  /*
   async importFromCsv(
     userId: string,
     file: Express.Multer.File,
@@ -477,4 +481,5 @@ export class TransactionsService {
       }
     });
   }
+  */
 }
