@@ -28,8 +28,8 @@ async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
 
-    // Set global prefix for all routes
-    app.setGlobalPrefix("api");
+    // Set global prefix for all routes - disabled for Netlify Functions
+    // app.setGlobalPrefix("api");
 
     // Enable validation pipes
     app.useGlobalPipes(
@@ -67,7 +67,7 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup("api/docs", app, document);
+    SwaggerModule.setup("docs", app, document);
 
     // Start the server
     const port = process.env.PORT || 3000;
