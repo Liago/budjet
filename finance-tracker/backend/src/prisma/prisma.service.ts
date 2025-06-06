@@ -16,10 +16,7 @@ export class PrismaService
   constructor() {
     const databaseUrl = process.env.DATABASE_URL;
     
-    if (!databaseUrl) {
-      this.logger.warn('[PrismaService] DATABASE_URL non configurato');
-    }
-    
+    // Call super first (required in TypeScript)
     super({
       datasources: {
         db: {
@@ -29,6 +26,11 @@ export class PrismaService
       errorFormat: "minimal",
       log: ["error", "warn"], // Reduced logging for production
     });
+    
+    // Log warnings after super() call
+    if (!databaseUrl) {
+      console.warn('[PrismaService] DATABASE_URL non configurato');
+    }
   }
 
   async onModuleInit() {
