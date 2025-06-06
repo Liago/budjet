@@ -14,7 +14,11 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    const databaseUrl = process.env.DATABASE_URL || 'postgresql://localhost:5432/fallback';
+    const databaseUrl = process.env.DATABASE_URL;
+    
+    if (!databaseUrl) {
+      this.logger.warn('[PrismaService] DATABASE_URL non configurato');
+    }
     
     super({
       datasources: {
@@ -30,7 +34,7 @@ export class PrismaService
   async onModuleInit() {
     try {
       await this.$connect();
-      this.logger.log("Successfully connected to PostgreSQL database");
+      this.logger.log("Successfully connected to database");
     } catch (error) {
       this.logger.error("Prisma connection failed, falling back to in-memory database", error);
       
