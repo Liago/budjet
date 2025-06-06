@@ -16,9 +16,8 @@ export const databaseProviderFactory = {
   provide: DATABASE_PROVIDER,
   useFactory: async (prismaService: PrismaService, inMemoryDbService: InMemoryDbService) => {
     try {
-      // Try to connect to the database using Prisma
-      await prismaService.$connect();
-      console.log('Using Prisma database service');
+      // Force use PrismaService for now (troubleshooting)
+      console.log('🔧 FORCED: Using Prisma database service (SQLite)');
       return prismaService;
     } catch (error) {
       // If Prisma fails, fall back to in-memory database

@@ -35,3 +35,7 @@ next-env.d.ts
 .qodo
 
 *.sqlite
+
+finance-tracker/backend/.env.development
+
+finance-tracker/backend/.env.production

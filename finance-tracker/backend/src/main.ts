@@ -51,22 +51,48 @@ async function bootstrap() {
       })
     );
 
-    // Enable CORS with specific configuration for Heroku
-    const isProduction = process.env.NODE_ENV === "production";
+    // Enable CORS with specific configuration
+    const isProduction = process.env.NODE_ENV === "production" || isNetlify;
+    logger.log(`CORS Configuration: isProduction=${isProduction}, NODE_ENV=${process.env.NODE_ENV}`);
+    
     if (isProduction) {
+      const allowedOrigins = [
+        "https://budjet-frontend.herokuapp.com",
+        "https://bud-jet.netlify.app",
+        "https://bud-jet-frontend.netlify.app",
+        "http://localhost:3000",
+        "http://localhost:19006", // Expo dev
+        // Add other origins as needed
+      ];
+      
       app.enableCors({
-        origin: [
-          "https://budjet-frontend.herokuapp.com",
-          "https://bud-jet.netlify.app",
-          // Add other origins as needed
-        ],
-        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+        origin: function (origin, callback) {
+          // Allow requests with no origin (mobile apps, Postman, etc.)
+          if (!origin) return callback(null, true);
+          
+          if (allowedOrigins.includes(origin)) {
+            logger.log(`✅ CORS: Allowing origin ${origin}`);
+            return callback(null, true);
+          } else {
+            logger.warn(`❌ CORS: Rejecting origin ${origin}`);
+            return callback(new Error('Not allowed by CORS'), false);
+          }
+        },
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+        credentials: true,
+        preflightContinue: false,
+        optionsSuccessStatus: 200,
+      });
+      logger.log(`CORS configured for production. Allowed origins: ${allowedOrigins.join(', ')}`);
+    } else {
+      app.enableCors({
+        origin: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
         credentials: true,
       });
-      logger.log("CORS configured for production environment");
-    } else {
-      app.enableCors();
-      logger.log("CORS configured for development environment");
+      logger.log("CORS configured for development environment (allow all)");
     }
 
     // Setup Swagger documentation
