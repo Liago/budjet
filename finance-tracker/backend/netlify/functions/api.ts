@@ -72,12 +72,21 @@ export const handler: Handler = async (event, context) => {
   // Optimize Netlify function context
   context.callbackWaitsForEmptyEventLoop = false;
   
-  // Debug: log incoming request
-  console.log('📨 Incoming request:', {
-    method: event.httpMethod,
-    path: event.path,
-    headers: event.headers,
-    queryStringParameters: event.queryStringParameters
+  // CRITICAL FIX: Strip Netlify function path prefix
+  const originalPath = event.path;
+  const functionPrefix = '/.netlify/functions/api';
+  
+  // Transform path: /.netlify/functions/api -> /
+  // Transform path: /.netlify/functions/api/health -> /health
+  if (originalPath.startsWith(functionPrefix)) {
+    event.path = originalPath.slice(functionPrefix.length) || '/';
+  }
+  
+  // Debug: log path transformation
+  console.log('🔄 Path transformation:', {
+    original: originalPath,
+    transformed: event.path,
+    method: event.httpMethod
   });
   
   try {
