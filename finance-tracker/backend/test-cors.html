@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CORS - Bud-Jet Backend</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test CORS - Bud-Jet Backend</h1>
+    
+    <div class="test info">
+        <h3>📋 Configurazione Test</h3>
+        <p><strong>Frontend:</strong> https://bud-jet.netlify.app</p>
+        <p><strong>Backend:</strong> <span id="backend-url">https://budjet-backend.netlify.app</span></p>
+        <input type="text" id="backend-input" placeholder="URL del backend" style="width: 400px;">
+        <button onclick="updateBackendUrl()">Aggiorna URL</button>
+    </div>
+
+    <div class="test">
+        <h3>🔍 Test 1: Health Check (GET)</h3>
+        <button onclick="testHealthCheck()">Test Health Check</button>
+        <pre id="health-result">Clicca il pulsante per testare...</pre>
+    </div>
+
+    <div class="test">
+        <h3>🔐 Test 2: Login (POST with Preflight)</h3>
+        <button onclick="testLogin()">Test Login</button>
+        <pre id="login-result">Clicca il pulsante per testare...</pre>
+    </div>
+
+    <div class="test">
+        <h3>🌐 Test 3: OPTIONS Preflight</h3>
+        <button onclick="testOptions()">Test OPTIONS</button>
+        <pre id="options-result">Clicca il pulsante per testare...</pre>
+    </div>
+
+    <script>
+        let backendUrl = 'https://budjet-backend.netlify.app';
+        
+        function updateBackendUrl() {
+            const input = document.getElementById('backend-input').value;
+            if (input) {
+                backendUrl = input;
+                document.getElementById('backend-url').textContent = backendUrl;
+            }
+        }
+
+        async function testHealthCheck() {
+            const resultElement = document.getElementById('health-result');
+            resultElement.textContent = '🔄 Testando...';
+            
+            try {
+                const response = await fetch(`${backendUrl}/.netlify/functions/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                resultElement.textContent = `✅ SUCCESS (${response.status})\n\nHeaders:\n${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}\n\nData:\n${JSON.stringify(data, null, 2)}`;
+                resultElement.parentElement.className = 'test success';
+                
+            } catch (error) {
+                resultElement.textContent = `❌ ERROR: ${error.message}`;
+                resultElement.parentElement.className = 'test error';
+            }
+        }
+
+        async function testLogin() {
+            const resultElement = document.getElementById('login-result');
+            resultElement.textContent = '🔄 Testando...';
+            
+            try {
+                const response = await fetch(`${backendUrl}/.netlify/functions/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpassword'
+                    })
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = await response.text();
+                }
+                
+                resultElement.textContent = `Status: ${response.status}\n\nHeaders:\n${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}\n\nResponse:\n${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}`;
+                
+                if (response.status < 400) {
+                    resultElement.parentElement.className = 'test success';
+                } else {
+                    resultElement.parentElement.className = 'test error';
+                }
+                
+            } catch (error) {
+                resultElement.textContent = `❌ CORS/Network ERROR: ${error.message}\n\nQuesto errore indica un problema CORS!`;
+                resultElement.parentElement.className = 'test error';
+            }
+        }
+
+        async function testOptions() {
+            const resultElement = document.getElementById('options-result');
+            resultElement.textContent = '🔄 Testando...';
+            
+            try {
+                const response = await fetch(`${backendUrl}/.netlify/functions/api/auth/login`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': 'https://bud-jet.netlify.app',
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type, Authorization'
+                    }
+                });
+                
+                resultElement.textContent = `✅ OPTIONS SUCCESS (${response.status})\n\nHeaders:\n${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`;
+                resultElement.parentElement.className = 'test success';
+                
+            } catch (error) {
+                resultElement.textContent = `❌ OPTIONS ERROR: ${error.message}\n\nLa richiesta preflight è fallita!`;
+                resultElement.parentElement.className = 'test error';
+            }
+        }
+
+        // Auto-update backend URL on page load
+        document.getElementById('backend-input').value = backendUrl;
+    </script>
+</body>
+</html>

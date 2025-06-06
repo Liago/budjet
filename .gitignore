@@ -39,3 +39,5 @@ next-env.d.ts
 finance-tracker/backend/.env.development
 
 finance-tracker/backend/.env.production
+
+database/

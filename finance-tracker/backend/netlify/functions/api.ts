@@ -1,120 +1,189 @@
 import { Handler } from '@netlify/functions';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../src/app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import serverlessExpress from 'serverless-http';
 import express from 'express';
 
 let cachedApp;
 
+// CORS headers configuration
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*', // Temporaneamente permetti tutto per debug
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-requested-with, Accept, Origin, X-Requested-With',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Max-Age': '86400',
+  'Vary': 'Origin'
+};
+
 async function createApp() {
   if (cachedApp) {
     return cachedApp;
   }
 
-  console.log('🚀 Creating Netlify NestJS app...');
-  const expressApp = express();
+  const logger = new Logger('NetlifyFunction');
   
-  // Create NestJS app with minimal configuration
-  console.log('📦 Initializing NestJS with AppModule...');
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
-    logger: ['error', 'warn', 'log'], // Add 'log' for more visibility
-    abortOnError: false, // Continue even if optional modules fail
-  });
+  try {
+    logger.log('🚀 Creating Netlify NestJS app...');
+    const expressApp = express();
+    
+    // Ensure required environment variables are set
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set');
+    }
+    
+    if (!process.env.JWT_SECRET) {
+      logger.warn('JWT_SECRET not set, using fallback');
+      process.env.JWT_SECRET = 'fallback-jwt-secret-for-development-minimum-32-chars';
+    }
 
-  // No global prefix for Netlify Functions - routing handled by Netlify
-  console.log('🔧 Configuring NestJS app...');
-  // app.setGlobalPrefix('api');
+    // Set NODE_ENV to production if not set
+    if (!process.env.NODE_ENV) {
+      process.env.NODE_ENV = 'production';
+    }
 
-  // Validation pipes
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-      skipMissingProperties: true,
-    })
-  );
+    logger.log('📦 Initializing NestJS with AppModule...');
+    const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
+      logger: ['error', 'warn', 'log'],
+      abortOnError: false,
+      bufferLogs: true,
+    });
 
-  // CORS configuration
-  app.enableCors({
-    origin: [
-      'https://bud-jet.netlify.app',
-      'http://localhost:3000',
-      'http://localhost:5173',
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-  });
+    logger.log('🔧 Configuring NestJS app...');
+    
+    // Global validation pipes
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+        skipMissingProperties: false,
+        validateCustomDecorators: true,
+      })
+    );
 
-  await app.init();
-  
-  // Debug: log registered routes
-  console.log('🗺️ NestJS app initialized, checking routes...');
-  const router = app.getHttpAdapter().getInstance();
-  console.log('🗺️ Express app created, routes should be available at:', {
-    root: 'GET /',
-    health: 'GET /health'
-  });
-  
-  const serverlessApp = serverlessExpress(expressApp);
-  cachedApp = serverlessApp;
-  
-  console.log('✅ Netlify function created successfully!');
-  return serverlessApp;
+    // CORS configuration - molto permissiva per il debug iniziale
+    app.enableCors({
+      origin: true, // Permetti tutti gli origin per ora
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      credentials: true,
+      allowedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'x-requested-with', 
+        'Accept',
+        'Origin',
+        'X-Requested-With'
+      ],
+      preflightContinue: false,
+      optionsSuccessStatus: 200
+    });
+
+    // Initialize the app
+    await app.init();
+    
+    logger.log('✅ NestJS app initialized successfully!');
+    
+    const serverlessApp = serverlessExpress(expressApp);
+    cachedApp = serverlessApp;
+    
+    return serverlessApp;
+    
+  } catch (error) {
+    logger.error('❌ Failed to create app:', error);
+    throw error;
+  }
 }
 
 export const handler: Handler = async (event, context) => {
+  const logger = new Logger('NetlifyHandler');
+  
   // Optimize Netlify function context
   context.callbackWaitsForEmptyEventLoop = false;
   
-  // CRITICAL FIX: Strip Netlify function path prefix
-  const originalPath = event.path;
-  const functionPrefix = '/.netlify/functions/api';
-  
-  // Transform path: /.netlify/functions/api -> /
-  // Transform path: /.netlify/functions/api/health -> /health
-  if (originalPath.startsWith(functionPrefix)) {
-    event.path = originalPath.slice(functionPrefix.length) || '/';
+  // **PRIORITÀ ASSOLUTA: Gestisci OPTIONS preflight IMMEDIATAMENTE**
+  if (event.httpMethod === 'OPTIONS') {
+    logger.log('🔄 Handling OPTIONS preflight request');
+    
+    return {
+      statusCode: 200,
+      headers: CORS_HEADERS,
+      body: ''
+    };
   }
   
-  // Debug: log path transformation
-  console.log('🔄 Path transformation:', {
-    original: originalPath,
-    transformed: event.path,
-    method: event.httpMethod
-  });
-  
   try {
-    const app = await createApp();
-    console.log('🚀 Processing request through serverless express...');
-    const result = await app(event, context);
+    // Enhanced path transformation with better logging
+    const originalPath = event.path;
+    const functionPrefix = '/.netlify/functions/api';
     
-    // Debug: log response
-    console.log('📤 Response details:', {
-      statusCode: result.statusCode,
-      headers: result.headers,
-      bodyLength: result.body ? result.body.length : 0,
-      bodyPreview: result.body ? result.body.substring(0, 100) : 'no body'
+    // Transform path: /.netlify/functions/api -> /
+    // Transform path: /.netlify/functions/api/auth/login -> /auth/login
+    if (originalPath.startsWith(functionPrefix)) {
+      event.path = originalPath.slice(functionPrefix.length) || '/';
+    }
+    
+    // Debug: log request details
+    logger.log('🔄 Request details:', {
+      original: originalPath,
+      transformed: event.path,
+      method: event.httpMethod,
+      origin: event.headers?.origin || 'no-origin',
+      userAgent: event.headers?.['user-agent']?.substring(0, 50) || 'no-user-agent',
+      contentType: event.headers?.['content-type'] || 'no-content-type'
     });
     
-    console.log('✅ Request processed successfully');
+    const app = await createApp();
+    logger.log('🚀 Processing request through serverless express...');
+    
+    const result = await app(event, context);
+    
+    // **IMPORTANTE: Assicurati che TUTTI i response abbiano headers CORS**
+    if (!result.headers) {
+      result.headers = {};
+    }
+    
+    // Aggiungi sempre gli headers CORS
+    Object.assign(result.headers, CORS_HEADERS);
+    
+    // Override origin specifico se fornito
+    if (event.headers?.origin) {
+      result.headers['Access-Control-Allow-Origin'] = event.headers.origin;
+    }
+    
+    logger.log('📤 Response details:', {
+      statusCode: result.statusCode,
+      corsHeaders: !!result.headers['Access-Control-Allow-Origin'],
+      bodyLength: result.body ? result.body.length : 0
+    });
+    
+    logger.log('✅ Request processed successfully');
     return result;
+    
   } catch (error) {
-    console.error('❌ Function error:', error);
+    logger.error('❌ Function error details:', {
+      message: error.message,
+      stack: error.stack?.split('\n')[0], // Solo prima linea dello stack
+      name: error.name
+    });
+    
+    // **IMPORTANTE: Anche gli errori devono avere headers CORS**
     return {
       statusCode: 500,
       headers: {
+        ...CORS_HEADERS,
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://bud-jet.netlify.app',
+        // Override origin specifico se fornito
+        'Access-Control-Allow-Origin': event.headers?.origin || '*'
       },
       body: JSON.stringify({
         error: 'Internal server error',
-        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
+        timestamp: new Date().toISOString(),
+        path: event.path,
+        method: event.httpMethod
       })
     };
   }
