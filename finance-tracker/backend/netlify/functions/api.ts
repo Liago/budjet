@@ -84,6 +84,15 @@ export const handler: Handler = async (event, context) => {
     const app = await createApp();
     console.log('🚀 Processing request through serverless express...');
     const result = await app(event, context);
+    
+    // Debug: log response
+    console.log('📤 Response details:', {
+      statusCode: result.statusCode,
+      headers: result.headers,
+      bodyLength: result.body ? result.body.length : 0,
+      bodyPreview: result.body ? result.body.substring(0, 100) : 'no body'
+    });
+    
     console.log('✅ Request processed successfully');
     return result;
   } catch (error) {
