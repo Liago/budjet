@@ -19,10 +19,15 @@ export class AppController {
       status: 'healthy',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
       checks: {
         server: 'up',
-        database: 'connected', // Will be updated when DB is configured
-        email: 'disabled' // Will be updated when SMTP is configured
+        database: 'checking...', // Will be updated after Prisma init
+        email: process.env.SMTP_HOST ? 'configured' : 'disabled'
+      },
+      netlify: {
+        region: process.env.AWS_REGION || 'unknown',
+        requestId: process.env.AWS_REQUEST_ID || 'local'
       }
     };
   }

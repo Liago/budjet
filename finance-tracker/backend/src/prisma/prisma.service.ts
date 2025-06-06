@@ -45,32 +45,26 @@ export class PrismaService
   }
 
   async onModuleInit() {
-    const maxRetries = 3;
-    let currentTry = 0;
-    
-    while (currentTry < maxRetries) {
-      try {
-        this.logger.log(`Attempting database connection (try ${currentTry + 1}/${maxRetries})...`);
-        await this.$connect();
-        this.logger.log("Successfully connected to database");
-        
-        // Test query to verify connection
-        await this.$queryRaw`SELECT 1`;
-        this.logger.log("Database connection verified with test query");
-        return;
-      } catch (error) {
-        currentTry++;
-        this.logger.error(`Database connection attempt ${currentTry} failed:`, error.message);
-        
-        if (currentTry >= maxRetries) {
-          this.logger.error("All database connection attempts failed, continuing without DB");
-          // Don't throw error - let the app start even if DB fails
-          return;
-        }
-        
-        // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, 2000 * currentTry));
-      }
+    try {
+      this.logger.log('Attempting database connection...');
+      
+      // Single connection attempt with timeout
+      const connectionPromise = this.$connect();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 8000)
+      );
+      
+      await Promise.race([connectionPromise, timeoutPromise]);
+      this.logger.log('Successfully connected to database');
+      
+      // Quick test query
+      await this.$queryRaw`SELECT 1`;
+      this.logger.log('Database connection verified');
+      
+    } catch (error) {
+      this.logger.error('Database connection failed:', error.message);
+      this.logger.warn('Continuing without database - API will use fallback mode');
+      // Don't throw - let app start without DB
     }
   }
 
