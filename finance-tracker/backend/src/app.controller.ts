@@ -1,7 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
+import { PrismaService } from './prisma/prisma.service';
 
 @Controller()
 export class AppController {
+  constructor(private readonly prisma: PrismaService) {}
+
   @Get()
   getHealth() {
     return {
@@ -14,7 +17,10 @@ export class AppController {
   }
 
   @Get('health')
-  getHealthCheck() {
+  async getHealthCheck() {
+    // Test database connection on-demand
+    const dbTest = await this.prisma.testConnection();
+    
     return {
       status: 'healthy',
       uptime: process.uptime(),
@@ -22,7 +28,8 @@ export class AppController {
       environment: process.env.NODE_ENV || 'development',
       checks: {
         server: 'up',
-        database: 'checking...', // Will be updated after Prisma init
+        database: dbTest.connected ? 'connected' : 'disconnected',
+        databaseError: dbTest.error || null,
         email: process.env.SMTP_HOST ? 'configured' : 'disabled'
       },
       netlify: {

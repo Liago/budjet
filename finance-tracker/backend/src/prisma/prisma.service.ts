@@ -45,26 +45,21 @@ export class PrismaService
   }
 
   async onModuleInit() {
+    // Skip database connection during startup to avoid timeouts
+    // Database will be connected on-demand when first used
+    this.logger.log('PrismaService initialized - database connection will be established on first use');
+  }
+
+  // Method to test database connection on-demand
+  async testConnection(): Promise<{ connected: boolean; error?: string }> {
     try {
-      this.logger.log('Attempting database connection...');
-      
-      // Single connection attempt with timeout
-      const connectionPromise = this.$connect();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout')), 8000)
-      );
-      
-      await Promise.race([connectionPromise, timeoutPromise]);
-      this.logger.log('Successfully connected to database');
-      
-      // Quick test query
+      await this.$connect();
       await this.$queryRaw`SELECT 1`;
-      this.logger.log('Database connection verified');
-      
+      this.logger.log('Database connection test successful');
+      return { connected: true };
     } catch (error) {
-      this.logger.error('Database connection failed:', error.message);
-      this.logger.warn('Continuing without database - API will use fallback mode');
-      // Don't throw - let app start without DB
+      this.logger.error('Database connection test failed:', error.message);
+      return { connected: false, error: error.message };
     }
   }
 
