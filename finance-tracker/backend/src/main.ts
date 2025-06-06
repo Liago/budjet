@@ -28,8 +28,14 @@ async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
 
-    // Set global prefix for all routes - disabled for Netlify Functions
-    // app.setGlobalPrefix("api");
+    // Set global prefix for all routes - only in non-Netlify environments
+    const isNetlify = process.env.NETLIFY === 'true' || process.env.LAMBDA_TASK_ROOT;
+    if (!isNetlify) {
+      app.setGlobalPrefix("api");
+      console.log('Running locally - using /api prefix');
+    } else {
+      console.log('Running on Netlify - no prefix needed');
+    }
 
     // Enable validation pipes
     app.useGlobalPipes(
@@ -67,14 +73,15 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup("docs", app, document);
+    const swaggerPath = isNetlify ? "docs" : "api/docs";
+    SwaggerModule.setup(swaggerPath, app, document);
 
     // Start the server
     const port = process.env.PORT || 3000;
     await app.listen(port);
     logger.log(`Application is running on: http://localhost:${port}`);
     logger.log(
-      `Swagger documentation available at: http://localhost:${port}/api/docs`
+      `Swagger documentation available at: http://localhost:${port}/${swaggerPath}`
     );
 
     // Log application mode

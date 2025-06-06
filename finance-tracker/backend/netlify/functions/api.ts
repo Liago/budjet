@@ -21,7 +21,7 @@ async function createApp() {
     abortOnError: false, // Continue even if optional modules fail
   });
 
-  // No global prefix - Netlify handles /api routing via redirects
+  // No global prefix for Netlify Functions - routing handled by Netlify
   // app.setGlobalPrefix('api');
 
   // Validation pipes
