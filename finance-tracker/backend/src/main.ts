@@ -30,6 +30,11 @@ async function bootstrap() {
 
     // Set global prefix for all routes - only in non-Netlify environments
     const isNetlify = process.env.NETLIFY === 'true' || process.env.LAMBDA_TASK_ROOT;
+    
+    // Debug logging for environment detection
+    logger.log(`Environment variables: NETLIFY=${process.env.NETLIFY}, LAMBDA_TASK_ROOT=${!!process.env.LAMBDA_TASK_ROOT}`);
+    logger.log(`Detected environment: ${isNetlify ? 'Netlify' : 'Local'}`);
+    
     if (!isNetlify) {
       app.setGlobalPrefix("api");
       console.log('Running locally - using /api prefix');

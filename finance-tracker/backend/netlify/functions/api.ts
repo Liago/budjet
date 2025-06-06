@@ -13,15 +13,18 @@ async function createApp() {
     return cachedApp;
   }
 
+  console.log('🚀 Creating Netlify NestJS app...');
   const expressApp = express();
   
   // Create NestJS app with minimal configuration
+  console.log('📦 Initializing NestJS with AppModule...');
   const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
-    logger: ['error', 'warn'],
+    logger: ['error', 'warn', 'log'], // Add 'log' for more visibility
     abortOnError: false, // Continue even if optional modules fail
   });
 
   // No global prefix for Netlify Functions - routing handled by Netlify
+  console.log('🔧 Configuring NestJS app...');
   // app.setGlobalPrefix('api');
 
   // Validation pipes
@@ -50,9 +53,18 @@ async function createApp() {
 
   await app.init();
   
+  // Debug: log registered routes
+  console.log('🗺️ NestJS app initialized, checking routes...');
+  const router = app.getHttpAdapter().getInstance();
+  console.log('🗺️ Express app created, routes should be available at:', {
+    root: 'GET /',
+    health: 'GET /health'
+  });
+  
   const serverlessApp = serverlessExpress(expressApp);
   cachedApp = serverlessApp;
   
+  console.log('✅ Netlify function created successfully!');
   return serverlessApp;
 }
 
@@ -60,11 +72,22 @@ export const handler: Handler = async (event, context) => {
   // Optimize Netlify function context
   context.callbackWaitsForEmptyEventLoop = false;
   
+  // Debug: log incoming request
+  console.log('📨 Incoming request:', {
+    method: event.httpMethod,
+    path: event.path,
+    headers: event.headers,
+    queryStringParameters: event.queryStringParameters
+  });
+  
   try {
     const app = await createApp();
-    return await app(event, context);
+    console.log('🚀 Processing request through serverless express...');
+    const result = await app(event, context);
+    console.log('✅ Request processed successfully');
+    return result;
   } catch (error) {
-    console.error('Function error:', error);
+    console.error('❌ Function error:', error);
     return {
       statusCode: 500,
       headers: {
