@@ -27,6 +27,7 @@
     "test:netlify": "node test-netlify-function.js",
     "test:cors": "echo 'Apri test-cors.html nel browser per testare CORS'",
     "check:env": "node check-env.js",
+    "test:cors-debug": "chmod +x test-cors-debug.sh && ./test-cors-debug.sh",
     "deploy:netlify": "git add . && git commit -m 'fix: CORS and Netlify optimizations' && git push origin main"
   },
   "dependencies": {
