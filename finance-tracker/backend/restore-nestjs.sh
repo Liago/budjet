@@ -1,5 +1,20 @@
+#!/bin/bash
+
+echo "🔄 Ripristinando la configurazione NestJS normale..."
+
+# Ripristina la function NestJS originale
+if [ -f "netlify/functions/api-nestjs.ts" ]; then
+    mv netlify/functions/api-nestjs.ts netlify/functions/api.ts
+    echo "✅ Function NestJS ripristinata"
+else
+    echo "❌ Backup api-nestjs.ts non trovato!"
+    exit 1
+fi
+
+# Ripristina il build script normale
+cat > netlify.toml << 'EOF'
 [build]
-  command = "chmod +x build-debug.sh && ./build-debug.sh"
+  command = "chmod +x build-netlify.sh && ./build-netlify.sh"
   functions = "netlify/functions"
   publish = "dist"
 
@@ -33,3 +48,11 @@
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, PATCH, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type, Authorization, x-requested-with, Accept, Origin"
     Access-Control-Allow-Credentials = "true"
+EOF
+
+echo "✅ netlify.toml ripristinato con build NestJS"
+
+echo "🚀 Ora puoi deployare la versione completa con:"
+echo "git add ."
+echo "git commit -m 'restore: back to full NestJS function'"
+echo "git push origin main"
