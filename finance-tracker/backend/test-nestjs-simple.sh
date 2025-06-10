@@ -10,10 +10,11 @@ echo "🎯 Testing NestJS backend URL: $BACKEND_URL"
 echo ""
 
 echo "📍 Test 1: Health check (dovrebbe funzionare)"
+echo "Response:"
 curl -X GET \
   "$BACKEND_URL/.netlify/functions/api/health" \
   -H "Origin: $FRONTEND_ORIGIN" \
-  -s | jq '.'
+  -s
 
 echo ""
 echo "================================================"
@@ -32,27 +33,30 @@ echo "================================================"
 echo ""
 
 echo "📍 Test 3: POST auth/login (dovrebbe funzionare senza CORS errors)"
+echo "Response:"
 curl -X POST \
   "$BACKEND_URL/.netlify/functions/api/auth/login" \
   -H "Origin: $FRONTEND_ORIGIN" \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"test123"}' \
-  -s | jq '.'
+  -s
 
 echo ""
 echo "================================================"
 echo ""
 
 echo "📍 Test 4: Base endpoint (dovrebbe mostrare info NestJS)"
+echo "Response:"
 curl -X GET \
   "$BACKEND_URL/.netlify/functions/api" \
   -H "Origin: $FRONTEND_ORIGIN" \
-  -s | jq '.'
+  -s
 
+echo ""
 echo ""
 echo "✅ Test NestJS completati."
 echo ""
-echo "🔍 Se tutti i test sopra mostrano JSON responses senza errori CORS,"
+echo "🔍 Se vedi JSON responses sopra senza errori CORS,"
 echo "   allora la function NestJS funziona correttamente!"
 echo ""
 echo "🎯 Prossimo passo: testa il login dal tuo frontend"
