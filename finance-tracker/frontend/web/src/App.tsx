@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import RecurrentPayments from "./pages/RecurrentPayments";
 import Analytics from "./pages/Analytics";
 import NotificationsPage from "./pages/NotificationsPage";
+import TestConnection from "./pages/TestConnection";
 
 // Components
 import Layout from "./components/Layout";
@@ -52,6 +53,7 @@ function App() {
               isAuthenticated ? <Navigate to="/dashboard" /> : <Register />
             }
           />
+          <Route path="/test-connection" element={<TestConnection />} />
 
           {/* Protected routes */}
           <Route

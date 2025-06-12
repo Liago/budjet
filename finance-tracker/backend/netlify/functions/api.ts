@@ -8,15 +8,42 @@ import express from 'express';
 
 let cachedApp;
 
-// CORS headers configuration - USA LA STESSA CONFIG CHE FUNZIONA
+// CORS headers configuration - CONFIGURAZIONE AGGIORNATA
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*', // Temporaneamente permissivo per debug
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-requested-with, Accept, Origin, X-Requested-With',
   'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Max-Age': '86400',
   'Vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
 };
+
+// Lista di origini permesse - AGGIORNA QUESTI URL
+const ALLOWED_ORIGINS = [
+  'https://bud-jet.netlify.app',           // URL principale del frontend
+  'https://bud-jet-frontend.netlify.app',  // URL alternativo
+  'http://localhost:3000',                 // Sviluppo locale
+  'http://localhost:5173',                 // Vite dev server
+  'http://localhost:4173',                 // Vite preview
+];
+
+function getCorsOrigin(requestOrigin: string | undefined): string {
+  // Se non c'è origin (richieste da mobile/Postman), permetti
+  if (!requestOrigin) return '*';
+  
+  // Se l'origin è nella lista permessa, usalo
+  if (ALLOWED_ORIGINS.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+  
+  // Per debug, permetti tutti gli origin che contengono "netlify"
+  if (requestOrigin.includes('netlify.app')) {
+    return requestOrigin;
+  }
+  
+  // Altrimenti nega
+  return 'null';
+}
 
 async function createApp() {
   if (cachedApp) {
@@ -31,11 +58,11 @@ async function createApp() {
     
     // Ensure required environment variables are set
     if (!process.env.DATABASE_URL) {
-      logger.warn('DATABASE_URL not set - some features will be limited');
+      logger.warn('⚠️ DATABASE_URL not set - some features will be limited');
     }
     
     if (!process.env.JWT_SECRET) {
-      logger.warn('JWT_SECRET not set, using fallback');
+      logger.warn('⚠️ JWT_SECRET not set, using fallback');
       process.env.JWT_SECRET = 'fallback-jwt-secret-for-development-minimum-32-chars';
     }
 
@@ -64,11 +91,18 @@ async function createApp() {
       })
     );
 
-    // CORS configuration - USA LA STESSA CONFIG CHE FUNZIONA
+    // CORS configuration MIGLIORATA
     app.enableCors({
       origin: function (origin, callback) {
-        // Allow all origins for now - same as working version
-        callback(null, true);
+        const allowedOrigin = getCorsOrigin(origin);
+        logger.log(`🌐 CORS Check: Origin="${origin}" -> Allowed="${allowedOrigin}"`);
+        
+        if (allowedOrigin === 'null') {
+          logger.warn(`❌ CORS DENIED for origin: ${origin}`);
+          callback(new Error('Not allowed by CORS'), false);
+        } else {
+          callback(null, true);
+        }
       },
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       credentials: true,
@@ -106,21 +140,30 @@ export const handler: Handler = async (event, context) => {
   // Optimize Netlify function context
   context.callbackWaitsForEmptyEventLoop = false;
   
+  const requestOrigin = event.headers?.origin || event.headers?.Origin;
+  
   // **PRIORITÀ ASSOLUTA: Gestisci OPTIONS preflight IMMEDIATAMENTE**
-  // Usa la stessa logica che funziona nella versione semplice
   if (event.httpMethod === 'OPTIONS') {
-    logger.log('🔄 Handling OPTIONS preflight request');
+    logger.log('🔄 Handling OPTIONS preflight request', {
+      origin: requestOrigin,
+      path: event.path,
+      headers: event.headers
+    });
     
-    // Override origin se specifico
-    const responseHeaders = { ...CORS_HEADERS };
-    if (event.headers?.origin) {
-      responseHeaders['Access-Control-Allow-Origin'] = event.headers.origin;
-    }
+    // Determina l'origin corretto
+    const allowedOrigin = getCorsOrigin(requestOrigin);
+    
+    const responseHeaders = {
+      ...CORS_HEADERS,
+      'Access-Control-Allow-Origin': allowedOrigin
+    };
+    
+    logger.log('✅ OPTIONS Response headers:', responseHeaders);
     
     return {
       statusCode: 200,
       headers: responseHeaders,
-      body: ''
+      body: JSON.stringify({ message: 'CORS preflight successful' })
     };
   }
   
@@ -137,7 +180,8 @@ export const handler: Handler = async (event, context) => {
       original: originalPath,
       transformed: event.path,
       method: event.httpMethod,
-      origin: event.headers?.origin || 'no-origin'
+      origin: requestOrigin,
+      userAgent: event.headers?.['user-agent']?.substring(0, 50)
     });
     
     const app = await createApp();
@@ -146,22 +190,22 @@ export const handler: Handler = async (event, context) => {
     const result = await app(event, context);
     
     // **IMPORTANTE: Assicurati che TUTTI i response abbiano headers CORS**
-    // Usa la stessa logica che funziona
     if (!result.headers) {
       result.headers = {};
     }
     
-    // Aggiungi sempre gli headers CORS
-    Object.assign(result.headers, CORS_HEADERS);
+    // Determina l'origin corretto per la risposta
+    const allowedOrigin = getCorsOrigin(requestOrigin);
     
-    // Override origin specifico se fornito
-    if (event.headers?.origin) {
-      result.headers['Access-Control-Allow-Origin'] = event.headers.origin;
-    }
+    // Aggiungi sempre gli headers CORS con l'origin corretto
+    Object.assign(result.headers, {
+      ...CORS_HEADERS,
+      'Access-Control-Allow-Origin': allowedOrigin
+    });
     
     logger.log('📤 Response details:', {
       statusCode: result.statusCode,
-      corsHeaders: !!result.headers['Access-Control-Allow-Origin'],
+      corsOrigin: result.headers['Access-Control-Allow-Origin'],
       bodyLength: result.body ? result.body.length : 0
     });
     
@@ -172,21 +216,22 @@ export const handler: Handler = async (event, context) => {
     logger.error('❌ Function error details:', {
       message: error.message,
       stack: error.stack?.split('\n')[0],
-      name: error.name
+      name: error.name,
+      origin: requestOrigin
     });
     
     // **IMPORTANTE: Anche gli errori devono avere headers CORS**
-    const errorHeaders = { ...CORS_HEADERS };
-    if (event.headers?.origin) {
-      errorHeaders['Access-Control-Allow-Origin'] = event.headers.origin;
-    }
+    const allowedOrigin = getCorsOrigin(requestOrigin);
+    
+    const errorHeaders = {
+      ...CORS_HEADERS,
+      'Access-Control-Allow-Origin': allowedOrigin,
+      'Content-Type': 'application/json'
+    };
     
     return {
       statusCode: 500,
-      headers: {
-        ...errorHeaders,
-        'Content-Type': 'application/json'
-      },
+      headers: errorHeaders,
       body: JSON.stringify({
         error: 'Internal server error',
         message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
