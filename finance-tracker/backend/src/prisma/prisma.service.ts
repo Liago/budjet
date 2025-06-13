@@ -14,12 +14,20 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
   private isConnected = false;
   private connectionPromise: Promise<void> | null = null;
+  private databaseProvider: 'sqlite' | 'postgresql' = 'sqlite';
 
   constructor() {
     const databaseUrl = process.env.DATABASE_URL;
     
     if (!databaseUrl) {
       throw new Error('DATABASE_URL environment variable is required');
+    }
+    
+    // Rileva il provider del database dalla URL
+    if (databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://')) {
+      this.databaseProvider = 'postgresql';
+    } else {
+      this.databaseProvider = 'sqlite';
     }
     
     // Enhanced Prisma configuration for Netlify
@@ -44,7 +52,7 @@ export class PrismaService
       }),
     });
     
-    this.logger.log('PrismaService initialized with URL:', databaseUrl.substring(0, 30) + '...');
+    this.logger.log(`PrismaService initialized with ${this.databaseProvider.toUpperCase()}: ${databaseUrl.substring(0, 30)}...`);
   }
 
   async onModuleInit() {
@@ -77,9 +85,11 @@ export class PrismaService
   }
 
   private async connectWithRetry(maxRetries: number = 3): Promise<void> {
+    const dbType = this.databaseProvider.toUpperCase();
+    
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        this.logger.log(`Database connection attempt ${attempt}/${maxRetries}...`);
+        this.logger.log(`${dbType} connection attempt ${attempt}/${maxRetries}...`);
         
         await this.$connect();
         
@@ -87,14 +97,14 @@ export class PrismaService
         await this.$queryRaw`SELECT 1 as test`;
         
         this.isConnected = true;
-        this.logger.log('✅ Database connection established successfully');
+        this.logger.log(`✅ ${dbType} connection established successfully`);
         return;
         
       } catch (error) {
-        this.logger.error(`❌ Connection attempt ${attempt} failed:`, error.message);
+        this.logger.error(`❌ ${dbType} connection attempt ${attempt} failed:`, error.message);
         
         if (attempt === maxRetries) {
-          throw new Error(`Failed to connect to database after ${maxRetries} attempts: ${error.message}`);
+          throw new Error(`Failed to connect to ${dbType} database after ${maxRetries} attempts: ${error.message}`);
         }
         
         // Wait before retrying (exponential backoff)
@@ -108,7 +118,7 @@ export class PrismaService
   // Query methods will automatically use ensureConnected through other methods
 
   // Test database connection on-demand
-  async testConnection(): Promise<{ connected: boolean; error?: string; latency?: number }> {
+  async testConnection(): Promise<{ connected: boolean; error?: string; latency?: number; provider?: string }> {
     const startTime = Date.now();
     
     try {
@@ -116,22 +126,24 @@ export class PrismaService
       await this.$queryRaw`SELECT 1 as health_check`;
       
       const latency = Date.now() - startTime;
-      this.logger.log(`Database health check passed (${latency}ms)`);
+      this.logger.log(`${this.databaseProvider.toUpperCase()} health check passed (${latency}ms)`);
       
       return { 
         connected: true, 
-        latency 
+        latency,
+        provider: this.databaseProvider
       };
       
     } catch (error) {
-      this.logger.error('Database health check failed:', error.message);
+      this.logger.error(`${this.databaseProvider.toUpperCase()} health check failed:`, error.message);
       this.isConnected = false; // Reset connection status
       this.connectionPromise = null; // Reset connection promise
       
       return { 
         connected: false, 
         error: error.message,
-        latency: Date.now() - startTime
+        latency: Date.now() - startTime,
+        provider: this.databaseProvider
       };
     }
   }
@@ -159,5 +171,10 @@ export class PrismaService
     this.isConnected = false;
     this.connectionPromise = null;
     await this.ensureConnected();
+  }
+
+  // Utility method to get current database provider
+  getDatabaseProvider(): 'sqlite' | 'postgresql' {
+    return this.databaseProvider;
   }
 }
