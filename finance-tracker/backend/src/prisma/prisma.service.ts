@@ -105,16 +105,7 @@ export class PrismaService
     }
   }
 
-  // Override query methods to ensure connection
-  async $queryRaw(query: any, ...args: any[]): Promise<any> {
-    await this.ensureConnected();
-    return super.$queryRaw(query, ...args);
-  }
-
-  async $executeRaw(query: any, ...args: any[]): Promise<any> {
-    await this.ensureConnected();
-    return super.$executeRaw(query, ...args);
-  }
+  // Query methods will automatically use ensureConnected through other methods
 
   // Test database connection on-demand
   async testConnection(): Promise<{ connected: boolean; error?: string; latency?: number }> {
