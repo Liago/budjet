@@ -23,13 +23,6 @@ export class PrismaService
       throw new Error('DATABASE_URL environment variable is required');
     }
     
-    // Rileva il provider del database dalla URL
-    if (databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://')) {
-      this.databaseProvider = 'postgresql';
-    } else {
-      this.databaseProvider = 'sqlite';
-    }
-    
     // Enhanced Prisma configuration for Netlify
     super({
       datasources: {
@@ -51,6 +44,14 @@ export class PrismaService
         },
       }),
     });
+    
+    // DOPO super(), ora posso accedere a this
+    // Rileva il provider del database dalla URL
+    if (databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://')) {
+      this.databaseProvider = 'postgresql';
+    } else {
+      this.databaseProvider = 'sqlite';
+    }
     
     this.logger.log(`PrismaService initialized with ${this.databaseProvider.toUpperCase()}: ${databaseUrl.substring(0, 30)}...`);
   }
