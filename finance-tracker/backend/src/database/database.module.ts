@@ -10,7 +10,7 @@ export const DATABASE_PROVIDER = 'DATABASE_PROVIDER';
 
 /**
  * Factory function to determine which database service to use
- * Auto-detects environment and chooses appropriate database
+ * Simplified version to avoid 502 errors during function startup
  */
 export const databaseProviderFactory = {
   provide: DATABASE_PROVIDER,
@@ -25,51 +25,31 @@ export const databaseProviderFactory = {
       databaseUrl.startsWith('postgres://')
     );
     
+    console.log('🔧 Database Configuration:');
+    console.log(`   - Environment: ${isNetlify ? 'Netlify' : 'Local'}`);
+    console.log(`   - NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`   - Database Type: ${isPostgreSQL ? 'PostgreSQL' : 'SQLite'}`);
+    
     try {
-      console.log('🔧 Database Configuration Detection:');
-      console.log(`   - Environment: ${isNetlify ? 'Netlify' : 'Local'}`);
-      console.log(`   - NODE_ENV: ${process.env.NODE_ENV}`);
-      console.log(`   - Database Type: ${isPostgreSQL ? 'PostgreSQL' : 'SQLite'}`);
-      console.log(`   - URL: ${databaseUrl ? databaseUrl.substring(0, 30) + '...' : 'Not set'}`);
+      // Simplified: Don't test connection during startup to avoid 502
+      // Connection will be tested lazily when needed
       
-      // Test the connection
-      const connectionTest = await prismaService.testConnection();
-      
-      if (connectionTest.connected) {
-        const dbType = connectionTest.provider?.toUpperCase() || 'Unknown';
-        console.log(`✅ Using PrismaService with ${dbType} database`);
-        console.log(`📊 Connection latency: ${connectionTest.latency}ms`);
-        
-        // Log appropriate database usage
-        if (isNetlify && connectionTest.provider === 'postgresql') {
-          console.log('🌐 Production mode: Supabase PostgreSQL');
-        } else if (!isNetlify && connectionTest.provider === 'sqlite') {
-          console.log('🏠 Development mode: Local SQLite');
-        } else {
-          console.log(`⚠️  Mixed configuration: ${isNetlify ? 'Netlify' : 'Local'} environment with ${dbType}`);
-        }
-        
+      if (isNetlify && isPostgreSQL) {
+        console.log('🌐 Using PrismaService with PostgreSQL (Supabase)');
+        console.log('   - Connection will be tested on first use');
+        return prismaService;
+      } else if (!isNetlify) {
+        console.log('🏠 Using PrismaService with SQLite (Local)');
         return prismaService;
       } else {
-        throw new Error(`Database connection test failed: ${connectionTest.error}`);
+        console.log('✅ Using PrismaService (Environment auto-detected)');
+        return prismaService;
       }
+      
     } catch (error) {
-      // If Prisma fails, fall back to in-memory database
-      console.error('❌ Prisma connection failed, falling back to in-memory database');
+      // If anything fails, fall back to in-memory database
+      console.error('❌ Database provider setup failed, using in-memory fallback');
       console.error('Error details:', error.message);
-      console.log('⚠️  Using InMemoryDbService - data will not persist!');
-      console.log('🔧 Troubleshooting tips:');
-      
-      if (isNetlify) {
-        console.log('   1. Check DATABASE_URL environment variable on Netlify');
-        console.log('   2. Verify Supabase connection string format');
-        console.log('   3. Ensure database is accessible from Netlify');
-      } else {
-        console.log('   1. Check if SQLite database file exists');
-        console.log('   2. Run: npx prisma db push');
-        console.log('   3. Verify file permissions');
-      }
-      
       return inMemoryDbService;
     }
   },
