@@ -8,6 +8,22 @@ import express from "express";
 
 let cachedApp;
 
+// 🔧 GLOBAL ERROR HANDLER
+process.on('uncaughtException', (error) => {
+  console.error('💥 UNCAUGHT EXCEPTION:', {
+    message: error.message,
+    stack: error.stack,
+    name: error.name
+  });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 UNHANDLED REJECTION:', {
+    reason: reason,
+    promise: promise
+  });
+});
+
 // CORS headers configuration - CONFIGURAZIONE AGGIORNATA
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*", // Temporaneamente permissivo per debug
@@ -55,30 +71,43 @@ async function createApp() {
 
   try {
     logger.log("🚀 Creating Netlify NestJS app...");
+    
+    // 🔧 LOG ENVIRONMENT VARIABLES (MASKED)
+    logger.log("🔧 Environment Check:", {
+      NODE_ENV: process.env.NODE_ENV,
+      HAS_DATABASE_URL: !!process.env.DATABASE_URL,
+      HAS_JWT_SECRET: !!process.env.JWT_SECRET,
+      JWT_SECRET_LENGTH: process.env.JWT_SECRET?.length || 0,
+      DATABASE_URL_PREFIX: process.env.DATABASE_URL?.substring(0, 20) + '...'
+    });
+
     const expressApp = express();
 
-    // Ensure required environment variables are set
+    // 🔧 VALIDATE CRITICAL ENVIRONMENT VARIABLES
     if (!process.env.DATABASE_URL) {
-      logger.warn("⚠️ DATABASE_URL not set - some features will be limited");
+      const error = new Error("DATABASE_URL environment variable is required");
+      logger.error("❌ CRITICAL: DATABASE_URL missing");
+      throw error;
     }
 
     if (!process.env.JWT_SECRET) {
       logger.warn("⚠️ JWT_SECRET not set, using fallback");
-      process.env.JWT_SECRET =
-        "fallback-jwt-secret-for-development-minimum-32-chars";
+      process.env.JWT_SECRET = "fallback-jwt-secret-for-development-minimum-32-chars";
+    } else if (process.env.JWT_SECRET.length < 32) {
+      logger.warn("⚠️ JWT_SECRET is too short (< 32 chars)");
     }
 
-    // Set NODE_ENV to production if not set
     if (!process.env.NODE_ENV) {
       process.env.NODE_ENV = "production";
     }
 
     logger.log("📦 Initializing NestJS with AppModule...");
+    // 🔧 ENHANCED APP CREATION WITH ERROR HANDLING
     const app = await NestFactory.create(
       AppModule,
       new ExpressAdapter(expressApp),
       {
-        logger: ["error", "warn", "log"],
+        logger: ["error", "warn", "log", "debug"], // 🔧 MORE VERBOSE LOGGING
         abortOnError: false,
         bufferLogs: true,
       }
@@ -86,7 +115,7 @@ async function createApp() {
 
     logger.log("🔧 Configuring NestJS app...");
 
-    // Global validation pipes
+    // 🔧 ENHANCED VALIDATION PIPES WITH ERROR LOGGING
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -94,6 +123,11 @@ async function createApp() {
         forbidNonWhitelisted: true,
         skipMissingProperties: false,
         validateCustomDecorators: true,
+        // 🔧 MORE DETAILED VALIDATION ERRORS
+        exceptionFactory: (errors) => {
+          logger.error("❌ Validation errors:", errors);
+          return new Error(`Validation failed: ${JSON.stringify(errors)}`);
+        }
       })
     );
 
@@ -126,17 +160,38 @@ async function createApp() {
       optionsSuccessStatus: 200,
     });
 
-    // Initialize the app
-    await app.init();
+    // 🔧 TEST DATABASE CONNECTION DURING INITIALIZATION
+    try {
+      logger.log("🔗 Testing database connection during app init...");
+      const { PrismaService } = await import("../../src/prisma/prisma.service");
+      const prisma = new PrismaService();
+      await prisma.$connect();
+      await prisma.$queryRaw`SELECT 1`;
+      logger.log("✅ Database connection test successful");
+      await prisma.$disconnect();
+    } catch (dbError) {
+      logger.error("❌ Database connection failed during init:", {
+        message: dbError.message,
+        stack: dbError.stack
+      });
+      // Don't throw here, let the app try to handle it later
+    }
 
+    await app.init();
     logger.log("✅ NestJS app initialized successfully!");
 
     const serverlessApp = serverlessExpress(expressApp);
     cachedApp = serverlessApp;
 
     return serverlessApp;
+    
   } catch (error) {
-    logger.error("❌ Failed to create app:", error);
+    logger.error("❌ Failed to create app - DETAILED ERROR:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      cause: error.cause
+    });
     throw error;
   }
 }
@@ -148,6 +203,16 @@ export const handler: Handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
   const requestOrigin = event.headers?.origin || event.headers?.Origin;
+
+  // 🔧 LOG INCOMING REQUEST DETAILS
+  logger.log("🔄 Incoming request:", {
+    method: event.httpMethod,
+    path: event.path,
+    origin: requestOrigin,
+    hasBody: !!event.body,
+    bodyLength: event.body?.length || 0,
+    headers: Object.keys(event.headers || {})
+  });
 
   // **PRIORITÀ ASSOLUTA: Gestisci OPTIONS preflight IMMEDIATAMENTE**
   if (event.httpMethod === "OPTIONS") {
@@ -191,10 +256,25 @@ export const handler: Handler = async (event, context) => {
       userAgent: event.headers?.["user-agent"]?.substring(0, 50),
     });
 
+    // 🔧 ENHANCED APP CREATION WITH DETAILED ERROR HANDLING
+    logger.log("🚀 Getting app instance...");
     const app = await createApp();
+    
     logger.log("🚀 Processing request through serverless express...");
-
-    const result = await app(event, context);
+    
+    // 🔧 WRAP THE SERVERLESS CALL WITH DETAILED ERROR HANDLING
+    let result;
+    try {
+      result = await app(event, context);
+      logger.log("✅ Serverless express completed successfully");
+    } catch (serverlessError) {
+      logger.error("❌ Serverless express error:", {
+        message: serverlessError.message,
+        stack: serverlessError.stack,
+        name: serverlessError.name
+      });
+      throw serverlessError;
+    }
 
     // **IMPORTANTE: Assicurati che TUTTI i response abbiano headers CORS**
     if (!result.headers) {
@@ -219,16 +299,19 @@ export const handler: Handler = async (event, context) => {
     logger.log("✅ Request processed successfully");
     return result;
   } catch (error) {
-    logger.error("❌ Function error details:", {
+    logger.error("❌ Function error - COMPREHENSIVE DETAILS:", {
       message: error.message,
-      stack: error.stack?.split("\n")[0],
+      stack: error.stack,
       name: error.name,
+      cause: error.cause,
       origin: requestOrigin,
+      path: event.path,
+      method: event.httpMethod,
+      timestamp: new Date().toISOString()
     });
 
-    // **IMPORTANTE: Anche gli errori devono avere headers CORS**
+    // Return detailed error for debugging
     const allowedOrigin = getCorsOrigin(requestOrigin);
-
     const errorHeaders = {
       ...CORS_HEADERS,
       "Access-Control-Allow-Origin": allowedOrigin,
@@ -240,13 +323,12 @@ export const handler: Handler = async (event, context) => {
       headers: errorHeaders,
       body: JSON.stringify({
         error: "Internal server error",
-        message:
-          process.env.NODE_ENV === "development"
-            ? error.message
-            : "Something went wrong",
+        message: error.message, // 🔧 ALWAYS INCLUDE ERROR MESSAGE FOR DEBUGGING
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
         timestamp: new Date().toISOString(),
         path: event.path,
         method: event.httpMethod,
+        requestId: context.awsRequestId
       }),
     };
   }
