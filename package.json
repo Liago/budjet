@@ -1,28 +1,33 @@
 {
-  "name": "budjet",
+  "name": "finance-db-exporter",
   "version": "1.0.0",
-  "description": "Budget tracking application",
-  "main": "index.js",
+  "description": "Script per esportare database SQLite del finance tracker in formato CSV",
+  "main": "export-db.ts",
   "scripts": {
-    "test": "echo \"No tests specified\" && exit 0",
-    "semantic-release": "semantic-release"
+    "build": "tsc export-db.ts --outDir ./dist --target es2020 --module commonjs --esModuleInterop true --strict true",
+    "start": "node dist/export-db.js",
+    "dev": "ts-node export-db.ts",
+    "export": "npm run build && npm run start"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Liago/budjet.git"
-  },
-  "author": "",
+  "keywords": [
+    "sqlite",
+    "csv",
+    "export",
+    "finance",
+    "typescript"
+  ],
+  "author": "Andrea Zampierolo",
   "license": "MIT",
   "dependencies": {
-    "expo-router": "^4.0.19",
-    "framer-motion": "^12.6.2",
-    "tailwindcss": "^4.0.9"
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^11.1.0",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/release-notes-generator": "^12.1.0",
-    "semantic-release": "^22.0.12"
+    "@types/node": "^20.10.0",
+    "@types/sqlite3": "^3.1.11",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

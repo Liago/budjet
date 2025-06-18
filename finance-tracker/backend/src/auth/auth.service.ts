@@ -76,23 +76,31 @@ export class AuthService {
       
       this.logger.log('✅ JWT token created successfully');
       
+      // 🔧 FIX: Controlla se i campi firstName/lastName esistono
+      const firstName = user.firstName || '';
+      const lastName = user.lastName || '';
+      const fullName = `${firstName} ${lastName}`.trim() || user.email.split('@')[0];
+      
       return {
         accessToken,
         user: {
           id: user.id,
           email: user.email,
-          name: `${user.firstName} ${user.lastName}`,
+          name: fullName, // 🔧 Usa il nome costruito in modo sicuro
+          firstName: firstName,
+          lastName: lastName,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt
         },
-        expiresIn: process.env.JWT_EXPIRES_IN || '1d'
+        expiresIn: process.env.JWT_EXPIRES_IN || '7d'
       };
       
     } catch (error) {
       this.logger.error('❌ Error in login:', {
         message: error.message,
         stack: error.stack,
-        userId: user?.id
+        userId: user?.id,
+        userFields: Object.keys(user || {}) // 🔧 Log dei campi disponibili per debug
       });
       throw error;
     }

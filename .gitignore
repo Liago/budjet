@@ -41,3 +41,15 @@ finance-tracker/backend/.env.development
 finance-tracker/backend/.env.production
 
 database/
+
+db-export-advanced.js
+
+export-db.ts
+
+export-simple.js
+
+finance-tracker/backend/quick-diagnosis.sh
+
+README_EXPORT.md
+
+setup_export.sh
