@@ -16,6 +16,16 @@ export class AppController {
     };
   }
 
+  @Get('simple')
+  getSimple() {
+    console.log('🧪 SIMPLE endpoint called - no dependencies');
+    return {
+      status: 'simple-ok',
+      timestamp: new Date().toISOString(),
+      message: 'Simple endpoint without database dependency'
+    };
+  }
+
   @Get('health')
   async getHealthCheck() {
     // Test database connection on-demand

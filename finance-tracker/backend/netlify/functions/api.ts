@@ -102,16 +102,29 @@ async function createApp() {
     }
 
     logger.log("📦 Initializing NestJS with AppModule...");
-    // 🔧 ENHANCED APP CREATION WITH ERROR HANDLING
-    const app = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(expressApp),
-      {
-        logger: ["error", "warn", "log", "debug"], // 🔧 MORE VERBOSE LOGGING
-        abortOnError: false,
-        bufferLogs: true,
-      }
-    );
+    
+    // 🔧 STEP-BY-STEP INITIALIZATION WITH DETAILED LOGGING
+    let app;
+    try {
+      logger.log("🔧 Creating NestJS app instance...");
+      app = await NestFactory.create(
+        AppModule,
+        new ExpressAdapter(expressApp),
+        {
+          logger: ["error", "warn", "log", "debug"], // 🔧 MORE VERBOSE LOGGING
+          abortOnError: false,
+          bufferLogs: true,
+        }
+      );
+      logger.log("✅ NestJS app instance created successfully");
+    } catch (createError) {
+      logger.error("❌ Failed to create NestJS app instance:", {
+        message: createError.message,
+        stack: createError.stack,
+        name: createError.name
+      });
+      throw createError;
+    }
 
     logger.log("🔧 Configuring NestJS app...");
 
@@ -160,23 +173,7 @@ async function createApp() {
       optionsSuccessStatus: 200,
     });
 
-    // 🔧 TEST DATABASE CONNECTION DURING INITIALIZATION
-    try {
-      logger.log("🔗 Testing database connection during app init...");
-      const { PrismaService } = await import("../../src/prisma/prisma.service");
-      const prisma = new PrismaService();
-      await prisma.$connect();
-      await prisma.$queryRaw`SELECT 1`;
-      logger.log("✅ Database connection test successful");
-      await prisma.$disconnect();
-    } catch (dbError) {
-      logger.error("❌ Database connection failed during init:", {
-        message: dbError.message,
-        stack: dbError.stack
-      });
-      // Don't throw here, let the app try to handle it later
-    }
-
+    // Initialize the app
     await app.init();
     logger.log("✅ NestJS app initialized successfully!");
 
