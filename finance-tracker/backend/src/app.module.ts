@@ -36,6 +36,6 @@ import { EmailModule } from "./email/email.module";
     EmailModule,
   ],
   controllers: [AppController],
-  providers: [PrismaService],
+  providers: [], // 🔧 REMOVED PrismaService - it's already exported by PrismaModule
 })
 export class AppModule {}
