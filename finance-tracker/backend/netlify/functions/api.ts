@@ -8,6 +8,10 @@ import express from "express";
 
 let cachedApp;
 
+// 🔧 FORCE CACHE REFRESH - Aggiungo timestamp per invalidare cache
+const APP_VERSION = Date.now();
+console.log(`🔄 App version: ${APP_VERSION}`);
+
 // 🔧 GLOBAL ERROR HANDLER
 process.on('uncaughtException', (error) => {
   console.error('💥 UNCAUGHT EXCEPTION:', {
@@ -63,7 +67,11 @@ function getCorsOrigin(requestOrigin: string | undefined): string {
 }
 
 async function createApp() {
+  // 🔧 DISABLE CACHING FOR DEBUG
+  cachedApp = null;
+  
   if (cachedApp) {
+    console.log('💾 Using cached app');
     return cachedApp;
   }
 

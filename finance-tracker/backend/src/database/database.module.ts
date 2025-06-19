@@ -58,14 +58,12 @@ export const databaseProviderFactory = {
 
 @Global()
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule], // 🔧 PrismaModule is global, so PrismaService is automatically available
   providers: [
-    PrismaService,
     InMemoryDbService,
-    databaseProviderFactory,
+    databaseProviderFactory, // 🔧 Can inject PrismaService because PrismaModule is global
   ],
   exports: [
-    PrismaService,
     InMemoryDbService,
     DATABASE_PROVIDER,
   ],

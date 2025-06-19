@@ -1,9 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService
+  ) {
+    console.log('🔧 AppController initialized, prisma:', !!this.prisma);
+  }
 
   @Get()
   getHealth() {
@@ -29,10 +33,20 @@ export class AppController {
   @Get('health')
   async getHealthCheck() {
     console.log('🔍 HEALTH endpoint called');
+    console.log('🔍 this.prisma available:', !!this.prisma);
+    console.log('🔍 this.prisma methods:', this.prisma ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.prisma)) : 'N/A');
     
     let dbTest = { connected: false, error: 'Database test not attempted' };
     
     try {
+      if (!this.prisma) {
+        throw new Error('PrismaService is not available - dependency injection failed');
+      }
+      
+      if (typeof this.prisma.testConnection !== 'function') {
+        throw new Error('PrismaService.testConnection method is not available');
+      }
+      
       console.log('🔍 Testing database connection...');
       // Test database connection on-demand with timeout
       const timeoutPromise = new Promise((_, reject) => {
@@ -77,7 +91,9 @@ export class AppController {
         databaseTest: dbTest,
         hasJwtSecret: !!process.env.JWT_SECRET,
         hasDatabaseUrl: !!process.env.DATABASE_URL,
-        databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) + '...'
+        databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) + '...',
+        prismaInjected: !!this.prisma,
+        prismaType: this.prisma ? this.prisma.constructor.name : 'undefined'
       }
     };
   }
