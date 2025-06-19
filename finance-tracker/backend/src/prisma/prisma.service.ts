@@ -23,7 +23,7 @@ export class PrismaService
       throw new Error('DATABASE_URL environment variable is required');
     }
     
-    // Enhanced Prisma configuration for Netlify
+    // Enhanced Prisma configuration for Netlify Functions
     super({
       datasources: {
         db: {
@@ -33,16 +33,15 @@ export class PrismaService
       errorFormat: "minimal",
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
       
-      // Enhanced connection configuration for serverless
-      ...(process.env.NETLIFY === 'true' && {
-        __internal: {
-          engine: {
-            connectTimeout: 10000,      // 10 seconds timeout
-            idleTimeout: 30000,         // 30 seconds idle timeout
-            maxConnections: 1,          // Limit connections for serverless
-          },
+      // 🔧 OTTIMIZZAZIONE SERVERLESS AVANZATA
+      __internal: {
+        engine: {
+          connectTimeout: 20000,      // 🔧 20 secondi timeout (era 10)
+          idleTimeout: 60000,         // 🔧 60 secondi idle timeout  
+          maxConnections: 1,          // 🔧 1 connessione per serverless
+          requestTimeout: 15000,      // 🔧 15 secondi per query timeout
         },
-      }),
+      },
     });
     
     // DOPO super(), ora posso accedere a this

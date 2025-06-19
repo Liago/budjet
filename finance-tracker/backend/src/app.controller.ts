@@ -48,9 +48,9 @@ export class AppController {
       }
       
       console.log('🔍 Testing database connection...');
-      // Test database connection on-demand with timeout
+      // Test database connection con timeout aumentato per Netlify
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Database test timeout after 5 seconds')), 5000);
+        setTimeout(() => reject(new Error('Database test timeout after 15 seconds')), 15000); // 🔧 Aumentato da 5 a 15 secondi
       });
       
       const testPromise = this.prisma.testConnection();
