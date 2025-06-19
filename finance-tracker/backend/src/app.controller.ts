@@ -52,8 +52,7 @@ export class AppController {
       
       dbTest = {
         connected: false,
-        error: `Database test failed: ${error.message}`,
-        errorType: error.name
+        error: `Database test failed: ${error.message} (${error.name})`
       };
     }
     
