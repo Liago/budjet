@@ -28,8 +28,36 @@ export class AppController {
 
   @Get('health')
   async getHealthCheck() {
-    // Test database connection on-demand
-    const dbTest = await this.prisma.testConnection();
+    console.log('🔍 HEALTH endpoint called');
+    
+    let dbTest = { connected: false, error: 'Database test not attempted' };
+    
+    try {
+      console.log('🔍 Testing database connection...');
+      // Test database connection on-demand with timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Database test timeout after 5 seconds')), 5000);
+      });
+      
+      const testPromise = this.prisma.testConnection();
+      dbTest = await Promise.race([testPromise, timeoutPromise]) as any;
+      console.log('✅ Database test completed:', dbTest);
+      
+    } catch (error) {
+      console.error('❌ Database test failed:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      dbTest = {
+        connected: false,
+        error: `Database test failed: ${error.message}`,
+        errorType: error.name
+      };
+    }
+    
+    console.log('📦 Returning health response');
     
     return {
       status: 'healthy',
@@ -45,6 +73,12 @@ export class AppController {
       netlify: {
         region: process.env.AWS_REGION || 'unknown',
         requestId: process.env.AWS_REQUEST_ID || 'local'
+      },
+      debug: {
+        databaseTest: dbTest,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        hasDatabaseUrl: !!process.env.DATABASE_URL,
+        databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) + '...'
       }
     };
   }
