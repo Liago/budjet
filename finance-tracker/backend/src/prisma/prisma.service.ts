@@ -33,15 +33,8 @@ export class PrismaService
       errorFormat: "minimal",
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
       
-      // 🔧 OTTIMIZZAZIONE SERVERLESS AVANZATA
-      __internal: {
-        engine: {
-          connectTimeout: 20000,      // 🔧 20 secondi timeout (era 10)
-          idleTimeout: 60000,         // 🔧 60 secondi idle timeout  
-          maxConnections: 1,          // 🔧 1 connessione per serverless
-          requestTimeout: 15000,      // 🔧 15 secondi per query timeout
-        },
-      },
+      // 🔧 CONFIGURAZIONE OTTIMIZZATA PER SERVERLESS
+      // Note: Le ottimizzazioni avanzate sono gestite tramite DATABASE_URL parameters
     });
     
     // DOPO super(), ora posso accedere a this
@@ -84,7 +77,7 @@ export class PrismaService
     return this.connectionPromise;
   }
 
-  private async connectWithRetry(maxRetries: number = 3): Promise<void> {
+  private async connectWithRetry(maxRetries: number = 2): Promise<void> { // 🔧 Ridotto a 2 retry per serverless
     const dbType = this.databaseProvider.toUpperCase();
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -107,8 +100,8 @@ export class PrismaService
           throw new Error(`Failed to connect to ${dbType} database after ${maxRetries} attempts: ${error.message}`);
         }
         
-        // Wait before retrying (exponential backoff)
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        // Wait before retrying (shorter delays for serverless)
+        const delay = Math.min(500 * attempt, 2000); // 🔧 Max 2 secondi di attesa
         this.logger.log(`Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
