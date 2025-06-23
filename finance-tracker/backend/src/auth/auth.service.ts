@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Inject } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UsersService } from "../users/users.service";
 import * as bcrypt from "bcryptjs";
@@ -9,9 +9,13 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    private usersService: UsersService,
+    @Inject(UsersService) private usersService: UsersService,
     private jwtService: JwtService
-  ) {}
+  ) {
+    console.log('🔧 AuthService initialized, usersService:', !!this.usersService);
+    console.log('🔧 UsersService type:', this.usersService ? this.usersService.constructor.name : 'undefined');
+    console.log('🔧 UsersService methods:', this.usersService ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.usersService)) : 'N/A');
+  }
 
   async validateUser(email: string, password: string): Promise<any> {
     try {
@@ -109,6 +113,20 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     try {
       this.logger.log(`📝 Registering new user with email: ${registerDto.email?.substring(0, 3)}***`);
+      
+      // 🔧 RUNTIME CHECK per UsersService
+      if (!this.usersService) {
+        this.logger.error('❌ CRITICAL: UsersService is not injected!');
+        this.logger.error('🔍 this.usersService:', this.usersService);
+        this.logger.error('🔍 typeof this.usersService:', typeof this.usersService);
+        throw new Error('UsersService dependency injection failed');
+      }
+      
+      if (typeof this.usersService.findByEmail !== 'function') {
+        this.logger.error('❌ CRITICAL: UsersService.findByEmail method is not available!');
+        this.logger.error('🔍 UsersService methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.usersService)));
+        throw new Error('UsersService.findByEmail method is not available');
+      }
       
       // STEP 1: Check if user already exists
       this.logger.log('🔍 STEP 1: Checking if user already exists...');

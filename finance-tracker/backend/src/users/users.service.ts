@@ -11,7 +11,12 @@ import { DATABASE_PROVIDER } from "../database/database.module";
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(DATABASE_PROVIDER) private db: PrismaService) {}
+  constructor(
+    @Inject(DATABASE_PROVIDER) private db: PrismaService
+  ) {
+    console.log('🔧 UsersService initialized, db:', !!this.db);
+    console.log('🔧 Database service type:', this.db ? this.db.constructor.name : 'undefined');
+  }
 
   async findByEmail(email: string): Promise<User | null> {
     return this.db.user.findUnique({
