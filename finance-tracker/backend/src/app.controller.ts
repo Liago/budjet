@@ -20,14 +20,55 @@ export class AppController {
     };
   }
 
-  @Get('simple')
-  getSimple() {
-    console.log('🧪 SIMPLE endpoint called - no dependencies');
-    return {
-      status: 'simple-ok',
-      timestamp: new Date().toISOString(),
-      message: 'Simple endpoint without database dependency'
-    };
+  @Get('db-direct')
+  async testDatabaseDirect() {
+    console.log('🧪 DIRECT DATABASE TEST - bypassing PrismaService');
+    
+    const databaseUrl = process.env.DATABASE_URL;
+    console.log('🔍 Database URL available:', !!databaseUrl);
+    console.log('🔍 Database URL prefix:', databaseUrl?.substring(0, 30) + '...');
+    
+    if (!databaseUrl) {
+      return {
+        status: 'error',
+        message: 'DATABASE_URL not configured',
+        timestamp: new Date().toISOString()
+      };
+    }
+    
+    try {
+      // Parse URL per verificare formato
+      const url = new URL(databaseUrl);
+      console.log('🔍 Parsed URL - Protocol:', url.protocol);
+      console.log('🔍 Parsed URL - Host:', url.hostname);
+      console.log('🔍 Parsed URL - Port:', url.port);
+      console.log('🔍 Parsed URL - Database:', url.pathname);
+      console.log('🔍 Parsed URL - Params:', url.search);
+      
+      return {
+        status: 'url-valid',
+        message: 'Database URL is properly formatted',
+        details: {
+          protocol: url.protocol,
+          host: url.hostname,
+          port: url.port || 'default',
+          database: url.pathname,
+          hasParams: url.search.length > 0,
+          paramCount: new URLSearchParams(url.search).size
+        },
+        timestamp: new Date().toISOString()
+      };
+      
+    } catch (error) {
+      console.error('❌ Database URL parsing failed:', error.message);
+      
+      return {
+        status: 'url-invalid',
+        message: 'Database URL format is invalid',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
   }
 
   @Get('health')
