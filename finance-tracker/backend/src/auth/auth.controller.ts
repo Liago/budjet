@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Inject } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RegisterDto } from './dto/register.dto';
@@ -8,7 +8,13 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    @Inject(AuthService) private readonly authService: AuthService
+  ) {
+    console.log('🔧 AuthController initialized, authService:', !!this.authService);
+    console.log('🔧 AuthService type:', this.authService ? this.authService.constructor.name : 'undefined');
+    console.log('🔧 AuthService methods:', this.authService ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.authService)) : 'N/A');
+  }
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
@@ -22,6 +28,20 @@ export class AuthController {
       hasPassword: !!registerDto.password,
       passwordLength: registerDto.password?.length
     });
+    
+    // 🔧 RUNTIME CHECK per AuthService
+    if (!this.authService) {
+      console.error('❌ CRITICAL: AuthService is not injected!');
+      console.error('🔍 this.authService:', this.authService);
+      console.error('🔍 typeof this.authService:', typeof this.authService);
+      throw new Error('AuthService dependency injection failed');
+    }
+    
+    if (typeof this.authService.register !== 'function') {
+      console.error('❌ CRITICAL: AuthService.register method is not available!');
+      console.error('🔍 AuthService methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.authService)));
+      throw new Error('AuthService.register method is not available');
+    }
     
     try {
       console.log('📝 Calling AuthService.register...');
