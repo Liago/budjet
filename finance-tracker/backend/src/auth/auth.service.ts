@@ -21,40 +21,66 @@ export class AuthService {
     try {
       this.logger.log(`🔍 Validating user with email: ${email?.substring(0, 3)}***`);
       
+      // 🔧 STEP 1: Input validation
       if (!email || !password) {
         this.logger.warn('❌ Email or password missing');
         return null;
       }
+      this.logger.log('✅ STEP 1: Email and password provided');
 
-      // Find user by email
-      this.logger.log('📧 Looking up user by email...');
+      // 🔧 STEP 2: Find user by email
+      this.logger.log('📧 STEP 2: Looking up user by email...');
+      this.logger.log(`🔍 Email to lookup: ${email}`);
+      
       const user = await this.usersService.findByEmail(email);
       
       if (!user) {
-        this.logger.warn(`❌ User not found with email: ${email?.substring(0, 3)}***`);
+        this.logger.warn(`❌ STEP 2: User not found with email: ${email?.substring(0, 3)}***`);
         return null;
       }
-
-      this.logger.log('👤 User found, verifying password...');
       
-      // Verify password
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      this.logger.log('👤 STEP 2: User found successfully');
+      this.logger.log(`🔍 User details: ID=${user.id}, Email=${user.email}`);
+      this.logger.log(`🔍 User has password hash: ${!!user.password}`);
+      this.logger.log(`🔍 Password hash length: ${user.password?.length}`);
+
+      // 🔧 STEP 3: Verify password
+      this.logger.log('🔐 STEP 3: Verifying password...');
+      this.logger.log(`🔍 Input password length: ${password?.length}`);
+      this.logger.log(`🔍 Stored hash length: ${user.password?.length}`);
+      
+      let isPasswordValid: boolean;
+      try {
+        isPasswordValid = await bcrypt.compare(password, user.password);
+        this.logger.log(`🔍 Password comparison result: ${isPasswordValid}`);
+      } catch (bcryptError) {
+        this.logger.error('❌ Password comparison failed:', {
+          message: bcryptError.message,
+          stack: bcryptError.stack
+        });
+        return null;
+      }
       
       if (!isPasswordValid) {
-        this.logger.warn('❌ Invalid password provided');
+        this.logger.warn('❌ STEP 3: Invalid password provided');
+        this.logger.log('🔍 Note: Password comparison returned false');
         return null;
       }
 
-      this.logger.log('✅ Password validation successful');
+      this.logger.log('✅ STEP 3: Password validation successful');
       
-      // Return user without password
+      // 🔧 STEP 4: Return user without password
+      this.logger.log('🔍 STEP 4: Preparing user response...');
       const { password: _, ...result } = user;
+      this.logger.log(`✅ STEP 4: User validation completed for ID: ${result.id}`);
+      
       return result;
       
     } catch (error) {
-      this.logger.error('❌ Error in validateUser:', {
+      this.logger.error('❌ Error in validateUser - COMPREHENSIVE:', {
         message: error.message,
         stack: error.stack,
+        name: error.name,
         email: email?.substring(0, 3) + '***'
       });
       return null;

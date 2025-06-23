@@ -73,6 +73,32 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto, @Request() req) {
-    return this.authService.login(req.user);
+    console.log('🔐 LOGIN endpoint called with data:', {
+      email: loginDto.email,
+      hasPassword: !!loginDto.password,
+      passwordLength: loginDto.password?.length
+    });
+    
+    console.log('🔍 Request user from LocalAuthGuard:', {
+      hasUser: !!req.user,
+      userId: req.user?.id,
+      userEmail: req.user?.email
+    });
+    
+    try {
+      console.log('🔍 Calling AuthService.login...');
+      const result = await this.authService.login(req.user);
+      console.log('✅ Login successful, JWT generated');
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Login failed in controller:', {
+        message: error.message,
+        stack: error.stack,
+        hasUser: !!req.user,
+        userId: req.user?.id
+      });
+      throw error;
+    }
   }
 } 
