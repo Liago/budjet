@@ -15,7 +15,36 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 409, description: 'Email already in use' })
   async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+    console.log('📝 REGISTER endpoint called with data:', {
+      email: registerDto.email,
+      firstName: registerDto.firstName,
+      lastName: registerDto.lastName,
+      hasPassword: !!registerDto.password,
+      passwordLength: registerDto.password?.length
+    });
+    
+    try {
+      console.log('📝 Calling AuthService.register...');
+      const result = await this.authService.register(registerDto);
+      console.log('✅ Registration successful for user:', result.id);
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Registration failed - DETAILED ERROR:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        cause: error.cause,
+        registerDto: {
+          email: registerDto.email,
+          firstName: registerDto.firstName,
+          lastName: registerDto.lastName
+        }
+      });
+      
+      // Re-throw per permettere a NestJS di gestire l'errore
+      throw error;
+    }
   }
 
   @UseGuards(LocalAuthGuard)

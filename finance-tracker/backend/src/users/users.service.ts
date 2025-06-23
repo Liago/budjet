@@ -31,26 +31,109 @@ export class UsersService {
     firstName: string;
     lastName: string;
   }): Promise<Omit<User, "password">> {
-    const existingUser = await this.findByEmail(data.email);
-    if (existingUser) {
-      throw new ConflictException("Email already in use");
-    }
-
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-
-    const user = await this.db.user.create({
-      data: {
-        ...data,
-        password: hashedPassword,
-      },
+    console.log('📝 UsersService.create called with data:', {
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      hasPassword: !!data.password,
+      passwordLength: data.password?.length
     });
+    
+    try {
+      // STEP 1: Check if user exists (double check)
+      console.log('🔍 USER SERVICE STEP 1: Checking if user exists...');
+      const existingUser = await this.findByEmail(data.email);
+      if (existingUser) {
+        console.error('❌ User already exists in UsersService check');
+        throw new ConflictException("Email already in use");
+      }
+      console.log('✅ USER SERVICE STEP 1: Email confirmed available');
 
-    // Create default categories for the user
-    await this.createDefaultCategories(user.id);
+      // STEP 2: Hash password
+      console.log('🔍 USER SERVICE STEP 2: Hashing password...');
+      console.log('🔍 Password to hash length:', data.password?.length);
+      
+      let hashedPassword: string;
+      try {
+        hashedPassword = await bcrypt.hash(data.password, 10);
+        console.log('✅ USER SERVICE STEP 2: Password hashed successfully');
+        console.log('🔍 Hashed password length:', hashedPassword?.length);
+      } catch (hashError) {
+        console.error('❌ Password hashing failed:', {
+          message: hashError.message,
+          stack: hashError.stack,
+          passwordLength: data.password?.length
+        });
+        throw new Error(`Password hashing failed: ${hashError.message}`);
+      }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = user;
-    return result;
+      // STEP 3: Create user in database
+      console.log('🔍 USER SERVICE STEP 3: Creating user in database...');
+      console.log('🔍 User data for DB:', {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        hasHashedPassword: !!hashedPassword
+      });
+      
+      let user: User;
+      try {
+        user = await this.db.user.create({
+          data: {
+            ...data,
+            password: hashedPassword,
+          },
+        });
+        console.log('✅ USER SERVICE STEP 3: User created in database with ID:', user.id);
+      } catch (dbError) {
+        console.error('❌ Database user creation failed:', {
+          message: dbError.message,
+          stack: dbError.stack,
+          code: dbError.code,
+          meta: dbError.meta
+        });
+        throw new Error(`Database user creation failed: ${dbError.message}`);
+      }
+
+      // STEP 4: Create default categories
+      console.log('🔍 USER SERVICE STEP 4: Creating default categories...');
+      try {
+        await this.createDefaultCategories(user.id);
+        console.log('✅ USER SERVICE STEP 4: Default categories created successfully');
+      } catch (categoriesError) {
+        console.error('❌ Default categories creation failed:', {
+          message: categoriesError.message,
+          stack: categoriesError.stack,
+          userId: user.id
+        });
+        
+        // Non throwamo l'errore qui perché l'utente è già stato creato
+        // Logghiamo l'errore ma continuiamo
+        console.warn('⚠️ User created but default categories failed - continuing...');
+      }
+      
+      // STEP 5: Return user without password
+      console.log('🔍 USER SERVICE STEP 5: Preparing final response...');
+      const { password, ...result } = user;
+      console.log('✅ USER SERVICE STEP 5: User creation completed successfully');
+      return result;
+      
+    } catch (error) {
+      console.error('❌ UsersService.create failed - DETAILED ERROR:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        cause: error.cause,
+        email: data.email,
+        userData: {
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          hasPassword: !!data.password
+        }
+      });
+      throw error;
+    }
   }
 
   async update(

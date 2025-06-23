@@ -110,29 +110,68 @@ export class AuthService {
     try {
       this.logger.log(`📝 Registering new user with email: ${registerDto.email?.substring(0, 3)}***`);
       
-      // Check if user already exists
+      // STEP 1: Check if user already exists
+      this.logger.log('🔍 STEP 1: Checking if user already exists...');
       const existingUser = await this.usersService.findByEmail(registerDto.email);
       if (existingUser) {
         this.logger.warn(`❌ User already exists with email: ${registerDto.email?.substring(0, 3)}***`);
         throw new Error('User with this email already exists');
       }
+      this.logger.log('✅ STEP 1: Email is available');
 
-      const user = await this.usersService.create(registerDto);
-      this.logger.log(`✅ User registered successfully with ID: ${user.id}`);
+      // STEP 2: Create user via UsersService
+      this.logger.log('🔍 STEP 2: Creating user via UsersService...');
+      this.logger.log('🔍 User data being passed:', {
+        email: registerDto.email,
+        firstName: registerDto.firstName,
+        lastName: registerDto.lastName,
+        hasPassword: !!registerDto.password
+      });
       
-      return {
+      const user = await this.usersService.create(registerDto);
+      this.logger.log(`✅ STEP 2: User created successfully with ID: ${user.id}`);
+      
+      // STEP 3: Return user data
+      this.logger.log('🔍 STEP 3: Preparing response...');
+      const response = {
         id: user.id,
         email: user.email,
         name: `${user.firstName} ${user.lastName}`,
         createdAt: user.createdAt
       };
       
+      this.logger.log('✅ STEP 3: Registration completed successfully');
+      return response;
+      
     } catch (error) {
-      this.logger.error('❌ Error in register:', {
+      this.logger.error('❌ Error in register - COMPREHENSIVE DETAILS:', {
         message: error.message,
         stack: error.stack,
-        email: registerDto.email?.substring(0, 3) + '***'
+        name: error.name,
+        cause: error.cause,
+        email: registerDto.email?.substring(0, 3) + '***',
+        step: 'Determining step from error...',
+        registerDto: {
+          email: registerDto.email,
+          firstName: registerDto.firstName,
+          lastName: registerDto.lastName,
+          hasPassword: !!registerDto.password
+        }
       });
+      
+      // Analizza l'errore per determinare il tipo
+      if (error.message?.includes('already exists')) {
+        this.logger.error('🏷️ Error Type: USER_ALREADY_EXISTS');
+      } else if (error.message?.includes('validation') || error.message?.includes('required')) {
+        this.logger.error('🏷️ Error Type: VALIDATION_ERROR');
+      } else if (error.message?.includes('database') || error.message?.includes('connection')) {
+        this.logger.error('🏷️ Error Type: DATABASE_ERROR');
+      } else if (error.message?.includes('bcrypt') || error.message?.includes('hash')) {
+        this.logger.error('🏷️ Error Type: PASSWORD_HASHING_ERROR');
+      } else {
+        this.logger.error('🏷️ Error Type: UNKNOWN_ERROR');
+      }
+      
       throw error;
     }
   }
