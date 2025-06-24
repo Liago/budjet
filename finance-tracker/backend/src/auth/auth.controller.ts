@@ -16,6 +16,53 @@ export class AuthController {
     console.log('🔧 AuthService methods:', this.authService ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.authService)) : 'N/A');
   }
 
+  @Post('test-login')
+  @ApiOperation({ summary: 'Test login without guards' })
+  async testLogin(@Body() loginDto: LoginDto) {
+    console.log('🧪 TEST-LOGIN endpoint called (no guards):', {
+      email: loginDto.email,
+      hasPassword: !!loginDto.password,
+      passwordLength: loginDto.password?.length
+    });
+    
+    try {
+      console.log('🧪 Calling AuthService.validateUser directly...');
+      const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+      
+      if (!user) {
+        console.log('❌ TEST-LOGIN: User validation failed');
+        return {
+          success: false,
+          message: 'Invalid credentials',
+          step: 'validateUser returned null'
+        };
+      }
+      
+      console.log('✅ TEST-LOGIN: User validated, generating JWT...');
+      const result = await this.authService.login(user);
+      
+      console.log('✅ TEST-LOGIN: Complete success!');
+      return {
+        success: true,
+        message: 'Login successful',
+        data: result
+      };
+      
+    } catch (error) {
+      console.error('❌ TEST-LOGIN failed:', {
+        message: error.message,
+        stack: error.stack
+      });
+      
+      return {
+        success: false,
+        message: error.message,
+        step: 'Exception thrown',
+        error: error.name
+      };
+    }
+  }
+
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully registered' })
