@@ -27,7 +27,7 @@ const getJwtExpiresIn = () => {
 @Module({
   imports: [
     UsersModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }), // 🔧 AGGIUNTA: default strategy
+    PassportModule.register({ session: false }), // 🔧 FIX: Rimuovo defaultStrategy che può causare conflitti
     // 🔧 FIX: Torniamo alla configurazione SINCRONA ma sicura
     JwtModule.register({
       secret: getJwtSecret(),

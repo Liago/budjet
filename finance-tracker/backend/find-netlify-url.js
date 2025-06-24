@@ -57,9 +57,9 @@ if (!netlifyUrl) {
 
 // 3. URL predefiniti comuni per questo progetto
 const commonUrls = [
+  'https://bud-jet-be.netlify.app',
   'https://bud-jet.netlify.app',
-  'https://finance-tracker-backend.netlify.app',
-  'https://budjet-finance.netlify.app'
+  'https://finance-tracker-backend.netlify.app'
 ];
 
 if (!netlifyUrl) {
@@ -71,7 +71,7 @@ console.log('🎯 Using Netlify URL:', netlifyUrl);
 
 // 4. Funzione per testare l'endpoint
 async function testAuthEndpoint(baseUrl) {
-  const url = `${baseUrl}/.netlify/functions/main/auth/test-login`;
+  const url = `${baseUrl}/.netlify/functions/api/auth/test-login`;
   
   console.log('\n🧪 Testing auth endpoint:', url);
   
@@ -140,7 +140,7 @@ async function main() {
       console.log('\n❌ 404 Not Found - Check if URL is correct');
       console.log('💡 Try these URLs manually:');
       commonUrls.forEach(url => {
-        console.log(`   ${url}/.netlify/functions/main/auth/test-login`);
+        console.log(`   ${url}/.netlify/functions/api/auth/test-login`);
       });
     } else {
       console.log(`\n⚠️  Status ${result.status} - Check server logs`);
@@ -151,7 +151,7 @@ async function main() {
     
     console.log('\n🔧 Manual test commands:');
     commonUrls.forEach(url => {
-      console.log(`\ncurl -X POST ${url}/.netlify/functions/main/auth/test-login \\`);
+      console.log(`\ncurl -X POST ${url}/.netlify/functions/api/auth/test-login \\`);
       console.log(`  -H "Content-Type: application/json" \\`);
       console.log(`  -d '{"email":"debug@test.com","password":"YourPassword123!"}'`);
     });
@@ -161,7 +161,7 @@ async function main() {
 // 6. Genera anche comandi curl
 console.log('\n📋 Manual curl commands:');
 if (netlifyUrl) {
-  console.log(`\ncurl -X POST ${netlifyUrl}/.netlify/functions/main/auth/test-login \\`);
+  console.log(`\ncurl -X POST ${netlifyUrl}/.netlify/functions/api/auth/test-login \\`);
   console.log(`  -H "Content-Type: application/json" \\`);
   console.log(`  -d '{"email":"debug@test.com","password":"YourPassword123!"}'`);
 }
