@@ -10,11 +10,22 @@ export class AuthService {
 
   constructor(
     @Inject(UsersService) private usersService: UsersService,
-    private jwtService: JwtService
+    private readonly jwtService: JwtService // 🔧 FIX: Rimuovo @Inject esplicito e uso readonly
   ) {
     console.log('🔧 AuthService initialized, usersService:', !!this.usersService);
     console.log('🔧 UsersService type:', this.usersService ? this.usersService.constructor.name : 'undefined');
     console.log('🔧 UsersService methods:', this.usersService ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.usersService)) : 'N/A');
+    
+    // 🔧 ENHANCED JWTSERVICE LOGGING
+    console.log('🔧 AuthService jwtService:', !!this.jwtService);
+    console.log('🔧 JwtService type:', this.jwtService ? this.jwtService.constructor.name : 'undefined');
+    console.log('🔧 JwtService methods:', this.jwtService ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.jwtService)) : 'N/A');
+    
+    // 🔧 VERIFICA METODI ESSENZIALI
+    if (this.jwtService) {
+      console.log('🔧 JwtService.sign available:', typeof this.jwtService.sign === 'function');
+      console.log('🔧 JwtService.verify available:', typeof this.jwtService.verify === 'function');
+    }
   }
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -91,7 +102,32 @@ export class AuthService {
     try {
       this.logger.log(`🔐 Creating JWT token for user: ${user.email?.substring(0, 3)}***`);
       
+      // 🔧 ENHANCED RUNTIME CHECKS per JwtService
+      if (!this.jwtService) {
+        this.logger.error('❌ CRITICAL: JwtService is not injected!');
+        this.logger.error('🔍 this.jwtService:', this.jwtService);
+        this.logger.error('🔍 typeof this.jwtService:', typeof this.jwtService);
+        this.logger.error('🔍 constructor name:', this.jwtService?.constructor?.name);
+        throw new Error('JwtService dependency injection failed - service is null/undefined');
+      }
+      
+      if (typeof this.jwtService.sign !== 'function') {
+        this.logger.error('❌ CRITICAL: JwtService.sign method is not available!');
+        this.logger.error('🔍 JwtService methods:', Object.getOwnPropertyNames(this.jwtService));
+        this.logger.error('🔍 JwtService prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.jwtService)));
+        this.logger.error('🔍 JwtService type:', typeof this.jwtService);
+        this.logger.error('🔍 JwtService instanceof JwtService:', this.jwtService instanceof JwtService);
+        throw new Error('JwtService.sign method is not available - invalid service instance');
+      }
+      
       if (!user || !user.id || !user.email) {
+        this.logger.error('❌ Invalid user object provided to login method');
+        this.logger.error('🔍 User object:', {
+          hasUser: !!user,
+          hasId: !!user?.id,
+          hasEmail: !!user?.email,
+          userKeys: user ? Object.keys(user) : 'N/A'
+        });
         throw new Error('Invalid user object provided to login method');
       }
 
@@ -102,9 +138,24 @@ export class AuthService {
       };
       
       this.logger.log('📝 JWT payload created, signing token...');
-      const accessToken = this.jwtService.sign(payload);
+      this.logger.log('🔍 JWT payload:', payload);
       
-      this.logger.log('✅ JWT token created successfully');
+      // 🔧 TRY-CATCH specifico per il signing
+      let accessToken: string;
+      try {
+        accessToken = this.jwtService.sign(payload);
+        this.logger.log('✅ JWT token created successfully');
+        this.logger.log('🔍 Access token length:', accessToken?.length);
+      } catch (signError) {
+        this.logger.error('❌ CRITICAL: JwtService.sign() failed:', {
+          message: signError.message,
+          stack: signError.stack,
+          payload: payload,
+          jwtServiceType: typeof this.jwtService,
+          jwtServiceConstructor: this.jwtService?.constructor?.name
+        });
+        throw new Error(`JWT signing failed: ${signError.message}`);
+      }
       
       // 🔧 FIX: Controlla se i campi firstName/lastName esistono
       const firstName = user.firstName || '';
@@ -126,11 +177,15 @@ export class AuthService {
       };
       
     } catch (error) {
-      this.logger.error('❌ Error in login:', {
+      this.logger.error('❌ Error in login - COMPREHENSIVE DETAILS:', {
         message: error.message,
         stack: error.stack,
+        name: error.name,
         userId: user?.id,
-        userFields: Object.keys(user || {}) // 🔧 Log dei campi disponibili per debug
+        userFields: Object.keys(user || {}), // 🔧 Log dei campi disponibili per debug
+        hasJwtService: !!this.jwtService,
+        jwtServiceType: this.jwtService ? this.jwtService.constructor.name : 'undefined',
+        jwtServiceMethods: this.jwtService ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.jwtService)) : 'N/A'
       });
       throw error;
     }
