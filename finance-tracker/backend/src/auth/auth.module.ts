@@ -27,33 +27,22 @@ const getJwtExpiresIn = () => {
 @Module({
   imports: [
     UsersModule,
-    PassportModule.register({ session: false }), // 🔧 FIX: Rimuovo defaultStrategy che può causare conflitti
-    // 🔧 FIX: Torniamo alla configurazione SINCRONA ma sicura
+    PassportModule.register({ session: false }),
     JwtModule.register({
       secret: getJwtSecret(),
       signOptions: {
         expiresIn: getJwtExpiresIn(),
       },
-      global: true, // 🔧 AGGIUNTA: Rende JwtModule globale
+      global: true,
     }),
   ],
   controllers: [AuthController],
   providers: [
     AuthService, 
     JwtStrategy, 
-    LocalStrategy,
-    // 🔧 AGGIUNTA: Provider esplicito per debugging
-    {
-      provide: 'JWT_DEBUG',
-      useFactory: () => {
-        console.log('🔧 JWT_DEBUG Provider - Environment check:');
-        console.log('🔧 - JWT_SECRET:', !!process.env.JWT_SECRET);
-        console.log('🔧 - JWT_EXPIRES_IN:', process.env.JWT_EXPIRES_IN);
-        return true;
-      }
-    }
+    LocalStrategy
   ],
-  exports: [AuthService, JwtModule], // 🔧 Esporta entrambi
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {
   constructor() {

@@ -53,3 +53,9 @@ finance-tracker/backend/quick-diagnosis.sh
 README_EXPORT.md
 
 setup_export.sh
+
+finance-tracker/backend/check-users.js
+
+finance-tracker/backend/quick-login-test.js
+
+finance-tracker/backend/test-login-detailed.js

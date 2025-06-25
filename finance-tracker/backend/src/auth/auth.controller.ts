@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request, Inject } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RegisterDto } from './dto/register.dto';
@@ -9,11 +9,9 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 @Controller('auth')
 export class AuthController {
   constructor(
-    @Inject(AuthService) private readonly authService: AuthService
+    private readonly authService: AuthService
   ) {
     console.log('🔧 AuthController initialized, authService:', !!this.authService);
-    console.log('🔧 AuthService type:', this.authService ? this.authService.constructor.name : 'undefined');
-    console.log('🔧 AuthService methods:', this.authService ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.authService)) : 'N/A');
   }
 
   @Post('test-login')
@@ -68,83 +66,35 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 409, description: 'Email already in use' })
   async register(@Body() registerDto: RegisterDto) {
-    console.log('📝 REGISTER endpoint called with data:', {
-      email: registerDto.email,
-      firstName: registerDto.firstName,
-      lastName: registerDto.lastName,
-      hasPassword: !!registerDto.password,
-      passwordLength: registerDto.password?.length
-    });
-    
-    // 🔧 RUNTIME CHECK per AuthService
-    if (!this.authService) {
-      console.error('❌ CRITICAL: AuthService is not injected!');
-      console.error('🔍 this.authService:', this.authService);
-      console.error('🔍 typeof this.authService:', typeof this.authService);
-      throw new Error('AuthService dependency injection failed');
-    }
-    
-    if (typeof this.authService.register !== 'function') {
-      console.error('❌ CRITICAL: AuthService.register method is not available!');
-      console.error('🔍 AuthService methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.authService)));
-      throw new Error('AuthService.register method is not available');
-    }
+    console.log('📝 Register endpoint called for:', registerDto.email);
     
     try {
-      console.log('📝 Calling AuthService.register...');
       const result = await this.authService.register(registerDto);
       console.log('✅ Registration successful for user:', result.id);
       return result;
       
     } catch (error) {
-      console.error('❌ Registration failed - DETAILED ERROR:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-        cause: error.cause,
-        registerDto: {
-          email: registerDto.email,
-          firstName: registerDto.firstName,
-          lastName: registerDto.lastName
-        }
-      });
-      
-      // Re-throw per permettere a NestJS di gestire l'errore
+      console.error('❌ Registration failed:', error.message);
       throw error;
     }
   }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'User successfully logged in' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto, @Request() req) {
-    console.log('🔐 LOGIN endpoint called with data:', {
-      email: loginDto.email,
-      hasPassword: !!loginDto.password,
-      passwordLength: loginDto.password?.length
-    });
-    
-    console.log('🔍 Request user from LocalAuthGuard:', {
-      hasUser: !!req.user,
-      userId: req.user?.id,
-      userEmail: req.user?.email
-    });
+    console.log('🔐 Login endpoint called for:', loginDto.email);
     
     try {
-      console.log('🔍 Calling AuthService.login...');
       const result = await this.authService.login(req.user);
       console.log('✅ Login successful, JWT generated');
       return result;
       
     } catch (error) {
-      console.error('❌ Login failed in controller:', {
-        message: error.message,
-        stack: error.stack,
-        hasUser: !!req.user,
-        userId: req.user?.id
-      });
+      console.error('❌ Login failed:', error.message);
       throw error;
     }
   }
