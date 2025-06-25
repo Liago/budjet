@@ -9,7 +9,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    private usersService: UsersService, // 🔧 FIX: Rimuovo forwardRef da qui dato che LocalStrategy ha forwardRef verso AuthService
+    @Inject(forwardRef(() => UsersService)) private usersService: UsersService, // 🔧 FIX: Ripristino forwardRef per evitare circular dependency
     @Inject(JwtService) private readonly jwtService: JwtService, // 🔧 FIX: Injection esplicita con forwardRef se necessario
     @Inject('JWT_DEBUG') private jwtDebug: boolean // 🔧 AGGIUNTA: Inject del debug provider
   ) {

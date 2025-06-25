@@ -5,7 +5,7 @@ console.log('🔧 DEBUG AUTH GUARDS - Comparing endpoints');
 // Test data
 const testData = JSON.stringify({
   email: 'debug@test.com',
-  password: 'YourPassword123!'
+  password: 'TestPassword123!'
 });
 
 const options = {
