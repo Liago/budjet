@@ -109,7 +109,7 @@ export class AuthService {
       this.logger.log('✅ JWT token created successfully');
       
       return {
-        access_token,
+        accessToken: access_token,
         user: {
           id: user.id,
           email: user.email,

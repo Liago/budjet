@@ -59,3 +59,13 @@ finance-tracker/backend/check-users.js
 finance-tracker/backend/quick-login-test.js
 
 finance-tracker/backend/test-login-detailed.js
+
+finance-tracker/backend/MISSION-ACCOMPLISHED.md
+
+finance-tracker/backend/test-complete-integration.sh
+
+finance-tracker/backend/test-frontend-compatibility.js
+
+finance-tracker/backend/test-netlify-backend.js
+
+finance-tracker/frontend/web/FRONTEND-ANALYSIS-COMPLETE.md
