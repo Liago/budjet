@@ -15,6 +15,7 @@ import { RecurrentPaymentsModule } from "./recurrent-payments/recurrent-payments
 import { SavingsGoalsModule } from "./savings-goals/savings-goals.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { EmailModule } from "./email/email.module";
+import { DebugModule } from "./debug/debug.module";
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { EmailModule } from "./email/email.module";
     SavingsGoalsModule,
     NotificationsModule,
     EmailModule,
+    DebugModule,
   ],
   controllers: [AppController],
   providers: [], // 🔧 REMOVED PrismaService - it's already exported by PrismaModule

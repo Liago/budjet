@@ -2,30 +2,28 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  Inject,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { User } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
-import { DATABASE_PROVIDER } from "../database/database.module";
 
 @Injectable()
 export class UsersService {
   constructor(
-    @Inject(DATABASE_PROVIDER) private db: PrismaService
+    private prisma: PrismaService
   ) {
-    console.log('🔧 UsersService initialized, db:', !!this.db);
-    console.log('🔧 Database service type:', this.db ? this.db.constructor.name : 'undefined');
+    console.log('🔧 UsersService initialized, prisma:', !!this.prisma);
+    console.log('🔧 Database service type:', this.prisma ? this.prisma.constructor.name : 'undefined');
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.db.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { email },
     });
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.db.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { id },
     });
   }
@@ -83,7 +81,7 @@ export class UsersService {
       
       let user: User;
       try {
-        user = await this.db.user.create({
+        user = await this.prisma.user.create({
           data: {
             ...data,
             password: hashedPassword,
@@ -148,7 +146,7 @@ export class UsersService {
       lastName?: string;
     }
   ): Promise<Omit<User, "password">> {
-    const user = await this.db.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data,
     });
@@ -207,7 +205,7 @@ export class UsersService {
       },
     ];
 
-    await this.db.category.createMany({
+    await this.prisma.category.createMany({
       data: defaultCategories.map((category) => ({
         ...category,
         userId,
