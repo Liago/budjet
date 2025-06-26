@@ -17,6 +17,13 @@
   status = 200
   force = true
 
+# 🔧 TEMPORARY FIX: Redirect login to working debug version
+[[redirects]]
+  from = "/api/auth/login"
+  to = "/.netlify/functions/login-debug"
+  status = 200
+  force = true
+
 # Headers globali per CORS - backup per tutti i file
 [[headers]]
   for = "/*"
