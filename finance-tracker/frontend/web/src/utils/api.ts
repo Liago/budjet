@@ -1,7 +1,18 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 
-// API base URL - configured based on environment
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+// 🔧 API base URL - priorità a variabile d'ambiente, fallback a localhost
+export const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD
+    ? "https://bud-jet-be.netlify.app/.netlify/functions/api"
+    : "http://localhost:3000/api");
+
+console.log("🔧 API Configuration:", {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  MODE: import.meta.env.MODE,
+  PROD: import.meta.env.PROD,
+  finalURL: API_URL,
+});
 
 // Create an axios instance with default config
 const api = axios.create({

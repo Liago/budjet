@@ -69,3 +69,15 @@ finance-tracker/backend/test-frontend-compatibility.js
 finance-tracker/backend/test-netlify-backend.js
 
 finance-tracker/frontend/web/FRONTEND-ANALYSIS-COMPLETE.md
+
+finance-tracker/backend/create-debug-user.js
+
+finance-tracker/backend/debug-login-netlify.js
+
+finance-tracker/backend/debug-results-1750864644451.json
+
+finance-tracker/backend/fix-andrea-login.js
+
+finance-tracker/backend/RISOLUZIONE-LOGIN-401.md
+
+finance-tracker/backend/setup-andrea-user.js
