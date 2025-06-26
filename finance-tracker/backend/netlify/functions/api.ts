@@ -13,18 +13,18 @@ const APP_VERSION = Date.now();
 console.log(`🔄 App version: ${APP_VERSION}`);
 
 // 🔧 GLOBAL ERROR HANDLER
-process.on('uncaughtException', (error) => {
-  console.error('💥 UNCAUGHT EXCEPTION:', {
+process.on("uncaughtException", (error) => {
+  console.error("💥 UNCAUGHT EXCEPTION:", {
     message: error.message,
     stack: error.stack,
-    name: error.name
+    name: error.name,
   });
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 UNHANDLED REJECTION:', {
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("💥 UNHANDLED REJECTION:", {
     reason: reason,
-    promise: promise
+    promise: promise,
   });
 });
 
@@ -43,6 +43,8 @@ const CORS_HEADERS = {
 const ALLOWED_ORIGINS = [
   "https://bud-jet.netlify.app", // URL principale del frontend
   "https://bud-jet-frontend.netlify.app", // URL alternativo
+  "https://stupendous-wisp-9a1b2c.netlify.app", // URL autogenerato Netlify
+  "https://adorable-gecko-123456.netlify.app", // URL autogenerato Netlify
   "http://localhost:3000", // Sviluppo locale
   "http://localhost:5173", // Vite dev server
   "http://localhost:4173", // Vite preview
@@ -69,9 +71,9 @@ function getCorsOrigin(requestOrigin: string | undefined): string {
 async function createApp() {
   // 🔧 DISABLE CACHING FOR DEBUG
   cachedApp = null;
-  
+
   if (cachedApp) {
-    console.log('💾 Using cached app');
+    console.log("💾 Using cached app");
     return cachedApp;
   }
 
@@ -79,14 +81,14 @@ async function createApp() {
 
   try {
     logger.log("🚀 Creating Netlify NestJS app...");
-    
+
     // 🔧 LOG ENVIRONMENT VARIABLES (MASKED)
     logger.log("🔧 Environment Check:", {
       NODE_ENV: process.env.NODE_ENV,
       HAS_DATABASE_URL: !!process.env.DATABASE_URL,
       HAS_JWT_SECRET: !!process.env.JWT_SECRET,
       JWT_SECRET_LENGTH: process.env.JWT_SECRET?.length || 0,
-      DATABASE_URL_PREFIX: process.env.DATABASE_URL?.substring(0, 20) + '...'
+      DATABASE_URL_PREFIX: process.env.DATABASE_URL?.substring(0, 20) + "...",
     });
 
     const expressApp = express();
@@ -100,7 +102,8 @@ async function createApp() {
 
     if (!process.env.JWT_SECRET) {
       logger.warn("⚠️ JWT_SECRET not set, using fallback");
-      process.env.JWT_SECRET = "fallback-jwt-secret-for-development-minimum-32-chars";
+      process.env.JWT_SECRET =
+        "fallback-jwt-secret-for-development-minimum-32-chars";
     } else if (process.env.JWT_SECRET.length < 32) {
       logger.warn("⚠️ JWT_SECRET is too short (< 32 chars)");
     }
@@ -110,7 +113,7 @@ async function createApp() {
     }
 
     logger.log("📦 Initializing NestJS with AppModule...");
-    
+
     // 🔧 STEP-BY-STEP INITIALIZATION WITH DETAILED LOGGING
     let app;
     try {
@@ -129,7 +132,7 @@ async function createApp() {
       logger.error("❌ Failed to create NestJS app instance:", {
         message: createError.message,
         stack: createError.stack,
-        name: createError.name
+        name: createError.name,
       });
       throw createError;
     }
@@ -148,7 +151,7 @@ async function createApp() {
         exceptionFactory: (errors) => {
           logger.error("❌ Validation errors:", errors);
           return new Error(`Validation failed: ${JSON.stringify(errors)}`);
-        }
+        },
       })
     );
 
@@ -189,13 +192,12 @@ async function createApp() {
     cachedApp = serverlessApp;
 
     return serverlessApp;
-    
   } catch (error) {
     logger.error("❌ Failed to create app - DETAILED ERROR:", {
       message: error.message,
       stack: error.stack,
       name: error.name,
-      cause: error.cause
+      cause: error.cause,
     });
     throw error;
   }
@@ -216,7 +218,7 @@ export const handler: Handler = async (event, context) => {
     origin: requestOrigin,
     hasBody: !!event.body,
     bodyLength: event.body?.length || 0,
-    headers: Object.keys(event.headers || {})
+    headers: Object.keys(event.headers || {}),
   });
 
   // **PRIORITÀ ASSOLUTA: Gestisci OPTIONS preflight IMMEDIATAMENTE**
@@ -264,9 +266,9 @@ export const handler: Handler = async (event, context) => {
     // 🔧 ENHANCED APP CREATION WITH DETAILED ERROR HANDLING
     logger.log("🚀 Getting app instance...");
     const app = await createApp();
-    
+
     logger.log("🚀 Processing request through serverless express...");
-    
+
     // 🔧 WRAP THE SERVERLESS CALL WITH DETAILED ERROR HANDLING
     let result;
     try {
@@ -276,7 +278,7 @@ export const handler: Handler = async (event, context) => {
       logger.error("❌ Serverless express error:", {
         message: serverlessError.message,
         stack: serverlessError.stack,
-        name: serverlessError.name
+        name: serverlessError.name,
       });
       throw serverlessError;
     }
@@ -312,7 +314,7 @@ export const handler: Handler = async (event, context) => {
       origin: requestOrigin,
       path: event.path,
       method: event.httpMethod,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Return detailed error for debugging
@@ -333,7 +335,7 @@ export const handler: Handler = async (event, context) => {
         timestamp: new Date().toISOString(),
         path: event.path,
         method: event.httpMethod,
-        requestId: context.awsRequestId
+        requestId: context.awsRequestId,
       }),
     };
   }

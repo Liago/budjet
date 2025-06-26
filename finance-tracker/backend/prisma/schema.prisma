@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // Aggiornato per produzione Netlify
+  provider = "postgresql" // 🔧 FORZATO per produzione Netlify
   url      = env("DATABASE_URL")
 }
 
