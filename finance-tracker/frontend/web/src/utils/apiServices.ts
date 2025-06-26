@@ -24,7 +24,32 @@ import axios from "axios";
 // Auth Service
 export const authService = {
   login: (credentials: LoginCredentials) =>
-    apiService.post<AuthResponse>("/auth/login", credentials),
+    // 🔧 TEMPORARY FIX: Use working login-debug endpoint until NestJS auth is fixed
+    fetch(`${API_URL.replace("/api", "")}/.netlify/functions/login-debug`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(credentials),
+    }).then(async (response) => {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      // Extract token and user from debug response format
+      if (data.success && data.accessToken) {
+        return {
+          accessToken: data.accessToken,
+          user: data.user,
+        };
+      }
+
+      throw new Error("Invalid response format from login endpoint");
+    }),
 
   register: (userData: RegisterData) =>
     apiService.post<AuthResponse>("/auth/register", userData),
