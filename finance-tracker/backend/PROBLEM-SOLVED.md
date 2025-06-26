@@ -11,7 +11,7 @@ Tutti gli endpoint (tranne login) restituivano **500 Internal Server Error** per
 
 ### 1. 🔧 Sistemato UsersService (PRINCIPALE)
 
-**PRIMA:**
+**PRIMA:**   
 ```typescript
 // ❌ Injection personalizzato inconsistente
 constructor(@Inject(DATABASE_PROVIDER) private db: PrismaService)
