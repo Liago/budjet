@@ -17,10 +17,10 @@
   status = 200
   force = true
 
-# 🔧 TEMPORARY FIX: Redirect login to working debug version
+# 🔧 TEMPORARY FIX: Redirect login to working direct-login version
 [[redirects]]
   from = "/api/auth/login"
-  to = "/.netlify/functions/login-debug"
+  to = "/.netlify/functions/api/auth/direct-login"
   status = 200
   force = true
 
