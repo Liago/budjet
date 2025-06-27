@@ -25,6 +25,7 @@ import axios from "axios";
 export const authService = {
   login: (credentials: LoginCredentials) => {
     // 🔧 SMART ENDPOINT SELECTION: Different endpoints for local vs production
+    // 🕐 Deployment timestamp: 2025-06-27 15:40 CET
     const isProduction = API_URL.includes("netlify.app");
     const loginEndpoint = isProduction
       ? `${API_URL.replace("/api", "")}/.netlify/functions/login-debug` // Production: use debug endpoint
@@ -35,6 +36,7 @@ export const authService = {
       API_URL,
       loginEndpoint,
       environment: isProduction ? "PRODUCTION" : "LOCAL",
+      timestamp: new Date().toISOString(),
     });
 
     return fetch(loginEndpoint, {
@@ -50,6 +52,7 @@ export const authService = {
         status: response.status,
         ok: response.ok,
         data: data,
+        timestamp: new Date().toISOString(),
       });
 
       if (!response.ok) {
