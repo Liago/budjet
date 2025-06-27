@@ -1,4 +1,4 @@
-import { apiService } from "./api";
+import { apiService, API_URL } from "./api";
 import {
   AuthResponse,
   Category,
@@ -23,9 +23,21 @@ import axios from "axios";
 
 // Auth Service
 export const authService = {
-  login: (credentials: LoginCredentials) =>
-    // 🔧 TEMPORARY FIX: Use working login-debug endpoint until NestJS auth is fixed
-    fetch(`${API_URL.replace("/api", "")}/.netlify/functions/login-debug`, {
+  login: (credentials: LoginCredentials) => {
+    // 🔧 SMART ENDPOINT SELECTION: Different endpoints for local vs production
+    const isProduction = API_URL.includes("netlify.app");
+    const loginEndpoint = isProduction
+      ? `${API_URL.replace("/api", "")}/.netlify/functions/login-debug` // Production: use debug endpoint
+      : `${API_URL}/auth/login`; // Local: use standard NestJS endpoint
+
+    console.log("🔍 Login endpoint selection:", {
+      isProduction,
+      API_URL,
+      loginEndpoint,
+      environment: isProduction ? "PRODUCTION" : "LOCAL",
+    });
+
+    return fetch(loginEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -34,22 +46,40 @@ export const authService = {
     }).then(async (response) => {
       const data = await response.json();
 
+      console.log("🔍 Login response:", {
+        status: response.status,
+        ok: response.ok,
+        data: data,
+      });
+
       if (!response.ok) {
         throw new Error(
           data.message || `HTTP error! status: ${response.status}`
         );
       }
 
-      // Extract token and user from debug response format
-      if (data.success && data.accessToken) {
-        return {
-          accessToken: data.accessToken,
-          user: data.user,
-        };
+      // Handle different response formats between local and production
+      if (isProduction) {
+        // Production: debug endpoint format
+        if (data.success && data.accessToken) {
+          return {
+            accessToken: data.accessToken,
+            user: data.user,
+          };
+        }
+      } else {
+        // Local: standard NestJS format
+        if (data.accessToken && data.user) {
+          return {
+            accessToken: data.accessToken,
+            user: data.user,
+          };
+        }
       }
 
       throw new Error("Invalid response format from login endpoint");
-    }),
+    });
+  },
 
   register: (userData: RegisterData) =>
     apiService.post<AuthResponse>("/auth/register", userData),
