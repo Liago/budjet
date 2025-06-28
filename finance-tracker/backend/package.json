@@ -12,7 +12,7 @@
     "prebuild": "node config-env.js",
     "build": "NODE_ENV=development npx nest build",
     "build:serverless": "prisma generate && npx nest build && cp -r prisma dist/ && cp package*.json dist/",
-    "build:netlify": "node scripts/set-schema-provider.js auto && npx prisma generate && npm run build:tsc",
+    "build:netlify": "node scripts/set-schema-provider.js auto && npx prisma generate && npm run build:tsc && cp -r netlify/functions dist/",
     "build:tsc": "./node_modules/.bin/nest build",
     "build:local": "node scripts/set-schema-provider.js sqlite && npx prisma generate && npx prisma db push && npm run build:tsc",
     "dev:db": "node scripts/set-schema-provider.js sqlite && npx prisma generate && npx prisma db push",
