@@ -56,8 +56,9 @@ export class DebugController {
   @Get("test-users")
   async testUsers() {
     try {
-      const { PrismaService } = await import("../prisma/prisma.service");
-      const prisma = new PrismaService();
+      // Usa PrismaClient direttamente invece di PrismaService
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
 
       // Test 1: Connessione database
       await prisma.$connect();
@@ -86,6 +87,8 @@ export class DebugController {
           connected: true,
           userCount,
           sampleUsers: users,
+          environment: process.env.NODE_ENV,
+          databaseUrl: process.env.DATABASE_URL ? "✅ Set" : "❌ Missing",
         },
       };
     } catch (error) {
@@ -94,6 +97,8 @@ export class DebugController {
         error: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        databaseUrl: process.env.DATABASE_URL ? "✅ Set" : "❌ Missing",
       };
     }
   }
@@ -102,11 +107,12 @@ export class DebugController {
   @Post("test-login")
   async testLogin(@Body() body: { email: string; password: string }) {
     try {
-      const { PrismaService } = await import("../prisma/prisma.service");
+      // Usa PrismaClient direttamente
+      const { PrismaClient } = await import("@prisma/client");
       const bcrypt = await import("bcryptjs");
       const jwt = await import("jsonwebtoken");
 
-      const prisma = new PrismaService();
+      const prisma = new PrismaClient();
       await prisma.$connect();
 
       console.log("🔧 Debug login test:", {
