@@ -26,9 +26,13 @@ export const authService = {
   login: (credentials: LoginCredentials) => {
     // 🔧 SMART ENDPOINT SELECTION: Different endpoints for local vs production
     // 🕐 Deployment timestamp: 2025-06-27 15:40 CET
+    // 🚀 CORS FIX: Corrected URL construction for login-debug
     const isProduction = API_URL.includes("netlify.app");
     const loginEndpoint = isProduction
-      ? `${API_URL.replace("/api", "")}/.netlify/functions/login-debug` // Production: use debug endpoint
+      ? `${API_URL.replace(
+          "/.netlify/functions/api",
+          ""
+        )}/.netlify/functions/login-debug` // Production: use debug endpoint
       : `${API_URL}/auth/login`; // Local: use standard NestJS endpoint
 
     console.log("🔍 Login endpoint selection:", {
