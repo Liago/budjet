@@ -24,9 +24,9 @@ import axios from "axios";
 // Auth Service
 export const authService = {
   login: (credentials: LoginCredentials) => {
-    // 🔧 USE STANDARD LOGIN ENDPOINT: Now that functions deploy correctly
-    // 🕐 Updated: 2025-06-28 - Using standard NestJS login for all environments
-    const loginEndpoint = `${API_URL}/auth/login`; // Use standard NestJS endpoint for all environments
+    // 🔧 USE DIRECT LOGIN: Bypasses LocalAuthGuard that doesn't work in serverless
+    // 🕐 Updated: 2025-06-28 - Using direct-login that works in Netlify Functions
+    const loginEndpoint = `${API_URL}/auth/direct-login`; // Bypasses problematic LocalAuthGuard
 
     console.log("🔍 Login endpoint selection:", {
       API_URL,
