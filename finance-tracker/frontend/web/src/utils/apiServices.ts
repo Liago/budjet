@@ -24,22 +24,13 @@ import axios from "axios";
 // Auth Service
 export const authService = {
   login: (credentials: LoginCredentials) => {
-    // 🔧 SMART ENDPOINT SELECTION: Different endpoints for local vs production
-    // 🕐 Deployment timestamp: 2025-06-27 15:40 CET
-    // 🚀 CORS FIX: Corrected URL construction for login-debug
-    const isProduction = API_URL.includes("netlify.app");
-    const loginEndpoint = isProduction
-      ? `${API_URL.replace(
-          "/.netlify/functions/api",
-          ""
-        )}/.netlify/functions/login-debug` // Production: use debug endpoint
-      : `${API_URL}/auth/login`; // Local: use standard NestJS endpoint
+    // 🔧 USE STANDARD LOGIN ENDPOINT: Now that functions deploy correctly
+    // 🕐 Updated: 2025-06-28 - Using standard NestJS login for all environments
+    const loginEndpoint = `${API_URL}/auth/login`; // Use standard NestJS endpoint for all environments
 
     console.log("🔍 Login endpoint selection:", {
-      isProduction,
       API_URL,
       loginEndpoint,
-      environment: isProduction ? "PRODUCTION" : "LOCAL",
       timestamp: new Date().toISOString(),
     });
 
@@ -65,23 +56,12 @@ export const authService = {
         );
       }
 
-      // Handle different response formats between local and production
-      if (isProduction) {
-        // Production: debug endpoint format
-        if (data.success && data.accessToken) {
-          return {
-            accessToken: data.accessToken,
-            user: data.user,
-          };
-        }
-      } else {
-        // Local: standard NestJS format
-        if (data.accessToken && data.user) {
-          return {
-            accessToken: data.accessToken,
-            user: data.user,
-          };
-        }
+      // Handle standard NestJS response format
+      if (data.accessToken && data.user) {
+        return {
+          accessToken: data.accessToken,
+          user: data.user,
+        };
       }
 
       throw new Error("Invalid response format from login endpoint");

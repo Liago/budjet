@@ -1,50 +1,53 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, UseGuards } from "@nestjs/common";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 
-@ApiTags('debug')
-@Controller('debug')
+@ApiTags("debug")
+@Controller("debug")
 export class DebugController {
-  
   // Endpoint NON protetto per test di base
-  @Get('health')
+  @Get("health")
   getHealth() {
     return {
-      status: 'OK',
+      status: "OK",
       timestamp: new Date().toISOString(),
-      message: 'Debug controller is working'
+      message: "Debug controller is working",
+      nestjsApp: "initialized",
+      environment: process.env.NODE_ENV,
+      hasDatabase: !!process.env.DATABASE_URL,
+      hasJwtSecret: !!process.env.JWT_SECRET,
     };
   }
 
   // Endpoint protetto SENZA PrismaService per testare solo JWT
-  @Get('auth-test')
+  @Get("auth-test")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   getAuthTest() {
     return {
-      status: 'OK',
+      status: "OK",
       timestamp: new Date().toISOString(),
-      message: 'JWT authentication is working',
-      authenticated: true
+      message: "JWT authentication is working",
+      authenticated: true,
     };
   }
 
   // Endpoint che testa il problema specifico
-  @Get('minimal')
+  @Get("minimal")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   getMinimalTest() {
     try {
       return {
-        status: 'OK',
+        status: "OK",
         timestamp: new Date().toISOString(),
-        message: 'Minimal protected endpoint working'
+        message: "Minimal protected endpoint working",
       };
     } catch (error) {
       return {
-        status: 'ERROR',
+        status: "ERROR",
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       };
     }
   }
