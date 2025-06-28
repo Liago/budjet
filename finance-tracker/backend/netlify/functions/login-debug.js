@@ -8,11 +8,12 @@ const jwt = require('jsonwebtoken');
  */
 
 exports.handler = async (event, context) => {
-  // CORS headers
+  // CORS headers - Updated for better compatibility
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept, X-Requested-With",
+    "Access-Control-Allow-Credentials": "true",
     "Content-Type": "application/json"
   };
 

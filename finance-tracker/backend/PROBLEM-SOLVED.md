@@ -11,13 +11,15 @@ Tutti gli endpoint (tranne login) restituivano **500 Internal Server Error** per
 
 ### 1. 🔧 Sistemato UsersService (PRINCIPALE)
 
-**PRIMA:**   
+**PRIMA:**
+
 ```typescript
 // ❌ Injection personalizzato inconsistente
 constructor(@Inject(DATABASE_PROVIDER) private db: PrismaService)
 ```
 
 **DOPO:**
+
 ```typescript
 // ✅ Injection standard come tutti gli altri service
 constructor(private prisma: PrismaService)
@@ -26,6 +28,7 @@ constructor(private prisma: PrismaService)
 ### 2. 🛠️ Aggiunto Debug Module
 
 Creato `DebugModule` per test isolati:
+
 - `/api/debug/health` - Test base (non protetto)
 - `/api/debug/auth-test` - Test JWT (protetto)
 - `/api/debug/minimal` - Test minimo con error handling
@@ -77,7 +80,7 @@ Se ancora vedi errori 500:
 
 - ✅ `src/users/users.service.ts` - Injection sistemato
 - ✅ `src/debug/debug.controller.ts` - Nuovo modulo test
-- ✅ `src/debug/debug.module.ts` - Nuovo modulo test  
+- ✅ `src/debug/debug.module.ts` - Nuovo modulo test
 - ✅ `src/app.module.ts` - Aggiunto DebugModule
 - ✅ `test-local-500.js` - Script di test
 
@@ -86,3 +89,41 @@ Se ancora vedi errori 500:
 Il problema era nell'**inconsistenza del dependency injection pattern**. Il login funzionava perché non dipendeva dai service problematici, ma tutti gli endpoint protetti fallivano durante la validazione JWT che usa UsersService.
 
 **🎉 Ora tutti gli endpoint dovrebbero funzionare correttamente!**
+
+---
+
+## 🚀 AGGIORNAMENTO CORS - LOGIN-DEBUG FIX
+
+### 🚨 NUOVO PROBLEMA RISOLTO (Dicembre 2024)
+
+**Problema**: La funzione `login-debug` presentava errori CORS in produzione.
+
+**Causa**: URL malformato nel frontend che generava path doppio:
+
+- ❌ `https://bud-jet-be.netlify.app/.netlify/functions//.netlify/functions/login-debug`
+- ✅ `https://bud-jet-be.netlify.app/.netlify/functions/login-debug`
+
+### ✅ SOLUZIONE IMPLEMENTATA
+
+**Frontend Fix** (`apiServices.ts`):
+
+```typescript
+// PRIMA (SBAGLIATO)
+? `${API_URL.replace("/api", "")}/.netlify/functions/login-debug`
+
+// DOPO (CORRETTO)
+? `${API_URL.replace("/.netlify/functions/api", "")}/.netlify/functions/login-debug`
+```
+
+**Backend Enhancement** (`login-debug.js`):
+
+- Aggiunti header CORS più completi
+- Migliorata gestione preflight requests
+
+### 🔍 VERIFICA FUNZIONAMENTO
+
+1. **Frontend**: Il login ora dovrebbe funzionare senza errori CORS
+2. **URL corretto**: `https://bud-jet-be.netlify.app/.netlify/functions/login-debug`
+3. **Headers**: Tutti i CORS headers sono configurati correttamente
+
+---
