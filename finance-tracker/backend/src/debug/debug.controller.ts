@@ -1,6 +1,8 @@
 import { Controller, Get, UseGuards, Post, Body } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import * as bcrypt from "bcryptjs";
+import * as jwt from "jsonwebtoken";
 
 @ApiTags("debug")
 @Controller("debug")
@@ -109,8 +111,6 @@ export class DebugController {
     try {
       // Usa PrismaClient direttamente
       const { PrismaClient } = await import("@prisma/client");
-      const bcrypt = await import("bcryptjs");
-      const jwt = await import("jsonwebtoken");
 
       const prisma = new PrismaClient();
       await prisma.$connect();
