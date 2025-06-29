@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 class NotificationService {
   private static instance: NotificationService;
-  private BASE_URL = "/notifications";
+  private BASE_URL = "/direct/notifications"; // 🔧 Use direct endpoint
 
   private constructor() {
     // No initialization needed for real backend service

@@ -71,10 +71,10 @@ export const authService = {
   register: (userData: RegisterData) =>
     apiService.post<AuthResponse>("/auth/register", userData),
 
-  getCurrentUser: () => apiService.get<User>("/users/me"),
+  getCurrentUser: () => apiService.get<User>("/direct/users/me"), // 🔧 Use direct endpoint
 
   updateProfile: (userData: Partial<User>) =>
-    apiService.patch<User>("/users/me", userData),
+    apiService.patch<User>("/users/me", userData), // Keep original for updates
 };
 
 // Category Service
@@ -195,7 +195,8 @@ export const dashboardService = {
 
 // Recurrent Payment Service
 export const recurrentPaymentService = {
-  getAll: () => apiService.get<RecurrentPayment[]>("/recurrent-payments"),
+  getAll: () =>
+    apiService.get<RecurrentPayment[]>("/direct/recurrent-payments"), // 🔧 Use direct endpoint
 
   getById: (id: string) =>
     apiService.get<RecurrentPayment>(`/recurrent-payments/${id}`),
@@ -210,6 +211,10 @@ export const recurrentPaymentService = {
     ),
 
   delete: (id: string) => apiService.delete<void>(`/recurrent-payments/${id}`),
+
+  // 🔧 NEW: Last execution endpoint (direct)
+  getLastExecution: () =>
+    apiService.get("/direct/recurrent-payments/last-execution"),
 };
 
 // SavingsGoals service methods

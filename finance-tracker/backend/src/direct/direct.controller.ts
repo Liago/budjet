@@ -183,4 +183,119 @@ export class DirectController {
       };
     }
   }
+
+  // 🚀 NOTIFICATIONS COUNT - Direct endpoint
+  @Get("notifications/unread/count")
+  async getUnreadNotificationsCount() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const count = await prisma.notification.count({
+        where: { read: false },
+      });
+
+      await prisma.$disconnect();
+
+      return { count };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 USERS/ME - Direct endpoint
+  @Get("users/me")
+  async getCurrentUser() {
+    try {
+      // Note: In a real app, you'd get user ID from JWT token
+      // For now, return a basic user info
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Get first user as example (in real app, extract from JWT)
+      const user = await prisma.user.findFirst({
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          createdAt: true,
+        },
+      });
+
+      await prisma.$disconnect();
+
+      return user || { error: "User not found" };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 RECURRENT PAYMENTS - Direct endpoint
+  @Get("recurrent-payments")
+  async getRecurrentPayments() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const payments = await prisma.recurrentPayment.findMany({
+        include: {
+          category: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      await prisma.$disconnect();
+
+      return payments;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 RECURRENT PAYMENTS LAST EXECUTION - Direct endpoint
+  @Get("recurrent-payments/last-execution")
+  async getLastExecution() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Get most recent execution info
+      const lastExecution = await prisma.recurrentPayment.findFirst({
+        where: {
+          lastExecution: { not: null },
+        },
+        orderBy: { lastExecution: "desc" },
+        select: {
+          id: true,
+          description: true,
+          amount: true,
+          lastExecution: true,
+          nextExecution: true,
+        },
+      });
+
+      await prisma.$disconnect();
+
+      return lastExecution || { message: "No executions found" };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
 }
