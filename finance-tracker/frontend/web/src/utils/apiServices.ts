@@ -79,7 +79,7 @@ export const authService = {
 
 // Category Service
 export const categoryService = {
-  getAll: () => apiService.get<Category[]>("/categories"),
+  getAll: () => apiService.get<Category[]>("/direct/categories"), // 🔧 Use direct endpoint
 
   getById: (id: string) => apiService.get<Category>(`/categories/${id}`),
 
@@ -95,7 +95,10 @@ export const categoryService = {
 // Transaction Service
 export const transactionService = {
   getAll: (filters?: TransactionFilters) =>
-    apiService.get<PaginatedResponse<Transaction>>("/transactions", filters),
+    apiService.get<PaginatedResponse<Transaction>>(
+      "/direct/transactions",
+      filters
+    ), // 🔧 Use direct endpoint
 
   getById: (id: string) => apiService.get<Transaction>(`/transactions/${id}`),
 
@@ -130,7 +133,7 @@ export const dashboardService = {
   // Ottieni le statistiche del dashboard
   getStats: async (startDate?: string, endDate?: string) => {
     const params = { startDate, endDate };
-    const response = await apiService.get("/dashboard/stats", params);
+    const response = await apiService.get("/direct/stats", params); // 🔧 Use direct endpoint
     return response;
   },
 
