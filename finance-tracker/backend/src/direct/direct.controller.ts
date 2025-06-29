@@ -135,8 +135,8 @@ export class DirectController {
       ]);
 
       // Calculate balance
-      const totalIncome = income._sum.amount || 0;
-      const totalExpenses = Math.abs(expenses._sum.amount || 0);
+      const totalIncome = Number(income._sum.amount || 0);
+      const totalExpenses = Math.abs(Number(expenses._sum.amount || 0));
       const balance = totalIncome - totalExpenses;
 
       await prisma.$disconnect();
