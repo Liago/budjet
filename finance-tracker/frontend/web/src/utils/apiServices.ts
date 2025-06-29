@@ -215,6 +215,9 @@ export const recurrentPaymentService = {
   // 🔧 NEW: Last execution endpoint (direct)
   getLastExecution: () =>
     apiService.get("/direct/recurrent-payments/last-execution"),
+
+  // 🔧 NEW: Execute recurrent payments (direct)
+  execute: () => apiService.post("/direct/recurrent-payments/execute", {}),
 };
 
 // SavingsGoals service methods

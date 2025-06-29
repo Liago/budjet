@@ -1,6 +1,19 @@
 import { Controller, Get, Post, Body, Param, Query } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 
+// Interface for execution result
+interface ExecutionResult {
+  processedPayments: number;
+  createdTransactions: number;
+  totalAmount: number;
+  executionDate: Date;
+  details: {
+    paymentName: string;
+    amount: number;
+    nextDate: Date;
+  }[];
+}
+
 @ApiTags("direct")
 @Controller("direct")
 export class DirectController {
@@ -299,5 +312,161 @@ export class DirectController {
         timestamp: new Date().toISOString(),
       };
     }
+  }
+
+  // 🚀 RECURRENT PAYMENTS EXECUTE - Direct endpoint
+  @Post("recurrent-payments/execute")
+  async executeRecurrentPayments(): Promise<
+    ExecutionResult | { error: string }
+  > {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const result: ExecutionResult = {
+        processedPayments: 0,
+        createdTransactions: 0,
+        totalAmount: 0,
+        executionDate: new Date(),
+        details: [],
+      };
+
+      // Find all active recurrent payments that are due today
+      const duePayments = await prisma.recurrentPayment.findMany({
+        where: {
+          isActive: true,
+          nextPaymentDate: {
+            lt: new Date(today.getTime() + 24 * 60 * 60 * 1000), // Include payments due until the end of today
+          },
+        },
+        include: {
+          category: true,
+        },
+      });
+
+      result.processedPayments = duePayments.length;
+
+      // Create execution log
+      const executionLog = await prisma.automaticExecutionLog.create({
+        data: {
+          executionDate: result.executionDate,
+          processedPayments: result.processedPayments,
+          createdTransactions: 0, // Will be updated later
+          totalAmount: 0, // Will be updated later
+          details: "[]", // Will be updated later
+        },
+      });
+
+      // Process each payment
+      for (const payment of duePayments) {
+        // Create transaction
+        await prisma.transaction.create({
+          data: {
+            amount: payment.amount,
+            description: `${payment.name} - Pagamento automatico`,
+            date: today,
+            type: "EXPENSE", // TransactionType.EXPENSE
+            categoryId: payment.categoryId,
+            userId: payment.userId,
+            executionLogId: executionLog.id,
+          },
+        });
+
+        // Calculate next payment date
+        const nextDate = this.calculateNextPaymentDate(
+          payment.nextPaymentDate,
+          payment.interval,
+          payment.dayOfMonth,
+          payment.dayOfWeek
+        );
+
+        // Update next payment date
+        await prisma.recurrentPayment.update({
+          where: { id: payment.id },
+          data: { nextPaymentDate: nextDate },
+        });
+
+        // Add to result details
+        const transactionDetails = {
+          paymentName: payment.name,
+          amount: Number(payment.amount),
+          nextDate,
+        };
+        result.details.push(transactionDetails);
+
+        result.createdTransactions++;
+        result.totalAmount += Number(payment.amount);
+      }
+
+      // Update execution log with final results
+      if (result.processedPayments > 0) {
+        await prisma.automaticExecutionLog.update({
+          where: { id: executionLog.id },
+          data: {
+            createdTransactions: result.createdTransactions,
+            totalAmount: result.totalAmount,
+            details: JSON.stringify(result.details),
+          },
+        });
+      }
+
+      await prisma.$disconnect();
+      return result;
+    } catch (error) {
+      return {
+        error: error.message,
+      };
+    }
+  }
+
+  // Helper method to calculate next payment date
+  private calculateNextPaymentDate(
+    currentDate: Date,
+    interval: string,
+    dayOfMonth?: number,
+    dayOfWeek?: number
+  ): Date {
+    const nextDate = new Date(currentDate);
+
+    switch (interval) {
+      case "daily":
+        nextDate.setDate(nextDate.getDate() + 1);
+        break;
+
+      case "weekly":
+        if (dayOfWeek !== undefined) {
+          const currentDayOfWeek = nextDate.getDay();
+          let daysToAdd = dayOfWeek - currentDayOfWeek;
+          if (daysToAdd <= 0) {
+            daysToAdd += 7;
+          }
+          nextDate.setDate(nextDate.getDate() + daysToAdd);
+        } else {
+          nextDate.setDate(nextDate.getDate() + 7);
+        }
+        break;
+
+      case "monthly":
+        if (dayOfMonth !== undefined) {
+          nextDate.setMonth(nextDate.getMonth() + 1);
+          nextDate.setDate(dayOfMonth);
+        } else {
+          nextDate.setMonth(nextDate.getMonth() + 1);
+        }
+        break;
+
+      case "yearly":
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+        break;
+
+      default:
+        break;
+    }
+
+    return nextDate;
   }
 }
