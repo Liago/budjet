@@ -193,7 +193,7 @@ export class DirectController {
       await prisma.$connect();
 
       const count = await prisma.notification.count({
-        where: { read: false },
+        where: { isRead: false },
       });
 
       await prisma.$disconnect();
@@ -265,7 +265,7 @@ export class DirectController {
     }
   }
 
-  // 🚀 RECURRENT PAYMENTS LAST EXECUTION - Direct endpoint
+  // 🚀 RECURRENT PAYMENTS NEXT - Direct endpoint (fixed schema)
   @Get("recurrent-payments/last-execution")
   async getLastExecution() {
     try {
@@ -273,24 +273,26 @@ export class DirectController {
       const prisma = new PrismaClient();
       await prisma.$connect();
 
-      // Get most recent execution info
-      const lastExecution = await prisma.recurrentPayment.findFirst({
+      // Get next upcoming payment (since lastExecution doesn't exist in schema)
+      const nextPayment = await prisma.recurrentPayment.findFirst({
         where: {
-          lastExecution: { not: null },
+          isActive: true,
+          nextPaymentDate: { gte: new Date() },
         },
-        orderBy: { lastExecution: "desc" },
+        orderBy: { nextPaymentDate: "asc" },
         select: {
           id: true,
+          name: true,
           description: true,
           amount: true,
-          lastExecution: true,
-          nextExecution: true,
+          nextPaymentDate: true,
+          interval: true,
         },
       });
 
       await prisma.$disconnect();
 
-      return lastExecution || { message: "No executions found" };
+      return nextPayment || { message: "No upcoming payments found" };
     } catch (error) {
       return {
         error: error.message,
