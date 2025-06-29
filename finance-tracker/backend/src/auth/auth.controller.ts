@@ -42,12 +42,18 @@ export class AuthController {
     });
 
     try {
+      // 🔧 FIX: Use PrismaClient directly like test-login (which works)
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
       // Direct database access
-      const user = await this.prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { email: loginDto.email },
       });
 
       if (!user) {
+        await prisma.$disconnect();
         console.log("❌ User not found");
         return {
           success: false,
@@ -63,6 +69,7 @@ export class AuthController {
       );
 
       if (!isPasswordValid) {
+        await prisma.$disconnect();
         console.log("❌ Invalid password");
         return {
           success: false,
@@ -86,6 +93,7 @@ export class AuthController {
         { expiresIn: "24h" }
       );
 
+      await prisma.$disconnect();
       console.log("✅ DIRECT-LOGIN successful");
 
       return {
