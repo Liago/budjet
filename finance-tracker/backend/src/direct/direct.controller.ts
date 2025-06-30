@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Query } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Patch,
+  Delete,
+} from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 
 // Interface for execution result
@@ -468,5 +477,262 @@ export class DirectController {
     }
 
     return nextDate;
+  }
+
+  // 🚀 CATEGORIES CRUD - Direct endpoints
+  @Post("categories")
+  async createCategory(@Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const category = await prisma.category.create({
+        data: {
+          name: body.name,
+          icon: body.icon || null,
+          color: body.color || null,
+          budget: body.budget ? Number(body.budget) : null,
+          userId: body.userId, // In real app, get from JWT token
+        },
+      });
+
+      await prisma.$disconnect();
+      return category;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Patch("categories/:id")
+  async updateCategory(@Param("id") id: string, @Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const category = await prisma.category.update({
+        where: { id },
+        data: {
+          name: body.name,
+          icon: body.icon,
+          color: body.color,
+          budget: body.budget ? Number(body.budget) : null,
+        },
+      });
+
+      await prisma.$disconnect();
+      return category;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Delete("categories/:id")
+  async deleteCategory(@Param("id") id: string) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      await prisma.category.delete({
+        where: { id },
+      });
+
+      await prisma.$disconnect();
+      return { message: "Category deleted successfully" };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 TRANSACTIONS CRUD - Direct endpoints
+  @Post("transactions")
+  async createTransaction(@Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const transaction = await prisma.transaction.create({
+        data: {
+          amount: Number(body.amount),
+          description: body.description || null,
+          date: new Date(body.date),
+          type: body.type,
+          categoryId: body.categoryId,
+          userId: body.userId, // In real app, get from JWT token
+        },
+        include: {
+          category: true,
+        },
+      });
+
+      await prisma.$disconnect();
+      return transaction;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Patch("transactions/:id")
+  async updateTransaction(@Param("id") id: string, @Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const transaction = await prisma.transaction.update({
+        where: { id },
+        data: {
+          amount: body.amount ? Number(body.amount) : undefined,
+          description: body.description,
+          date: body.date ? new Date(body.date) : undefined,
+          type: body.type,
+          categoryId: body.categoryId,
+        },
+        include: {
+          category: true,
+        },
+      });
+
+      await prisma.$disconnect();
+      return transaction;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Delete("transactions/:id")
+  async deleteTransaction(@Param("id") id: string) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      await prisma.transaction.delete({
+        where: { id },
+      });
+
+      await prisma.$disconnect();
+      return { message: "Transaction deleted successfully" };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 RECURRENT PAYMENTS CRUD - Direct endpoints
+  @Post("recurrent-payments")
+  async createRecurrentPayment(@Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const payment = await prisma.recurrentPayment.create({
+        data: {
+          name: body.name,
+          amount: Number(body.amount),
+          description: body.description || null,
+          interval: body.interval,
+          dayOfMonth: body.dayOfMonth || null,
+          dayOfWeek: body.dayOfWeek || null,
+          startDate: new Date(body.startDate),
+          endDate: body.endDate ? new Date(body.endDate) : null,
+          nextPaymentDate: new Date(body.nextPaymentDate || body.startDate),
+          categoryId: body.categoryId,
+          userId: body.userId, // In real app, get from JWT token
+        },
+        include: {
+          category: true,
+        },
+      });
+
+      await prisma.$disconnect();
+      return payment;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Patch("recurrent-payments/:id")
+  async updateRecurrentPayment(@Param("id") id: string, @Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const payment = await prisma.recurrentPayment.update({
+        where: { id },
+        data: {
+          name: body.name,
+          amount: body.amount ? Number(body.amount) : undefined,
+          description: body.description,
+          interval: body.interval,
+          dayOfMonth: body.dayOfMonth,
+          dayOfWeek: body.dayOfWeek,
+          startDate: body.startDate ? new Date(body.startDate) : undefined,
+          endDate: body.endDate ? new Date(body.endDate) : undefined,
+          nextPaymentDate: body.nextPaymentDate
+            ? new Date(body.nextPaymentDate)
+            : undefined,
+          isActive: body.isActive,
+          categoryId: body.categoryId,
+        },
+        include: {
+          category: true,
+        },
+      });
+
+      await prisma.$disconnect();
+      return payment;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Delete("recurrent-payments/:id")
+  async deleteRecurrentPayment(@Param("id") id: string) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      await prisma.recurrentPayment.delete({
+        where: { id },
+      });
+
+      await prisma.$disconnect();
+      return { message: "Recurrent payment deleted successfully" };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 }

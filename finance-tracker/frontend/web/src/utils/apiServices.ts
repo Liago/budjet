@@ -84,12 +84,12 @@ export const categoryService = {
   getById: (id: string) => apiService.get<Category>(`/categories/${id}`),
 
   create: (categoryData: CreateCategoryData) =>
-    apiService.post<Category>("/categories", categoryData),
+    apiService.post<Category>("/direct/categories", categoryData), // 🔧 Use direct endpoint
 
   update: (id: string, categoryData: UpdateCategoryData) =>
-    apiService.patch<Category>(`/categories/${id}`, categoryData),
+    apiService.patch<Category>(`/direct/categories/${id}`, categoryData), // 🔧 Use direct endpoint
 
-  delete: (id: string) => apiService.delete<void>(`/categories/${id}`),
+  delete: (id: string) => apiService.delete<void>(`/direct/categories/${id}`), // 🔧 Use direct endpoint
 };
 
 // Transaction Service
@@ -103,12 +103,15 @@ export const transactionService = {
   getById: (id: string) => apiService.get<Transaction>(`/transactions/${id}`),
 
   create: (transactionData: CreateTransactionData) =>
-    apiService.post<Transaction>("/transactions", transactionData),
+    apiService.post<Transaction>("/direct/transactions", transactionData), // 🔧 Use direct endpoint
 
   update: (id: string, transactionData: UpdateTransactionData) =>
-    apiService.patch<Transaction>(`/transactions/${id}`, transactionData),
+    apiService.patch<Transaction>(
+      `/direct/transactions/${id}`,
+      transactionData
+    ), // 🔧 Use direct endpoint
 
-  delete: (id: string) => apiService.delete<void>(`/transactions/${id}`),
+  delete: (id: string) => apiService.delete<void>(`/direct/transactions/${id}`), // 🔧 Use direct endpoint
 
   // Aggiorna multiple transazioni contemporaneamente
   bulkUpdate: (ids: string[], updateData: Partial<UpdateTransactionData>) =>
@@ -202,15 +205,19 @@ export const recurrentPaymentService = {
     apiService.get<RecurrentPayment>(`/recurrent-payments/${id}`),
 
   create: (paymentData: CreateRecurrentPaymentData) =>
-    apiService.post<RecurrentPayment>("/recurrent-payments", paymentData),
+    apiService.post<RecurrentPayment>(
+      "/direct/recurrent-payments",
+      paymentData
+    ), // 🔧 Use direct endpoint
 
   update: (id: string, paymentData: UpdateRecurrentPaymentData) =>
     apiService.patch<RecurrentPayment>(
-      `/recurrent-payments/${id}`,
+      `/direct/recurrent-payments/${id}`,
       paymentData
-    ),
+    ), // 🔧 Use direct endpoint
 
-  delete: (id: string) => apiService.delete<void>(`/recurrent-payments/${id}`),
+  delete: (id: string) =>
+    apiService.delete<void>(`/direct/recurrent-payments/${id}`), // 🔧 Use direct endpoint
 
   // 🔧 NEW: Last execution endpoint (direct)
   getLastExecution: () =>
