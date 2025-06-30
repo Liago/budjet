@@ -26,6 +26,47 @@ interface ExecutionResult {
 @ApiTags("direct")
 @Controller("direct")
 export class DirectController {
+  // 🚀 DEBUG ENDPOINT - Temporary for debugging
+  @Get("debug-data")
+  async getDebugData() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Get sample transactions with amounts
+      const transactions = await prisma.transaction.findMany({
+        take: 10,
+        orderBy: { date: "desc" },
+        include: { category: true },
+      });
+
+      // Get amount statistics
+      const [positiveCount, negativeCount, totalCount] = await Promise.all([
+        prisma.transaction.count({ where: { amount: { gt: 0 } } }),
+        prisma.transaction.count({ where: { amount: { lt: 0 } } }),
+        prisma.transaction.count(),
+      ]);
+
+      await prisma.$disconnect();
+
+      return {
+        sampleTransactions: transactions,
+        stats: {
+          totalTransactions: totalCount,
+          positiveAmounts: positiveCount,
+          negativeAmounts: negativeCount,
+        },
+        analysis: {
+          issue:
+            "If negativeAmounts = 0, then all expenses are saved as positive values",
+        },
+      };
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+
   // 🚀 CATEGORIES - Direct endpoint
   @Get("categories")
   async getCategories() {
@@ -59,6 +100,7 @@ export class DirectController {
   async getTransactions(
     @Query("startDate") startDate?: string,
     @Query("endDate") endDate?: string,
+    @Query("categoryId") categoryId?: string,
     @Query("page") page = "1",
     @Query("limit") limit = "50"
   ) {
@@ -78,6 +120,11 @@ export class DirectController {
           gte: new Date(startDate),
           lte: new Date(endDate),
         };
+      }
+
+      // Add category filter
+      if (categoryId && categoryId !== "all") {
+        where.categoryId = categoryId;
       }
 
       // Get transactions with relations
@@ -103,7 +150,7 @@ export class DirectController {
           total,
           page: pageNum,
           limit: limitNum,
-          pages: Math.ceil(total / limitNum),
+          totalPages: Math.ceil(total / limitNum),
         },
       };
     } catch (error) {
@@ -111,6 +158,83 @@ export class DirectController {
         error: error.message,
         timestamp: new Date().toISOString(),
       };
+    }
+  }
+
+  // 🚀 CATEGORY SPENDING STATS - Direct endpoint
+  @Get("category-spending")
+  async getCategorySpending(
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string
+  ) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Default to current month if no dates provided
+      const start = startDate
+        ? new Date(startDate)
+        : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const end = endDate
+        ? new Date(endDate)
+        : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+      // Get spending by category
+      const categorySpending = await prisma.transaction.groupBy({
+        by: ["categoryId"],
+        where: {
+          date: { gte: start, lte: end },
+          type: "EXPENSE",
+        },
+        _sum: { amount: true },
+        _count: { id: true },
+      });
+
+      // Get category details
+      const categoriesData = await Promise.all(
+        categorySpending.map(async (item) => {
+          const category = await prisma.category.findUnique({
+            where: { id: item.categoryId },
+            select: { id: true, name: true, color: true, budget: true },
+          });
+
+          return {
+            categoryId: item.categoryId,
+            categoryName: category?.name || "Unknown",
+            color: category?.color || "#999999",
+            budget: Number(category?.budget || 0),
+            spent: Number(item._sum.amount || 0),
+            transactionCount: item._count.id,
+          };
+        })
+      );
+
+      await prisma.$disconnect();
+      return categoriesData.sort((a, b) => b.spent - a.spent);
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+
+  // 🚀 RECENT TRANSACTIONS - Direct endpoint
+  @Get("recent-transactions")
+  async getRecentTransactions(@Query("limit") limit = "5") {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const transactions = await prisma.transaction.findMany({
+        take: parseInt(limit),
+        orderBy: { date: "desc" },
+        include: { category: true },
+      });
+
+      await prisma.$disconnect();
+      return transactions;
+    } catch (error) {
+      return { error: error.message };
     }
   }
 
@@ -133,7 +257,7 @@ export class DirectController {
         ? new Date(endDate)
         : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
-      // Get basic stats
+      // Get basic stats using transaction TYPE instead of amount sign
       const [transactions, income, expenses] = await Promise.all([
         prisma.transaction.count({
           where: {
@@ -143,22 +267,22 @@ export class DirectController {
         prisma.transaction.aggregate({
           where: {
             date: { gte: start, lte: end },
-            amount: { gt: 0 },
+            type: "INCOME",
           },
           _sum: { amount: true },
         }),
         prisma.transaction.aggregate({
           where: {
             date: { gte: start, lte: end },
-            amount: { lt: 0 },
+            type: "EXPENSE",
           },
           _sum: { amount: true },
         }),
       ]);
 
-      // Calculate balance
+      // Calculate balance (all amounts are positive, so expenses are subtracted)
       const totalIncome = Number(income._sum.amount || 0);
-      const totalExpenses = Math.abs(Number(expenses._sum.amount || 0));
+      const totalExpenses = Number(expenses._sum.amount || 0);
       const balance = totalIncome - totalExpenses;
 
       await prisma.$disconnect();
@@ -221,6 +345,99 @@ export class DirectController {
       await prisma.$disconnect();
 
       return { count };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 NOTIFICATION MARK AS READ - Direct endpoint
+  @Patch("notifications/:id/read")
+  async markNotificationAsRead(@Param("id") id: string) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Update notification to mark as read
+      const updatedNotification = await prisma.notification.update({
+        where: { id: id },
+        data: {
+          isRead: true,
+        },
+      });
+
+      await prisma.$disconnect();
+
+      return {
+        success: true,
+        notification: updatedNotification,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 MARK ALL NOTIFICATIONS AS READ - Direct endpoint (PATCH)
+  @Patch("notifications/mark-all-read")
+  async markAllNotificationsAsRead() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Update all unread notifications
+      const result = await prisma.notification.updateMany({
+        where: { isRead: false },
+        data: {
+          isRead: true,
+        },
+      });
+
+      await prisma.$disconnect();
+
+      return {
+        success: true,
+        updatedCount: result.count,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 MARK ALL NOTIFICATIONS AS READ - Direct endpoint (POST - Frontend compatibility)
+  @Post("notifications/read-all")
+  async markAllNotificationsAsReadPost() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Update all unread notifications
+      const result = await prisma.notification.updateMany({
+        where: { isRead: false },
+        data: {
+          isRead: true,
+        },
+      });
+
+      await prisma.$disconnect();
+
+      return {
+        success: true,
+        updatedCount: result.count,
+        timestamp: new Date().toISOString(),
+      };
     } catch (error) {
       return {
         error: error.message,

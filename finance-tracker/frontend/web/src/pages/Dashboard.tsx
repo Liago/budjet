@@ -60,6 +60,8 @@ const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardStatsType | null>(
     null
   );
+  const [categorySpending, setCategorySpending] = useState<any[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   // State per controllo visualizzazione debug info
@@ -91,26 +93,40 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchDashboardStats = async () => {
+    const fetchDashboardData = async () => {
       setIsLoadingDashboard(true);
       setDashboardError(null);
 
       try {
-        const data = await dashboardService.getStats(
-          startDateFormatted,
-          endDateFormatted
-        );
+        // 🔧 Fetch multiple dashboard endpoints in parallel
+        const [statsData, categorySpendingData, recentTransactionsData] =
+          await Promise.all([
+            dashboardService.getStats(startDateFormatted, endDateFormatted),
+            dashboardService.getCategorySpending(
+              startDateFormatted,
+              endDateFormatted
+            ),
+            dashboardService.getRecentTransactions(5),
+          ]);
 
-        setDashboardData(data as DashboardStatsType);
+        setDashboardData(statsData as DashboardStatsType);
+        setCategorySpending(categorySpendingData || []);
+        setRecentTransactions(recentTransactionsData || []);
+
+        console.log("🎯 Dashboard data loaded successfully:", {
+          stats: statsData,
+          categorySpending: categorySpendingData,
+          recentTransactions: recentTransactionsData,
+        });
       } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-        setDashboardError("Failed to load dashboard statistics");
+        console.error("Error fetching dashboard data:", error);
+        setDashboardError("Failed to load dashboard data");
       } finally {
         setIsLoadingDashboard(false);
       }
     };
 
-    fetchDashboardStats();
+    fetchDashboardData();
 
     // Fetch also transactions for charts and other components that need raw data
     const filters = {
@@ -152,6 +168,37 @@ const Dashboard: React.FC = () => {
 
     return numAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
+
+  // Calculate budget data from categorySpending
+  const budgetData = useMemo(() => {
+    if (!categorySpending || categorySpending.length === 0) {
+      return {
+        totalBudget: 0,
+        totalSpent: 0,
+        budgetRemaining: 0,
+        budgetPercentage: 0,
+      };
+    }
+
+    const totalBudget = categorySpending.reduce(
+      (sum, cat) => sum + (cat.budget || 0),
+      0
+    );
+    const totalSpent = categorySpending.reduce(
+      (sum, cat) => sum + (cat.spent || 0),
+      0
+    );
+    const budgetRemaining = Math.max(0, totalBudget - totalSpent);
+    const budgetPercentage =
+      totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
+
+    return {
+      totalBudget,
+      totalSpent,
+      budgetRemaining,
+      budgetPercentage,
+    };
+  }, [categorySpending]);
 
   // Get chart data from custom hook
   const { monthlyData, balanceData, dailySpending } = useDashboardCharts(
@@ -432,61 +479,66 @@ const Dashboard: React.FC = () => {
             <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <DashboardStats
                 totalIncome={dashboardData?.totalIncome ?? 0}
-                totalExpense={dashboardData?.totalExpense ?? 0}
-                totalBudget={dashboardData?.totalBudget ?? 0}
-                budgetRemaining={dashboardData?.budgetRemaining ?? 0}
-                budgetPercentage={dashboardData?.budgetPercentage ?? 0}
+                totalExpense={dashboardData?.totalExpenses ?? 0}
+                totalBudget={budgetData.totalBudget}
+                budgetRemaining={budgetData.budgetRemaining}
+                budgetPercentage={budgetData.budgetPercentage}
                 formatAmount={formatAmount}
               />
             </div>
 
             {/* Top Spending Category Card */}
-            {dashboardData?.categories &&
-              dashboardData.categories.length > 0 && (
-                <div className="lg:col-span-1">
-                  {(() => {
-                    // Troviamo la categoria con la spesa maggiore
-                    const sortedCategories = [...dashboardData.categories]
-                      .filter((cat) => cat.amount > 0)
-                      .sort((a, b) => b.amount - a.amount);
+            {categorySpending && categorySpending.length > 0 && (
+              <div className="lg:col-span-1">
+                {(() => {
+                  // Troviamo la categoria con la spesa maggiore dai nuovi dati
+                  const topCategory = categorySpending[0]; // Già ordinato dal backend
 
-                    if (sortedCategories.length === 0) {
-                      return (
-                        <div className="bg-white overflow-hidden shadow rounded-lg p-6">
-                          <p className="text-gray-500">
-                            Nessuna categoria di spesa
-                          </p>
-                        </div>
-                      );
-                    }
-
-                    const topCategory = sortedCategories[0];
-
+                  if (!topCategory) {
                     return (
-                      <TopSpendingCategory
-                        categoryName={topCategory.categoryName}
-                        categoryColor={topCategory.categoryColor}
-                        amount={topCategory.amount}
-                        percentage={topCategory.percentage}
-                        formatAmount={formatAmount}
-                      />
+                      <div className="bg-white overflow-hidden shadow rounded-lg p-6">
+                        <p className="text-gray-500">
+                          Nessuna categoria di spesa
+                        </p>
+                      </div>
                     );
-                  })()}
-                </div>
-              )}
+                  }
+
+                  return (
+                    <TopSpendingCategory
+                      categoryName={topCategory.categoryName}
+                      categoryColor={topCategory.color}
+                      amount={topCategory.spent}
+                      percentage={Math.round(
+                        (topCategory.spent / topCategory.budget) * 100
+                      )}
+                      formatAmount={formatAmount}
+                    />
+                  );
+                })()}
+              </div>
+            )}
           </div>
 
           {/* Charts Grid - 4 colonne per schermi medi e grandi */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Prima riga di grafici */}
             <ExpensePieChart
-              expensesByCategory={(dashboardData?.categories || []).map(
-                (cat) => ({
-                  id: parseInt(cat.categoryId) || 0,
+              expensesByCategory={(categorySpending || []).map(
+                (cat, index) => ({
+                  id: index,
                   name: cat.categoryName || "Categoria sconosciuta",
-                  value: cat.amount || 0,
-                  color: cat.categoryColor || "#cccccc",
-                  percentage: cat.percentage || 0,
+                  value: cat.spent || 0,
+                  color: cat.color || "#cccccc",
+                  percentage:
+                    Math.round(
+                      (cat.spent /
+                        categorySpending.reduce(
+                          (total, c) => total + c.spent,
+                          0
+                        )) *
+                        100
+                    ) || 0,
                 })
               )}
               formatAmount={formatAmount}
@@ -507,35 +559,33 @@ const Dashboard: React.FC = () => {
             {/* Seconda riga di grafici */}
             <div className="md:col-span-2">
               <RecentTransactions
-                transactions={
-                  dashboardData?.recentTransactions?.slice(0, 5) || []
-                }
+                transactions={recentTransactions || []}
                 formatAmount={formatAmount}
               />
             </div>
             <div className="md:col-span-1">
               <TopCategoriesChart
-                topCategories={(dashboardData?.categories || [])
+                topCategories={(categorySpending || [])
                   .slice(0, 5)
                   .map((cat) => ({
                     name: cat.categoryName,
-                    amount: cat.amount,
-                    color: cat.categoryColor,
+                    amount: cat.spent,
+                    color: cat.color,
                   }))}
                 formatAmount={formatAmount}
               />
             </div>
             <div className="md:col-span-1">
               <BudgetCategoryProgress
-                budgetCategories={(dashboardData?.categories || [])
+                budgetCategories={(categorySpending || [])
                   .filter((cat) => cat.budget && cat.budget > 0)
-                  .map((cat) => ({
-                    id: parseInt(cat.categoryId) || 0,
+                  .map((cat, index) => ({
+                    id: index,
                     name: cat.categoryName,
-                    color: cat.categoryColor,
+                    color: cat.color,
                     budget: cat.budget || 0,
-                    spent: cat.amount || 0,
-                    percentage: cat.budgetPercentage || 0,
+                    spent: cat.spent || 0,
+                    percentage: Math.round((cat.spent / cat.budget) * 100) || 0,
                   }))}
                 formatAmount={formatAmount}
               />

@@ -140,6 +140,21 @@ export const dashboardService = {
     return response;
   },
 
+  // 🔧 NEW: Ottieni spese per categoria (per grafici spese categoria)
+  getCategorySpending: async (startDate?: string, endDate?: string) => {
+    const params = { startDate, endDate };
+    const response = await apiService.get("/direct/category-spending", params);
+    return response;
+  },
+
+  // 🔧 NEW: Ottieni transazioni recenti (per card transazioni recenti)
+  getRecentTransactions: async (limit: number = 5) => {
+    const response = await apiService.get("/direct/recent-transactions", {
+      limit,
+    });
+    return response;
+  },
+
   // Ottieni i dati di trend
   getTrendData: async (timeRange = "3m") => {
     const response = await apiService.get(`/dashboard/trends`, { timeRange });
