@@ -28,9 +28,9 @@ const RecurrentPaymentList: React.FC<RecurrentPaymentListProps> = ({
 }) => {
   return (
     <Card>
-      {payments.length > 0 ? (
+      {(payments || []).length > 0 ? ( {/* 🔧 Safe check for payments */}
         <div className="divide-y divide-gray-200">
-          {payments.map((payment) => (
+          {(payments || []).map((payment) => ( {/* 🔧 Safe check for payments */}
             <RecurrentPaymentCard
               key={payment.id}
               payment={payment}

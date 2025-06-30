@@ -58,9 +58,9 @@ const useRecurrentPaymentForm = (
     undefined
   );
 
-  // Inizializza il form con il valore di default della prima categoria disponibile
+  // 🔧 Inizializza il form con il valore di default della prima categoria disponibile (safe)
   useEffect(() => {
-    if (categories.length > 0 && !formData.categoryId) {
+    if (categories && categories.length > 0 && !formData.categoryId) {
       setFormData((prev) => ({
         ...prev,
         categoryId: categories[0].id,
@@ -118,7 +118,7 @@ const useRecurrentPaymentForm = (
           amount: 0,
           categoryId:
             defaultCategoryId ||
-            (categories.length > 0 ? categories[0].id : ""),
+            (categories && categories.length > 0 ? categories[0].id : ""), // 🔧 Safe check
           description: "",
           interval: "monthly",
           dayOfMonth: 1,

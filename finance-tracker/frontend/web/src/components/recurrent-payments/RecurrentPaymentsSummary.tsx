@@ -19,7 +19,7 @@ const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
   formatAmount,
 }) => {
   // 🔧 Calculate total monthly amount from active payments (safe)
-  const totalMonthlyAmount = payments
+  const totalMonthlyAmount = (payments || [])
     .filter((payment) => payment.isActive)
     .reduce((sum, payment) => {
       const amount =
@@ -38,7 +38,7 @@ const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
     const today = new Date();
     const monthEnd = endOfMonth(today);
 
-    return payments
+    return (payments || [])
       .filter((payment) => {
         // Only include active payments
         if (!payment.isActive) return false;
@@ -67,9 +67,11 @@ const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
       }, 0);
   }, [payments]);
 
-  // Count active and inactive payments
-  const activePayments = payments.filter((payment) => payment.isActive).length;
-  const inactivePayments = payments.filter(
+  // 🔧 Count active and inactive payments (safe)
+  const activePayments = (payments || []).filter(
+    (payment) => payment.isActive
+  ).length;
+  const inactivePayments = (payments || []).filter(
     (payment) => !payment.isActive
   ).length;
 
@@ -126,7 +128,7 @@ const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
               </span>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              {payments.length} pagamenti totali
+              {(payments || []).length} pagamenti totali
             </p>
           </div>
         </div>

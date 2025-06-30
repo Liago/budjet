@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { RecurrentPayment } from '../types';
+import { useState, useMemo } from "react";
+import { RecurrentPayment } from "../types";
 
 interface UseRecurrentPaymentFiltersResult {
   searchTerm: string;
@@ -9,35 +9,46 @@ interface UseRecurrentPaymentFiltersResult {
   setFilterActive: (value: "all" | "active" | "inactive") => void;
 }
 
-const useRecurrentPaymentFilters = (payments: RecurrentPayment[]): UseRecurrentPaymentFiltersResult => {
+const useRecurrentPaymentFilters = (
+  payments: RecurrentPayment[]
+): UseRecurrentPaymentFiltersResult => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">("all");
+  const [filterActive, setFilterActive] = useState<
+    "all" | "active" | "inactive"
+  >("all");
 
-  // Applicazione dei filtri e ordinamento per data del prossimo pagamento
+  // 🔧 Applicazione dei filtri e ordinamento per data del prossimo pagamento (safe)
   const filteredPayments = useMemo(() => {
-    return payments
-      .filter((payment) => {
-        // Filter by search term
-        const matchesSearch =
-          payment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (payment.description || "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase());
+    // Safe check for undefined payments array
+    if (!payments || !Array.isArray(payments)) {
+      return [];
+    }
 
-        // Filter by active status
-        const matchesActive =
-          filterActive === "all" ||
-          (filterActive === "active" && payment.isActive) ||
-          (filterActive === "inactive" && !payment.isActive);
+    return (
+      payments
+        .filter((payment) => {
+          // Filter by search term
+          const matchesSearch =
+            payment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (payment.description || "")
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase());
 
-        return matchesSearch && matchesActive;
-      })
-      // Sort by nextPaymentDate (earliest date first)
-      .sort((a, b) => {
-        const dateA = new Date(a.nextPaymentDate).getTime();
-        const dateB = new Date(b.nextPaymentDate).getTime();
-        return dateA - dateB;
-      });
+          // Filter by active status
+          const matchesActive =
+            filterActive === "all" ||
+            (filterActive === "active" && payment.isActive) ||
+            (filterActive === "inactive" && !payment.isActive);
+
+          return matchesSearch && matchesActive;
+        })
+        // Sort by nextPaymentDate (earliest date first)
+        .sort((a, b) => {
+          const dateA = new Date(a.nextPaymentDate).getTime();
+          const dateB = new Date(b.nextPaymentDate).getTime();
+          return dateA - dateB;
+        })
+    );
   }, [payments, searchTerm, filterActive]);
 
   return {
@@ -45,8 +56,8 @@ const useRecurrentPaymentFilters = (payments: RecurrentPayment[]): UseRecurrentP
     filterActive,
     filteredPayments,
     setSearchTerm,
-    setFilterActive
+    setFilterActive,
   };
 };
 
-export default useRecurrentPaymentFilters; 
+export default useRecurrentPaymentFilters;

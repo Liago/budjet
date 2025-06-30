@@ -121,7 +121,10 @@ const RecurrentPayments = () => {
       dispatch(setCurrentRecurrentPayment(payment));
     } else {
       dispatch(setCurrentRecurrentPayment(null));
-      resetForm(undefined, categories.length > 0 ? categories[0].id : "");
+      resetForm(
+        undefined,
+        categories && categories.length > 0 ? categories[0].id : ""
+      ); // 🔧 Safe check for categories
     }
     openModal();
   };
@@ -298,7 +301,8 @@ const RecurrentPayments = () => {
     }
   };
 
-  if (isLoading && recurrentPayments.length === 0) {
+  if (isLoading && (!recurrentPayments || recurrentPayments.length === 0)) {
+    // 🔧 Safe check for recurrentPayments
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
