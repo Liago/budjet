@@ -17,6 +17,7 @@ import useRecurrentPaymentFilters from "../utils/hooks/useRecurrentPaymentFilter
 import { RecurrentPayment } from "../utils/types";
 import { format } from "date-fns";
 import { notificationService } from "../utils/notificationService";
+import { recurrentPaymentService } from "../utils/apiServices"; // 🔧 Add recurrentPaymentService import
 import { Dialog } from "@/components/ui/dialog";
 
 // Import componenti di presentazione
@@ -86,16 +87,8 @@ const RecurrentPayments = () => {
   useEffect(() => {
     const fetchLastExecution = async () => {
       try {
-        const response = await fetch("/api/recurrent-payments/last-execution", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        // 🔧 Use the corrected service instead of direct fetch
+        const data = await recurrentPaymentService.getLastExecution();
         setLastExecution(data);
       } catch (error) {
         console.error("Error fetching last execution:", error);
@@ -272,17 +265,8 @@ const RecurrentPayments = () => {
     const toastId = notificationService.loading("Esecuzione in corso...");
 
     try {
-      const response = await fetch("/api/recurrent-payments/execute", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
+      // 🔧 Use the corrected service instead of direct fetch
+      const result = await recurrentPaymentService.execute();
 
       setLastExecution(result);
       notificationService.success("Esecuzione completata con successo", {
