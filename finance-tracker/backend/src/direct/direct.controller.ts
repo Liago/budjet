@@ -704,13 +704,34 @@ export class DirectController {
       const prisma = new PrismaClient();
       await prisma.$connect();
 
+      // 🔧 TEMP FIX: Use default user ID for testing if not provided
+      let userId = body.userId;
+      if (!userId) {
+        // Try to get first user from database or create a default one
+        const firstUser = await prisma.user.findFirst();
+        if (firstUser) {
+          userId = firstUser.id;
+        } else {
+          // Create a default test user if none exists
+          const defaultUser = await prisma.user.create({
+            data: {
+              email: "test@budjet.app",
+              password: "hashed_password", // In real app, this would be properly hashed
+              firstName: "Test",
+              lastName: "User",
+            },
+          });
+          userId = defaultUser.id;
+        }
+      }
+
       const category = await prisma.category.create({
         data: {
           name: body.name,
           icon: body.icon || null,
           color: body.color || null,
           budget: body.budget ? Number(body.budget) : null,
-          userId: body.userId, // In real app, get from JWT token
+          userId: userId,
         },
       });
 
@@ -780,6 +801,27 @@ export class DirectController {
       const prisma = new PrismaClient();
       await prisma.$connect();
 
+      // 🔧 TEMP FIX: Use default user ID for testing if not provided
+      let userId = body.userId;
+      if (!userId) {
+        // Try to get first user from database or create a default one
+        const firstUser = await prisma.user.findFirst();
+        if (firstUser) {
+          userId = firstUser.id;
+        } else {
+          // Create a default test user if none exists
+          const defaultUser = await prisma.user.create({
+            data: {
+              email: "test@budjet.app",
+              password: "hashed_password", // In real app, this would be properly hashed
+              firstName: "Test",
+              lastName: "User",
+            },
+          });
+          userId = defaultUser.id;
+        }
+      }
+
       const transaction = await prisma.transaction.create({
         data: {
           amount: Number(body.amount),
@@ -787,7 +829,7 @@ export class DirectController {
           date: new Date(body.date),
           type: body.type,
           categoryId: body.categoryId,
-          userId: body.userId, // In real app, get from JWT token
+          userId: userId,
         },
         include: {
           category: true,
@@ -864,6 +906,27 @@ export class DirectController {
       const prisma = new PrismaClient();
       await prisma.$connect();
 
+      // 🔧 TEMP FIX: Use default user ID for testing if not provided
+      let userId = body.userId;
+      if (!userId) {
+        // Try to get first user from database or create a default one
+        const firstUser = await prisma.user.findFirst();
+        if (firstUser) {
+          userId = firstUser.id;
+        } else {
+          // Create a default test user if none exists
+          const defaultUser = await prisma.user.create({
+            data: {
+              email: "test@budjet.app",
+              password: "hashed_password", // In real app, this would be properly hashed
+              firstName: "Test",
+              lastName: "User",
+            },
+          });
+          userId = defaultUser.id;
+        }
+      }
+
       const payment = await prisma.recurrentPayment.create({
         data: {
           name: body.name,
@@ -876,7 +939,7 @@ export class DirectController {
           endDate: body.endDate ? new Date(body.endDate) : null,
           nextPaymentDate: new Date(body.nextPaymentDate || body.startDate),
           categoryId: body.categoryId,
-          userId: body.userId, // In real app, get from JWT token
+          userId: userId,
         },
         include: {
           category: true,
