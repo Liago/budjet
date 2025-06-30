@@ -1,15 +1,15 @@
-import React from 'react';
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusIcon } from '../../components/Icons';
-import { RecurrentPayment } from '../../utils/types';
-import RecurrentPaymentCard from './RecurrentPaymentCard';
+import { PlusIcon } from "../../components/Icons";
+import { RecurrentPayment } from "../../utils/types";
+import RecurrentPaymentCard from "./RecurrentPaymentCard";
 
 interface RecurrentPaymentListProps {
   payments: RecurrentPayment[];
   searchTerm: string;
   filterActive: string;
-  formatAmount: (amount: number | string) => string;
+  formatAmount: (amount: number | string | null | undefined) => string; // 🔧 Updated to match fixed function
   onToggleActive: (payment: RecurrentPayment) => void;
   onEdit: (payment: RecurrentPayment) => void;
   onDelete: (id: string) => void;
@@ -24,7 +24,7 @@ const RecurrentPaymentList: React.FC<RecurrentPaymentListProps> = ({
   onToggleActive,
   onEdit,
   onDelete,
-  onAddPayment
+  onAddPayment,
 }) => {
   return (
     <Card>
@@ -48,10 +48,7 @@ const RecurrentPaymentList: React.FC<RecurrentPaymentListProps> = ({
           ) : (
             <div className="space-y-4">
               <p>Non ci sono ancora pagamenti ricorrenti.</p>
-              <Button
-                onClick={onAddPayment}
-                className="gap-2"
-              >
+              <Button onClick={onAddPayment} className="gap-2">
                 <PlusIcon className="h-4 w-4" />
                 Crea il tuo primo pagamento ricorrente
               </Button>
@@ -63,4 +60,4 @@ const RecurrentPaymentList: React.FC<RecurrentPaymentListProps> = ({
   );
 };
 
-export default RecurrentPaymentList; 
+export default RecurrentPaymentList;

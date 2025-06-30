@@ -33,7 +33,7 @@ interface LastExecutionSummaryProps {
   } | null;
   onManualExecution: () => void;
   isLoading: boolean;
-  formatAmount: (amount: number) => string;
+  formatAmount: (amount: number | string | null | undefined) => string; // 🔧 Updated to match fixed function
 }
 
 const LastExecutionSummary: React.FC<LastExecutionSummaryProps> = ({

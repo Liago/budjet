@@ -11,14 +11,14 @@ import { isWithinInterval, endOfMonth, startOfDay } from "date-fns";
 
 interface RecurrentPaymentsSummaryProps {
   payments: RecurrentPayment[];
-  formatAmount: (amount: number | string) => string;
+  formatAmount: (amount: number | string | null | undefined) => string; // 🔧 Updated to match fixed function
 }
 
 const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
   payments,
   formatAmount,
 }) => {
-  // Calculate total monthly amount from active payments
+  // 🔧 Calculate total monthly amount from active payments (safe)
   const totalMonthlyAmount = payments
     .filter((payment) => payment.isActive)
     .reduce((sum, payment) => {
@@ -26,6 +26,10 @@ const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
         typeof payment.amount === "string"
           ? parseFloat(payment.amount)
           : payment.amount;
+      // Safe check for null/undefined/NaN
+      if (amount === null || amount === undefined || isNaN(amount)) {
+        return sum;
+      }
       return sum + amount;
     }, 0);
 
@@ -55,6 +59,10 @@ const RecurrentPaymentsSummary: React.FC<RecurrentPaymentsSummaryProps> = ({
           typeof payment.amount === "string"
             ? parseFloat(payment.amount)
             : payment.amount;
+        // Safe check for null/undefined/NaN
+        if (amount === null || amount === undefined || isNaN(amount)) {
+          return sum;
+        }
         return sum + amount;
       }, 0);
   }, [payments]);

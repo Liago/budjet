@@ -32,7 +32,7 @@ const formatSafeDate = (
 
 interface RecurrentPaymentCardProps {
   payment: RecurrentPayment;
-  formatAmount: (amount: number | string) => string;
+  formatAmount: (amount: number | string | null | undefined) => string; // 🔧 Updated to match fixed function
   onToggleActive: (payment: RecurrentPayment) => void;
   onEdit: (payment: RecurrentPayment) => void;
   onDelete: (id: string) => void;

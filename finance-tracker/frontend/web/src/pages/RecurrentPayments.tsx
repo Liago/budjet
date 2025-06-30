@@ -28,10 +28,21 @@ import RecurrentPaymentForm from "../components/recurrent-payments/RecurrentPaym
 import RecurrentPaymentsSummary from "../components/recurrent-payments/RecurrentPaymentsSummary";
 import LastExecutionSummary from "../components/recurrent-payments/LastExecutionSummary";
 
-// Utility per formattare gli importi con la virgola come separatore decimale e simbolo dell'euro
-const formatAmount = (amount: number | string): string => {
+// 🔧 Utility per formattare gli importi con la virgola come separatore decimale e simbolo dell'euro
+const formatAmount = (amount: number | string | null | undefined): string => {
+  // Gestione safe per valori null/undefined
+  if (amount === null || amount === undefined) {
+    return "€ 0,00";
+  }
+
   // Assicuriamoci che amount sia un numero prima di chiamare toFixed
   const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+
+  // Gestione NaN
+  if (isNaN(numAmount)) {
+    return "€ 0,00";
+  }
+
   return `€ ${numAmount.toFixed(2).replace(".", ",")}`;
 };
 
