@@ -4,6 +4,21 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
+// 🔧 Safe date formatting helper
+const formatSafeDate = (
+  date: string | Date | null | undefined,
+  formatString: string = "PPP"
+): string => {
+  if (!date) return "Data non disponibile";
+  try {
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return "Data non valida";
+    return format(dateObj, formatString, { locale: it });
+  } catch (error) {
+    return "Data non valida";
+  }
+};
+
 interface LastExecutionSummaryProps {
   lastExecution: {
     executionDate: string;
@@ -62,9 +77,7 @@ const LastExecutionSummary: React.FC<LastExecutionSummaryProps> = ({
               <div>
                 <p className="text-sm text-gray-500">
                   Ultima esecuzione:{" "}
-                  {format(new Date(lastExecution.executionDate), "PPP", {
-                    locale: it,
-                  })}
+                  {formatSafeDate(lastExecution.executionDate)}
                 </p>
                 <p className="text-sm text-gray-500">
                   Pagamenti processati: {lastExecution.processedPayments}
@@ -94,7 +107,7 @@ const LastExecutionSummary: React.FC<LastExecutionSummaryProps> = ({
                         <p className="font-medium">{detail.paymentName}</p>
                         <p className="text-sm text-gray-500">
                           Prossimo pagamento:{" "}
-                          {format(new Date(detail.nextDate), "dd/MM/yyyy")}
+                          {formatSafeDate(detail.nextDate, "dd/MM/yyyy")}
                         </p>
                       </div>
                       <p className="font-medium text-blue-600">

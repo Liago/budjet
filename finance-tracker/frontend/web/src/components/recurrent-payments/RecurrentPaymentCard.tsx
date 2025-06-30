@@ -15,6 +15,21 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
+// 🔧 Safe date formatting helper
+const formatSafeDate = (
+  date: string | Date | null | undefined,
+  formatString: string = "d MMMM yyyy"
+): string => {
+  if (!date) return "Data non disponibile";
+  try {
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return "Data non valida";
+    return format(dateObj, formatString, { locale: it });
+  } catch (error) {
+    return "Data non valida";
+  }
+};
+
 interface RecurrentPaymentCardProps {
   payment: RecurrentPayment;
   formatAmount: (amount: number | string) => string;
@@ -194,14 +209,7 @@ const RecurrentPaymentCard: React.FC<RecurrentPaymentCardProps> = ({
                   <div className="flex items-center gap-1.5 text-gray-600">
                     <CalendarIcon className="h-4 w-4" />
                     <span>
-                      Prossimo:{" "}
-                      {format(
-                        new Date(payment.nextPaymentDate),
-                        "d MMMM yyyy",
-                        {
-                          locale: it,
-                        }
-                      )}
+                      Prossimo: {formatSafeDate(payment.nextPaymentDate)}
                     </span>
                   </div>
                   {payment.endDate && (
@@ -211,12 +219,7 @@ const RecurrentPaymentCard: React.FC<RecurrentPaymentCardProps> = ({
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.1 }}
                     >
-                      <span>
-                        Fine:{" "}
-                        {format(new Date(payment.endDate), "d MMMM yyyy", {
-                          locale: it,
-                        })}
-                      </span>
+                      <span>Fine: {formatSafeDate(payment.endDate)}</span>
                     </motion.div>
                   )}
                 </motion.div>
