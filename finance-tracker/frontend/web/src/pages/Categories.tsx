@@ -149,8 +149,14 @@ const Categories = () => {
     }
   };
 
-  // Filter categories
+  // Filter categories with safe null/undefined checks
   const filteredCategories = categories.filter((category) => {
+    // Safety check: ensure category and category.name exist
+    if (!category || !category.name) {
+      console.warn("Category with missing name found:", category);
+      return false;
+    }
+
     // Filter by search term
     return category.name.toLowerCase().includes(searchTerm.toLowerCase());
   });
