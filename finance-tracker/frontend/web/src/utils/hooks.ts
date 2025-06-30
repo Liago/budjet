@@ -39,12 +39,12 @@ export const useCategories = () => {
   const { categories, isLoading } = useAppSelector((state) => state.categories);
 
   useEffect(() => {
-    if (categories.length === 0) {
+    if (!categories || categories.length === 0) {
       dispatch(fetchCategories());
     }
-  }, [dispatch, categories.length]);
+  }, [dispatch, categories]);
 
-  return { categories, isLoading };
+  return { categories: categories || [], isLoading };
 };
 
 export type ValidationRule<T> = (
