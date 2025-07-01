@@ -85,7 +85,7 @@ interface SpendingAnomaly {
 interface TrendData {
   period: string;
   income: number;
-  expense: number;
+  expenses: number; // 🔧 Corretto da expense a expenses per match con API
   balance: number;
 }
 
@@ -154,7 +154,7 @@ const TrendAnalyzer = () => {
       const formattedData = data.trends.map((trend) => ({
         name: trend.period,
         income: trend.income,
-        expense: trend.expense,
+        expense: trend.expenses, // 🔧 Corretto per usare expenses dall'API
         balance: trend.balance,
       }));
 

@@ -1039,4 +1039,539 @@ export class DirectController {
       };
     }
   }
+
+  // 🚀 DASHBOARD ADVANCED ENDPOINTS - Direct endpoints for Netlify compatibility
+  @Get("dashboard/budget-analysis")
+  async getBudgetAnalysis(@Query("timeRange") timeRange = "1m") {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Calculate date range based on timeRange
+      const now = new Date();
+      let startDate: Date;
+
+      switch (timeRange) {
+        case "1m":
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case "3m":
+          startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+          break;
+        case "6m":
+          startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+          break;
+        case "1y":
+          startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+          break;
+        default:
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+
+      // Get categories with budget
+      const categories = await prisma.category.findMany({
+        where: { budget: { not: null } },
+      });
+
+      const budgetAnalysis = await Promise.all(
+        categories.map(async (category) => {
+          const expenses = await prisma.transaction.aggregate({
+            where: {
+              categoryId: category.id,
+              type: "EXPENSE",
+              date: { gte: startDate, lte: now },
+            },
+            _sum: { amount: true },
+          });
+
+          const spent = Number(expenses._sum.amount || 0);
+          const budget = Number(category.budget || 0);
+          const remaining = budget - spent;
+          const percentage = budget > 0 ? (spent / budget) * 100 : 0;
+          const deviation = spent - budget;
+          const deviationPercentage =
+            budget > 0 ? Math.abs((deviation / budget) * 100) : 0;
+
+          return {
+            categoryId: category.id,
+            categoryName: category.name,
+            categoryColor: category.color || "#999999",
+            budget,
+            spent,
+            amount: spent, // 🔧 Add 'amount' field for frontend compatibility
+            remaining,
+            percentage: Math.round(percentage * 100) / 100,
+            budgetPercentage: Math.round(percentage * 100) / 100, // 🔧 Add budgetPercentage field
+            deviation,
+            deviationPercentage: Math.round(deviationPercentage * 100) / 100,
+            status:
+              percentage > 100 ? "over" : percentage > 80 ? "warning" : "good",
+            color: category.color,
+            isOverBudget: percentage > 100,
+          };
+        })
+      );
+
+      // 🔧 Calculate totals for frontend compatibility
+      const totalBudget = budgetAnalysis.reduce(
+        (sum, cat) => sum + cat.budget,
+        0
+      );
+      const totalSpent = budgetAnalysis.reduce(
+        (sum, cat) => sum + cat.spent,
+        0
+      );
+      const totalRemaining = totalBudget - totalSpent;
+      const totalDeviation = totalSpent - totalBudget;
+      const totalDeviationPercentage =
+        totalBudget > 0
+          ? Math.round((Math.abs(totalDeviation) / totalBudget) * 100 * 100) /
+            100
+          : 0;
+
+      // 🔧 Return structured response that frontend expects
+      const response = {
+        categoryAnalysis: budgetAnalysis.sort(
+          (a, b) => b.percentage - a.percentage
+        ),
+        totalBudget,
+        totalSpent,
+        totalRemaining,
+        totalDeviation,
+        totalDeviationPercentage,
+        summary: {
+          categoriesOverBudget: budgetAnalysis.filter((cat) => cat.isOverBudget)
+            .length,
+          categoriesWithBudget: budgetAnalysis.length,
+          averageSpendingPercentage:
+            budgetAnalysis.length > 0
+              ? Math.round(
+                  (budgetAnalysis.reduce(
+                    (sum, cat) => sum + cat.percentage,
+                    0
+                  ) /
+                    budgetAnalysis.length) *
+                    100
+                ) / 100
+              : 0,
+        },
+      };
+
+      await prisma.$disconnect();
+      return response;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Get("dashboard/trends")
+  async getTrends(@Query("timeRange") timeRange = "3m") {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const months = parseInt(timeRange.replace("m", "")) || 3;
+      const startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - months);
+
+      // Get monthly trends
+      const transactions = await prisma.transaction.findMany({
+        where: { date: { gte: startDate } },
+        include: { category: true },
+        orderBy: { date: "asc" },
+      });
+
+      // Group by month
+      const monthlyData = new Map();
+
+      transactions.forEach((transaction) => {
+        const monthKey = transaction.date.toISOString().substring(0, 7); // YYYY-MM
+        if (!monthlyData.has(monthKey)) {
+          monthlyData.set(monthKey, {
+            income: 0,
+            expenses: 0,
+            transactions: 0,
+          });
+        }
+
+        const data = monthlyData.get(monthKey);
+        if (transaction.type === "INCOME") {
+          data.income += Number(transaction.amount);
+        } else {
+          data.expenses += Number(transaction.amount);
+        }
+        data.transactions += 1;
+      });
+
+      // Convert to array and calculate trends
+      const trends = Array.from(monthlyData.entries()).map(([month, data]) => ({
+        period: month,
+        income: data.income,
+        expenses: data.expenses,
+        balance: data.income - data.expenses,
+        transactions: data.transactions,
+      }));
+
+      await prisma.$disconnect();
+      return { trends, categoryTrends: [] }; // Simplified version
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Get("dashboard/forecast")
+  async getForecastData(@Query("months") months = "6") {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const monthsNum = parseInt(months.toString()) || 6;
+      const now = new Date();
+      const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+
+      // Get historical data
+      const transactions = await prisma.transaction.findMany({
+        where: { date: { gte: threeMonthsAgo } },
+        orderBy: { date: "asc" },
+      });
+
+      // Calculate averages
+      const totalIncome = transactions
+        .filter((t) => t.type === "INCOME")
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const totalExpenses = transactions
+        .filter((t) => t.type === "EXPENSE")
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const avgIncome = totalIncome / 3;
+      const avgExpense = totalExpenses / 3;
+
+      // Generate historical data
+      const historicalData = [];
+      for (let i = 2; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthTransactions = transactions.filter(
+          (t) =>
+            t.date.getMonth() === date.getMonth() &&
+            t.date.getFullYear() === date.getFullYear()
+        );
+
+        const monthIncome = monthTransactions
+          .filter((t) => t.type === "INCOME")
+          .reduce((sum, t) => sum + Number(t.amount), 0);
+
+        const monthExpenses = monthTransactions
+          .filter((t) => t.type === "EXPENSE")
+          .reduce((sum, t) => sum + Number(t.amount), 0);
+
+        historicalData.push({
+          period: date.toISOString().substring(0, 7),
+          value: monthIncome - monthExpenses,
+          forecast: false,
+        });
+      }
+
+      // Generate forecast data
+      const forecastData = [];
+      for (let i = 1; i <= monthsNum; i++) {
+        const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        forecastData.push({
+          period: date.toISOString().substring(0, 7),
+          value: Math.round(avgIncome - avgExpense),
+          forecast: true,
+        });
+      }
+
+      await prisma.$disconnect();
+      return {
+        historicalData,
+        forecastData,
+        averageIncome: Math.round(avgIncome),
+        averageExpense: Math.round(avgExpense),
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Get("dashboard/savings")
+  async getSavingSuggestions() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const now = new Date();
+      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      // Get spending by category for analysis
+      const categorySpending = await prisma.transaction.groupBy({
+        by: ["categoryId"],
+        where: {
+          type: "EXPENSE",
+          date: { gte: lastMonth, lt: currentMonth },
+        },
+        _sum: { amount: true },
+        _count: { id: true },
+      });
+
+      const suggestions = [];
+      let totalPotentialSavings = 0;
+
+      // Simple suggestions based on spending patterns
+      for (const spending of categorySpending) {
+        const category = await prisma.category.findUnique({
+          where: { id: spending.categoryId },
+        });
+
+        if (category && spending._sum.amount) {
+          const monthlySpent = Number(spending._sum.amount);
+          let potentialSaving = 0;
+          let suggestion = "";
+
+          if (monthlySpent > 200) {
+            potentialSaving = monthlySpent * 0.1; // 10% reduction
+            suggestion = `Riduci le spese in ${category.name} del 10%`;
+          } else if (monthlySpent > 100) {
+            potentialSaving = monthlySpent * 0.05; // 5% reduction
+            suggestion = `Ottimizza le spese in ${category.name}`;
+          }
+
+          if (potentialSaving > 0) {
+            suggestions.push({
+              id: category.id,
+              category: category.name,
+              categoryColor: category.color || "#999999",
+              description: suggestion,
+              potentialSaving: Math.round(potentialSaving),
+              type: "spending_reduction",
+              difficulty: potentialSaving > 50 ? "medium" : "easy",
+              impact:
+                potentialSaving > 100
+                  ? "high"
+                  : potentialSaving > 50
+                  ? "medium"
+                  : "low",
+            });
+            totalPotentialSavings += potentialSaving;
+          }
+        }
+      }
+
+      // Calculate averages
+      const avgIncome = await prisma.transaction.aggregate({
+        where: {
+          type: "INCOME",
+          date: { gte: lastMonth, lt: currentMonth },
+        },
+        _sum: { amount: true },
+      });
+
+      const avgExpense = await prisma.transaction.aggregate({
+        where: {
+          type: "EXPENSE",
+          date: { gte: lastMonth, lt: currentMonth },
+        },
+        _sum: { amount: true },
+      });
+
+      await prisma.$disconnect();
+      return {
+        suggestions,
+        averageIncome: Number(avgIncome._sum.amount || 0),
+        averageExpense: Number(avgExpense._sum.amount || 0),
+        potentialMonthlySavings: Math.round(totalPotentialSavings),
+        yearlyProjection: Math.round(totalPotentialSavings * 12),
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 SAVINGS GOALS CRUD - Direct endpoints for Netlify compatibility
+  @Get("savings-goals")
+  async getSavingsGoals() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Get default user ID (in real app, would get from JWT)
+      const firstUser = await prisma.user.findFirst();
+      if (!firstUser) {
+        await prisma.$disconnect();
+        return { error: "No user found" };
+      }
+
+      const savingsGoals = await prisma.savingsGoal.findMany({
+        where: { userId: firstUser.id },
+        orderBy: { createdAt: "desc" },
+      });
+
+      await prisma.$disconnect();
+      return savingsGoals;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Post("savings-goals")
+  async createSavingsGoal(@Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Get default user ID (in real app, would get from JWT)
+      let userId = body.userId;
+      if (!userId) {
+        const firstUser = await prisma.user.findFirst();
+        if (firstUser) {
+          userId = firstUser.id;
+        } else {
+          // Create a default test user if none exists
+          const defaultUser = await prisma.user.create({
+            data: {
+              email: "test@budjet.app",
+              password: "hashed_password",
+              firstName: "Test",
+              lastName: "User",
+            },
+          });
+          userId = defaultUser.id;
+        }
+      }
+
+      const savingsGoal = await prisma.savingsGoal.create({
+        data: {
+          name: body.name,
+          targetAmount: Number(body.targetAmount),
+          currentAmount: Number(body.currentAmount || 0),
+          deadline: body.deadline ? new Date(body.deadline) : null,
+          description: body.description || null,
+          userId: userId,
+        },
+      });
+
+      await prisma.$disconnect();
+      return savingsGoal;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Patch("savings-goals/:id")
+  async updateSavingsGoal(@Param("id") id: string, @Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const savingsGoal = await prisma.savingsGoal.update({
+        where: { id },
+        data: {
+          name: body.name,
+          targetAmount: body.targetAmount
+            ? Number(body.targetAmount)
+            : undefined,
+          currentAmount: body.currentAmount
+            ? Number(body.currentAmount)
+            : undefined,
+          deadline: body.deadline ? new Date(body.deadline) : undefined,
+          description: body.description,
+          isCompleted: body.isCompleted,
+        },
+      });
+
+      await prisma.$disconnect();
+      return savingsGoal;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Delete("savings-goals/:id")
+  async deleteSavingsGoal(@Param("id") id: string) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      await prisma.savingsGoal.delete({
+        where: { id },
+      });
+
+      await prisma.$disconnect();
+      return { message: "Savings goal deleted successfully" };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Post("savings-goals/:id/add-amount")
+  async addAmountToSavingsGoal(@Param("id") id: string, @Body() body: any) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const savingsGoal = await prisma.savingsGoal.findUnique({
+        where: { id },
+      });
+
+      if (!savingsGoal) {
+        await prisma.$disconnect();
+        return { error: "Savings goal not found" };
+      }
+
+      const newCurrentAmount =
+        Number(savingsGoal.currentAmount) + Number(body.amount);
+      const isCompleted = newCurrentAmount >= Number(savingsGoal.targetAmount);
+
+      const updatedGoal = await prisma.savingsGoal.update({
+        where: { id },
+        data: {
+          currentAmount: newCurrentAmount,
+          isCompleted,
+        },
+      });
+
+      await prisma.$disconnect();
+      return updatedGoal;
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
 }

@@ -157,14 +157,17 @@ export const dashboardService = {
 
   // Ottieni i dati di trend
   getTrendData: async (timeRange = "3m") => {
-    const response = await apiService.get(`/dashboard/trends`, { timeRange });
+    const response = await apiService.get(`/direct/dashboard/trends`, {
+      timeRange,
+    }); // 🔧 Use direct endpoint
     return response;
   },
 
   // Ottieni l'analisi budget vs spesa
   getBudgetAnalysis: async (timeRange = "1m") => {
     console.log("Chiamata getBudgetAnalysis con timeRange:", timeRange);
-    const response = await apiService.get(`/dashboard/budget-analysis`, {
+    const response = await apiService.get(`/direct/dashboard/budget-analysis`, {
+      // 🔧 Use direct endpoint
       timeRange,
     });
     return response;
@@ -185,7 +188,7 @@ export const dashboardService = {
       }[];
       averageIncome: number;
       averageExpense: number;
-    }>("/dashboard/forecast", { months }),
+    }>("/direct/dashboard/forecast", { months }), // 🔧 Use direct endpoint
 
   // Nuovo endpoint per i suggerimenti di risparmio
   getSavingSuggestions: () =>
@@ -208,7 +211,7 @@ export const dashboardService = {
       averageExpense: number;
       potentialMonthlySavings: number;
       yearlyProjection: number;
-    }>("/dashboard/savings"),
+    }>("/direct/dashboard/savings"), // 🔧 Use direct endpoint
 };
 
 // Recurrent Payment Service
@@ -246,33 +249,40 @@ export const recurrentPaymentService = {
 export const savingsGoalsService = {
   // Ottieni tutti gli obiettivi di risparmio dell'utente
   getAll: async () => {
-    const response = await apiService.get("/savings-goals");
+    const response = await apiService.get("/direct/savings-goals"); // 🔧 Use direct endpoint
     return response;
   },
 
   // Crea un nuovo obiettivo di risparmio
   create: async (data: CreateSavingsGoalData) => {
-    const response = await apiService.post("/savings-goals", data);
+    const response = await apiService.post("/direct/savings-goals", data); // 🔧 Use direct endpoint
     return response;
   },
 
   // Aggiorna un obiettivo di risparmio esistente
   update: async (id: string, data: UpdateSavingsGoalData) => {
-    const response = await apiService.patch(`/savings-goals/${id}`, data);
+    const response = await apiService.patch(
+      `/direct/savings-goals/${id}`,
+      data
+    ); // 🔧 Use direct endpoint (to be implemented)
     return response;
   },
 
   // Elimina un obiettivo di risparmio
   delete: async (id: string) => {
-    const response = await apiService.delete(`/savings-goals/${id}`);
+    const response = await apiService.delete(`/direct/savings-goals/${id}`); // 🔧 Use direct endpoint (to be implemented)
     return response;
   },
 
   // Aggiungi un importo a un obiettivo di risparmio
   addAmount: async (id: string, amount: number) => {
-    const response = await apiService.post(`/savings-goals/${id}/add-amount`, {
-      amount,
-    });
+    const response = await apiService.post(
+      `/direct/savings-goals/${id}/add-amount`,
+      {
+        // 🔧 Use direct endpoint (to be implemented)
+        amount,
+      }
+    );
     return response;
   },
 };
