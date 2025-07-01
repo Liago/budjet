@@ -80,44 +80,48 @@ const LastExecutionSummary: React.FC<LastExecutionSummaryProps> = ({
                   {formatSafeDate(lastExecution.executionDate)}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Pagamenti processati: {lastExecution.processedPayments}
+                  Pagamenti processati: {lastExecution.processedPayments || 0}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Transazioni create: {lastExecution.createdTransactions}
+                  Transazioni create: {lastExecution.createdTransactions || 0}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-semibold text-blue-600">
-                  {formatAmount(lastExecution.totalAmount)}
+                  {formatAmount(lastExecution.totalAmount || 0)}
                 </p>
                 <p className="text-sm text-gray-500">Importo totale</p>
               </div>
             </div>
 
-            {lastExecution.details.length > 0 && (
-              <div className="mt-4">
-                <p className="font-medium mb-2">Dettaglio transazioni:</p>
-                <div className="space-y-2">
-                  {lastExecution.details.map((detail, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center py-2 border-b last:border-0"
-                    >
-                      <div>
-                        <p className="font-medium">{detail.paymentName}</p>
-                        <p className="text-sm text-gray-500">
-                          Prossimo pagamento:{" "}
-                          {formatSafeDate(detail.nextDate, "dd/MM/yyyy")}
+            {lastExecution.details &&
+              Array.isArray(lastExecution.details) &&
+              lastExecution.details.length > 0 && (
+                <div className="mt-4">
+                  <p className="font-medium mb-2">Dettaglio transazioni:</p>
+                  <div className="space-y-2">
+                    {lastExecution.details.map((detail, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center py-2 border-b last:border-0"
+                      >
+                        <div>
+                          <p className="font-medium">
+                            {detail?.paymentName || "Nome non disponibile"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Prossimo pagamento:{" "}
+                            {formatSafeDate(detail?.nextDate, "dd/MM/yyyy")}
+                          </p>
+                        </div>
+                        <p className="font-medium text-blue-600">
+                          {formatAmount(detail?.amount)}
                         </p>
                       </div>
-                      <p className="font-medium text-blue-600">
-                        {formatAmount(detail.amount)}
-                      </p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         ) : (
           <div className="text-center py-6">

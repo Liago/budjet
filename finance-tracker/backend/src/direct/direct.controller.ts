@@ -504,7 +504,7 @@ export class DirectController {
     }
   }
 
-  // 🚀 RECURRENT PAYMENTS NEXT - Direct endpoint (fixed schema)
+  // 🚀 RECURRENT PAYMENTS LAST EXECUTION - Direct endpoint (fixed schema)
   @Get("recurrent-payments/last-execution")
   async getLastExecution() {
     try {
@@ -512,26 +512,48 @@ export class DirectController {
       const prisma = new PrismaClient();
       await prisma.$connect();
 
-      // Get next upcoming payment (since lastExecution doesn't exist in schema)
-      const nextPayment = await prisma.recurrentPayment.findFirst({
-        where: {
-          isActive: true,
-          nextPaymentDate: { gte: new Date() },
-        },
-        orderBy: { nextPaymentDate: "asc" },
+      // Get the most recent execution log
+      const lastExecution = await prisma.automaticExecutionLog.findFirst({
+        orderBy: { executionDate: "desc" },
         select: {
-          id: true,
-          name: true,
-          description: true,
-          amount: true,
-          nextPaymentDate: true,
-          interval: true,
+          executionDate: true,
+          processedPayments: true,
+          createdTransactions: true,
+          totalAmount: true,
+          details: true,
         },
       });
 
       await prisma.$disconnect();
 
-      return nextPayment || { message: "No upcoming payments found" };
+      if (!lastExecution) {
+        return {
+          executionDate: null,
+          processedPayments: 0,
+          createdTransactions: 0,
+          totalAmount: 0,
+          details: [], // 🔧 Always return an array even if empty
+        };
+      }
+
+      // Parse details JSON string back to array
+      let parsedDetails = [];
+      try {
+        parsedDetails = lastExecution.details
+          ? JSON.parse(lastExecution.details)
+          : [];
+      } catch (parseError) {
+        console.error("Error parsing execution details:", parseError);
+        parsedDetails = [];
+      }
+
+      return {
+        executionDate: lastExecution.executionDate.toISOString(),
+        processedPayments: lastExecution.processedPayments,
+        createdTransactions: lastExecution.createdTransactions,
+        totalAmount: Number(lastExecution.totalAmount),
+        details: parsedDetails, // 🔧 Ensure details is always an array
+      };
     } catch (error) {
       return {
         error: error.message,
