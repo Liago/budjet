@@ -855,6 +855,7 @@ export class DirectController {
         },
         include: {
           category: true,
+          tags: true, // 🔧 Include tags to prevent frontend crash
         },
       });
 
@@ -886,6 +887,7 @@ export class DirectController {
         },
         include: {
           category: true,
+          tags: true, // 🔧 Include tags to prevent frontend crash
         },
       });
 

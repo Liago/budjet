@@ -146,7 +146,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     {transaction.description}
                   </div>
                   <div className="text-sm text-muted-foreground truncate">
-                    {transaction.tags.map((tag) => tag.name).join(", ")}
+                    {transaction.tags && transaction.tags.length > 0
+                      ? transaction.tags.map((tag) => tag.name).join(", ")
+                      : "No tags"}
                   </div>
                 </td>
                 <td className="p-3">
