@@ -14,7 +14,9 @@ interface TotalBudgetCardProps {
 }
 
 const TotalBudgetCard: React.FC<TotalBudgetCardProps> = ({ categories }) => {
-  const categoriesWithBudget = categories.filter((cat) => cat.budget);
+  const categoriesWithBudget = categories.filter(
+    (cat) => cat.budget && cat.budget > 0
+  );
   const totalBudget = categoriesWithBudget.reduce(
     (total, cat) => total + Number(cat.budget),
     0

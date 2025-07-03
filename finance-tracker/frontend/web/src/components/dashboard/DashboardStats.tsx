@@ -38,7 +38,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
   return (
     <>
       {/* Income Card */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden h-full flex flex-col">
         <CardHeader className="pb-2 bg-gradient-to-r from-green-50 to-emerald-50">
           <CardTitle className="text-lg flex items-center gap-2">
             <svg
@@ -59,7 +59,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
             Entrate
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 flex-1">
           <p className="text-3xl font-bold text-green-600">
             €{formatAmount(safeIncome)}
           </p>
@@ -87,7 +87,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       </Card>
 
       {/* Expense Card */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden h-full flex flex-col">
         <CardHeader className="pb-2 bg-gradient-to-r from-red-50 to-rose-50">
           <CardTitle className="text-lg flex items-center gap-2">
             <svg
@@ -108,7 +108,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
             Uscite
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 flex-1">
           <p className="text-3xl font-bold text-red-600">
             €{formatAmount(safeExpense)}
           </p>
@@ -136,7 +136,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       </Card>
 
       {/* Budget Card */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden h-full flex flex-col">
         <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50">
           <CardTitle className="text-lg flex items-center gap-2">
             <svg
@@ -156,7 +156,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
             Budget
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 flex-1">
           <div>
             <p className="text-3xl font-bold text-blue-600">
               €{formatAmount(safeBudget)}
@@ -226,7 +226,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       </Card>
 
       {/* Balance Card */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden h-full flex flex-col">
         <CardHeader className="pb-2 bg-gradient-to-r from-purple-50 to-violet-50">
           <CardTitle className="text-lg flex items-center gap-2">
             <svg
@@ -248,7 +248,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
             Bilancio
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 flex-1">
           <p
             className={`text-3xl font-bold ${
               balance >= 0 ? "text-purple-600" : "text-red-600"

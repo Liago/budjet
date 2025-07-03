@@ -124,3 +124,7 @@ create-complete-csv.ts
 finance-tracker/backend/quick-fix-csv.ts
 
 json-to-csv-supabase-complete.ts
+
+finance-tracker/backend/sqlite-export.json
+
+ISSUES_JULY.md

@@ -62,8 +62,23 @@ const TopSpendingCategory: React.FC<TopSpendingCategoryProps> = ({
         </div>
       </CardContent>
       <CardFooter className="border-t bg-gradient-to-r from-violet-50 to-fuchsia-50">
-        <p className="text-sm font-medium text-violet-600 hover:text-violet-500 cursor-pointer">
-          Dettagli
+        <p className="text-sm font-medium flex items-center gap-1.5">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-violet-600"
+          >
+            <rect width="20" height="14" x="2" y="5" rx="2" />
+            <path d="M2 10h20" />
+          </svg>
+          Questo periodo
         </p>
       </CardFooter>
     </Card>

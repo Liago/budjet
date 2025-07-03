@@ -169,25 +169,22 @@ const Dashboard: React.FC = () => {
     return numAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  // Calculate budget data from categorySpending
+  // Calculate budget data from categories (consistent with Categories page)
   const budgetData = useMemo(() => {
-    if (!categorySpending || categorySpending.length === 0) {
-      return {
-        totalBudget: 0,
-        totalSpent: 0,
-        budgetRemaining: 0,
-        budgetPercentage: 0,
-      };
-    }
+    // 🔧 FIX ISSUE #1: Use same calculation logic as Categories page
+    // Get total budget from all categories with budget > 0
+    const categoriesWithBudget =
+      categories.categories?.filter((cat) => cat.budget && cat.budget > 0) ||
+      [];
+    const totalBudget = categoriesWithBudget.reduce(
+      (total, cat) => total + Number(cat.budget),
+      0
+    );
 
-    const totalBudget = categorySpending.reduce(
-      (sum, cat) => sum + (cat.budget || 0),
-      0
-    );
-    const totalSpent = categorySpending.reduce(
-      (sum, cat) => sum + (cat.spent || 0),
-      0
-    );
+    // Get total spent from categorySpending
+    const totalSpent =
+      categorySpending?.reduce((sum, cat) => sum + (cat.spent || 0), 0) || 0;
+
     const budgetRemaining = Math.max(0, totalBudget - totalSpent);
     const budgetPercentage =
       totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
@@ -198,7 +195,7 @@ const Dashboard: React.FC = () => {
       budgetRemaining,
       budgetPercentage,
     };
-  }, [categorySpending]);
+  }, [categories.categories, categorySpending]);
 
   // Get chart data from custom hook
   const { monthlyData, balanceData, dailySpending } = useDashboardCharts(

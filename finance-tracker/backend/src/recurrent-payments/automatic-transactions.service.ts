@@ -27,7 +27,16 @@ export class AutomaticTransactionsService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleRecurrentPayments(): Promise<ExecutionResult> {
-    return this.processRecurrentPayments();
+    console.log(
+      "🔄 [AutomaticTransactionsService] Cron job triggered at:",
+      new Date().toISOString()
+    );
+    const result = await this.processRecurrentPayments();
+    console.log(
+      "✅ [AutomaticTransactionsService] Cron job completed:",
+      result
+    );
+    return result;
   }
 
   async manualExecution(): Promise<ExecutionResult> {
@@ -38,6 +47,11 @@ export class AutomaticTransactionsService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    console.log(
+      "🔄 [AutomaticTransactionsService] Processing recurrent payments for date:",
+      today.toISOString()
+    );
+
     const result: ExecutionResult = {
       processedPayments: 0,
       createdTransactions: 0,
@@ -46,12 +60,32 @@ export class AutomaticTransactionsService {
       details: [],
     };
 
+    // First, let's check all recurrent payments to debug
+    const allPayments = await this.prisma.recurrentPayment.findMany({
+      include: {
+        category: true,
+        user: true,
+      },
+    });
+
+    console.log(
+      "🔍 [AutomaticTransactionsService] All recurrent payments in database:",
+      allPayments.map((p) => ({
+        id: p.id,
+        name: p.name,
+        amount: p.amount,
+        isActive: p.isActive,
+        nextPaymentDate: p.nextPaymentDate,
+        interval: p.interval,
+      }))
+    );
+
     // Find all active recurrent payments that are due today
     const duePayments = await this.prisma.recurrentPayment.findMany({
       where: {
         isActive: true,
         nextPaymentDate: {
-          lt: new Date(today.getTime() + 24 * 60 * 60 * 1000), // Include payments due until the end of today
+          lte: new Date(today.getTime() + 24 * 60 * 60 * 1000), // Include payments due until the end of today
         },
         OR: [{ endDate: null }, { endDate: { gte: today } }],
       },
@@ -61,7 +95,16 @@ export class AutomaticTransactionsService {
       },
     });
 
-    console.log("Due payments found:", duePayments);
+    console.log(
+      "🎯 [AutomaticTransactionsService] Due payments found:",
+      duePayments.map((p) => ({
+        id: p.id,
+        name: p.name,
+        amount: p.amount,
+        nextPaymentDate: p.nextPaymentDate,
+        interval: p.interval,
+      }))
+    );
 
     result.processedPayments = duePayments.length;
 
