@@ -38,3 +38,4 @@ coverage/
 .Trashes
 ehthumbs.db
 Thumbs.db
+csv-export/*

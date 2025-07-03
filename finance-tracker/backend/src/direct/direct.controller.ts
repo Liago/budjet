@@ -844,14 +844,27 @@ export class DirectController {
         }
       }
 
+      // 🔧 FIX: Handle tags like in TransactionsService
+      const { tags, ...transactionData } = body;
+
+      // Create or connect tags
+      const tagConnectOrCreate =
+        tags?.map((tagName: string) => ({
+          where: { name_userId: { name: tagName, userId } },
+          create: { name: tagName, userId },
+        })) || [];
+
       const transaction = await prisma.transaction.create({
         data: {
-          amount: Number(body.amount),
-          description: body.description || null,
-          date: new Date(body.date),
-          type: body.type,
-          categoryId: body.categoryId,
+          amount: Number(transactionData.amount),
+          description: transactionData.description || null,
+          date: new Date(transactionData.date),
+          type: transactionData.type,
+          categoryId: transactionData.categoryId,
           userId: userId,
+          tags: {
+            connectOrCreate: tagConnectOrCreate,
+          },
         },
         include: {
           category: true,
@@ -876,14 +889,48 @@ export class DirectController {
       const prisma = new PrismaClient();
       await prisma.$connect();
 
+      // 🔧 FIX: Handle tags like in TransactionsService
+      const { tags, ...transactionData } = body;
+
+      // Get userId from existing transaction for tag management
+      const existingTransaction = await prisma.transaction.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+
+      if (!existingTransaction) {
+        throw new Error("Transaction not found");
+      }
+
+      const userId = existingTransaction.userId;
+
+      // If tags are provided, update them
+      let tagsUpdate = {};
+      if (tags) {
+        tagsUpdate = {
+          tags: {
+            set: [], // First disconnect all existing tags
+            connectOrCreate: tags.map((tagName: string) => ({
+              where: { name_userId: { name: tagName, userId } },
+              create: { name: tagName, userId },
+            })),
+          },
+        };
+      }
+
       const transaction = await prisma.transaction.update({
         where: { id },
         data: {
-          amount: body.amount ? Number(body.amount) : undefined,
-          description: body.description,
-          date: body.date ? new Date(body.date) : undefined,
-          type: body.type,
-          categoryId: body.categoryId,
+          amount: transactionData.amount
+            ? Number(transactionData.amount)
+            : undefined,
+          description: transactionData.description,
+          date: transactionData.date
+            ? new Date(transactionData.date)
+            : undefined,
+          type: transactionData.type,
+          categoryId: transactionData.categoryId,
+          ...tagsUpdate,
         },
         include: {
           category: true,

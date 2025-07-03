@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // 🔧 FORZATO per produzione Netlify
+  provider = "sqlite" // For migration
   url      = env("DATABASE_URL")
 }
 
@@ -17,7 +17,7 @@ enum TransactionType {
 }
 
 model User {
-  id                 String            @id @default(cuid())
+  id                 String            @id @default(uuid())
   email              String            @unique
   password           String
   firstName          String
@@ -34,7 +34,7 @@ model User {
 }
 
 model Category {
-  id                 String              @id @default(cuid())
+  id                 String              @id @default(uuid())
   name               String
   icon               String?
   color              String?
@@ -68,7 +68,7 @@ model Transaction {
 }
 
 model Tag {
-  id            String        @id @default(cuid())
+  id            String        @id @default(uuid())
   name          String
   user          User          @relation(fields: [userId], references: [id])
   userId        String
@@ -80,7 +80,7 @@ model Tag {
 }
 
 model RecurrentPayment {
-  id           String   @id @default(cuid())
+  id           String   @id @default(uuid())
   name         String
   amount       Decimal
   description  String?
@@ -101,7 +101,7 @@ model RecurrentPayment {
 
 // Modello per gli obiettivi di risparmio
 model SavingsGoal {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   name          String
   targetAmount  Decimal
   currentAmount Decimal   @default(0)
@@ -127,7 +127,7 @@ model AutomaticExecutionLog {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   userId    String
   title     String
   message   String
@@ -139,7 +139,7 @@ model Notification {
 
 // Modello per le preferenze di notifica
 model NotificationPreference {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   userId    String
   type      String   // 'BUDGET_ALERT', 'PAYMENT_REMINDER', ecc.
   enabled   Boolean  @default(true)
