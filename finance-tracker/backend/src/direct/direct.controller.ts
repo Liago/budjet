@@ -2015,7 +2015,9 @@ export class DirectController {
   @Get("notifications/preferences")
   async getNotificationPreferences(@Query("userId") userId?: string) {
     try {
-      const prisma = this.getPrismaInstance();
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
 
       // Default userId if not provided (for compatibility)
       if (!userId) {
@@ -2025,6 +2027,8 @@ export class DirectController {
       const preferences = await prisma.notificationPreference.findMany({
         where: { userId },
       });
+
+      await prisma.$disconnect();
 
       if (preferences.length === 0) {
         // Return default preferences if user has no custom ones
@@ -2048,7 +2052,10 @@ export class DirectController {
     @Body() body: { userId?: string; preferences: any[] }
   ) {
     try {
-      const prisma = this.getPrismaInstance();
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
       const { userId = "default-user-id", preferences } = body;
 
       // Delete existing preferences
@@ -2069,6 +2076,8 @@ export class DirectController {
           });
         })
       );
+
+      await prisma.$disconnect();
 
       return createdPrefs.map((pref) => ({
         ...pref,
@@ -2093,7 +2102,10 @@ export class DirectController {
     }
   ) {
     try {
-      const prisma = this.getPrismaInstance();
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
       const { currentPassword, newPassword, userId = "default-user-id" } = body;
 
       // Get user
@@ -2102,14 +2114,15 @@ export class DirectController {
       });
 
       if (!user) {
+        await prisma.$disconnect();
         return {
           success: false,
           error: "Utente non trovato",
         };
       }
 
-      // Import bcrypt for password hashing
-      const bcrypt = await import("bcrypt");
+      // Import bcryptjs for password hashing
+      const bcrypt = await import("bcryptjs");
 
       // Verify current password
       const isCurrentPasswordValid = await bcrypt.compare(
@@ -2117,6 +2130,7 @@ export class DirectController {
         user.password
       );
       if (!isCurrentPasswordValid) {
+        await prisma.$disconnect();
         return {
           success: false,
           error: "Password attuale non corretta",
@@ -2132,6 +2146,8 @@ export class DirectController {
         where: { id: userId },
         data: { password: hashedNewPassword },
       });
+
+      await prisma.$disconnect();
 
       return {
         success: true,
