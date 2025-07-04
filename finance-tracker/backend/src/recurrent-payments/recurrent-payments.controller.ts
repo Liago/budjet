@@ -26,6 +26,7 @@ import {
   AutomaticTransactionsService,
   ExecutionResult,
 } from "./automatic-transactions.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 @ApiTags("recurrent-payments")
 @Controller("recurrent-payments")
@@ -34,7 +35,8 @@ import {
 export class RecurrentPaymentsController {
   constructor(
     private readonly recurrentPaymentsService: RecurrentPaymentsService,
-    private readonly automaticTransactionsService: AutomaticTransactionsService
+    private readonly automaticTransactionsService: AutomaticTransactionsService,
+    private readonly prisma: PrismaService
   ) {}
 
   @Post()
@@ -147,5 +149,91 @@ export class RecurrentPaymentsController {
   })
   async executeManually(): Promise<ExecutionResult> {
     return this.automaticTransactionsService.manualExecution();
+  }
+
+  @Post("debug-status")
+  @ApiOperation({
+    summary: "Debug endpoint to check recurrent payments status",
+  })
+  @ApiResponse({ status: 200, description: "Debug information" })
+  async debugStatus() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get all recurrent payments
+    const allPayments = await this.prisma.recurrentPayment.findMany({
+      include: {
+        user: {
+          select: { id: true, email: true },
+        },
+        category: {
+          select: { name: true },
+        },
+      },
+    });
+
+    // Get payments due today
+    const duePayments = await this.prisma.recurrentPayment.findMany({
+      where: {
+        isActive: true,
+        nextPaymentDate: {
+          lte: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        },
+        OR: [{ endDate: null }, { endDate: { gte: today } }],
+      },
+      include: {
+        user: {
+          select: { id: true, email: true },
+        },
+        category: {
+          select: { name: true },
+        },
+      },
+    });
+
+    // Get last execution log
+    const lastExecution = await this.prisma.automaticExecutionLog.findFirst({
+      orderBy: { executionDate: "desc" },
+    });
+
+    return {
+      status: "debug",
+      timestamp: new Date().toISOString(),
+      currentDate: today.toISOString(),
+      emailConfigured: process.env.SMTP_HOST ? true : false,
+      smtpHost: process.env.SMTP_HOST ? "configured" : "missing",
+      smtpUser: process.env.SMTP_USER ? "configured" : "missing",
+      counts: {
+        totalPayments: allPayments.length,
+        activePayments: allPayments.filter((p) => p.isActive).length,
+        dueToday: duePayments.length,
+      },
+      allPayments: allPayments.map((p) => ({
+        id: p.id,
+        name: p.name,
+        amount: Number(p.amount),
+        isActive: p.isActive,
+        nextPaymentDate: p.nextPaymentDate,
+        interval: p.interval,
+        userEmail: p.user.email,
+        category: p.category.name,
+      })),
+      duePayments: duePayments.map((p) => ({
+        id: p.id,
+        name: p.name,
+        amount: Number(p.amount),
+        nextPaymentDate: p.nextPaymentDate,
+        userEmail: p.user.email,
+        category: p.category.name,
+      })),
+      lastExecution: lastExecution
+        ? {
+            date: lastExecution.executionDate,
+            processedPayments: lastExecution.processedPayments,
+            createdTransactions: lastExecution.createdTransactions,
+            totalAmount: Number(lastExecution.totalAmount),
+          }
+        : null,
+    };
   }
 }
