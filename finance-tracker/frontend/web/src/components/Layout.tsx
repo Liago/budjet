@@ -21,7 +21,7 @@ import {
   ChevronDownIcon,
   MailIcon,
   LogOutIcon,
-  SettingsIcon,
+  Settings,
 } from "./Icons";
 
 // New Sidebar Components
@@ -243,7 +243,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         }}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent/50 flex items-center"
                       >
-                        <SettingsIcon className="mr-3 h-4 w-4 text-muted-foreground" />
+                        <Settings className="mr-3 h-4 w-4 text-muted-foreground" />
                         Preferenze
                       </button>
                       <button
