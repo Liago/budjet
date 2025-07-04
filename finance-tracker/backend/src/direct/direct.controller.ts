@@ -1652,12 +1652,12 @@ export class DirectController {
 
       const firstUser = await prisma.user.findFirst();
       const testEmail = firstUser?.email || "test@budjet.app";
-      
+
       await prisma.$disconnect();
 
       // Setup nodemailer
       const nodemailer = await import("nodemailer");
-      const transporter = nodemailer.createTransporter({
+      const transporter = nodemailer.createTransport({
         host: smtpHost,
         port: parseInt(smtpPort),
         secure: false,
