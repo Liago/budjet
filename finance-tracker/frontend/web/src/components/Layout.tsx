@@ -67,9 +67,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleSendTestEmail = async () => {
     setIsLoading(true);
     try {
-      const data = await apiService.post<{ success: boolean; error?: string }>("/email/test", {
-        template: selectedTemplate
-      });
+      const data = await apiService.post<{ success: boolean; error?: string }>(
+        "/direct/email/test",
+        {
+          template: selectedTemplate,
+        }
+      );
 
       if (data.success) {
         toast.success("Email di test inviata con successo!");

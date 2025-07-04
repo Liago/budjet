@@ -1621,4 +1621,340 @@ export class DirectController {
       };
     }
   }
+
+  // 🚀 EMAIL TEST - Direct endpoint for Netlify compatibility
+  @Post("email/test")
+  async sendTestEmail(@Body() body: { template?: string }) {
+    try {
+      // Get email configuration from environment
+      const smtpHost = process.env.SMTP_HOST;
+      const smtpUser = process.env.SMTP_USER;
+      const smtpPass = process.env.SMTP_PASS;
+      const smtpPort = process.env.SMTP_PORT || "587";
+      const smtpFrom = process.env.SMTP_FROM || "noreply@bud-jet.app";
+
+      if (!smtpHost || !smtpUser || !smtpPass) {
+        return {
+          success: false,
+          error: "SMTP configuration incomplete",
+          missing: {
+            SMTP_HOST: !smtpHost,
+            SMTP_USER: !smtpUser,
+            SMTP_PASS: !smtpPass,
+          },
+        };
+      }
+
+      // Get test email (use default for testing)
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const firstUser = await prisma.user.findFirst();
+      const testEmail = firstUser?.email || "test@budjet.app";
+      
+      await prisma.$disconnect();
+
+      // Setup nodemailer
+      const nodemailer = await import("nodemailer");
+      const transporter = nodemailer.createTransporter({
+        host: smtpHost,
+        port: parseInt(smtpPort),
+        secure: false,
+        requireTLS: true,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+        tls: {
+          ciphers: "SSLv3",
+          rejectUnauthorized: false,
+        },
+      });
+
+      // Generate HTML content based on template
+      const template = body.template || "test";
+      let html: string;
+      let subject: string;
+
+      if (template === "transactions") {
+        // Example transactions for testing
+        const exampleTransactions = [
+          {
+            paymentName: "Restituzione INPS",
+            amount: 221.65,
+            nextDate: new Date("2025-04-30"),
+          },
+          {
+            paymentName: "AppleOne",
+            amount: 25.95,
+            nextDate: new Date("2025-04-30"),
+          },
+        ];
+        const totalAmount = 247.6;
+
+        // Generate transactions template
+        const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+        const formatDate = (date: Date) =>
+          new Date(date).toLocaleDateString("it-IT", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          });
+
+        const transactionsHtml = exampleTransactions
+          .map(
+            (t) => `
+            <tr>
+              <td class="text-bold">${t.paymentName}</td>
+              <td class="text-right">${formatCurrency(t.amount)}</td>
+              <td>${formatDate(t.nextDate)}</td>
+            </tr>
+          `
+          )
+          .join("");
+
+        const content = `
+          <h1>Nuove Transazioni Automatiche</h1>
+          
+          <div class="mb-4">
+            <p>
+              Sono state create <span class="text-bold">${
+                exampleTransactions.length
+              }</span> nuove transazioni
+              per un totale di <span class="text-bold text-blue">${formatCurrency(
+                totalAmount
+              )}</span>.
+            </p>
+          </div>
+
+          <div style="background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nome Transazione</th>
+                  <th class="text-right">Importo</th>
+                  <th>Prossima Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${transactionsHtml}
+                <tr style="background-color: #F9FAFB;">
+                  <td colspan="3" class="text-right text-bold">
+                    Totale: <span class="text-blue">${formatCurrency(
+                      totalAmount
+                    )}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-4" style="background-color: #EFF6FF; border-radius: 8px; padding: 16px; border: 1px solid #BFDBFE;">
+            <h2 style="color: #1E40AF; margin-bottom: 8px;">📅 Prossimi Passi</h2>
+            <p style="color: #1E40AF; margin: 0;">
+              Le transazioni verranno create automaticamente alle date specificate.
+              Puoi modificare o cancellare queste transazioni in qualsiasi momento dal tuo pannello di controllo.
+            </p>
+          </div>
+        `;
+
+        html = this.generateEmailTemplate(content);
+        subject = "Test Email - Template Transazioni";
+      } else {
+        // Test template
+        const content = `
+          <h1>Test Email da Bud-Jet</h1>
+          <div class="mb-4">
+            <p>👋 Ciao! Questa è una email di test per verificare la configurazione del sistema di notifiche.</p>
+          </div>
+          
+          <div style="background-color: #F0FDF4; border-radius: 8px; padding: 16px; border: 1px solid #86EFAC;">
+            <h2 style="color: #166534; margin-bottom: 8px;">✅ Configurazione Corretta!</h2>
+            <p style="color: #166534; margin: 0;">
+              Se stai vedendo questa email, significa che il sistema di notifiche è configurato correttamente.
+              Riceverai notifiche per:
+            </p>
+            <ul style="color: #166534; margin: 12px 0 0 24px;">
+              <li>Transazioni automatiche create</li>
+              <li>Promemoria di pagamento</li>
+              <li>Aggiornamenti importanti del tuo account</li>
+            </ul>
+          </div>
+        `;
+
+        html = this.generateEmailTemplate(content);
+        subject = "Test Email da Bud-Jet";
+      }
+
+      // Send email
+      const info = await transporter.sendMail({
+        from: smtpFrom,
+        to: testEmail,
+        subject,
+        html,
+      });
+
+      return {
+        success: true,
+        messageId: info.messageId,
+        template,
+        emailSentTo: testEmail,
+      };
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // Helper method to generate email template
+  private generateEmailTemplate(content: string): string {
+    return `
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Reset CSS */
+    body, p, h1, h2, h3, h4, h5, h6, ul, ol, li {
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* Base styles */
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #1F2937;
+      background-color: #F3F4F6;
+    }
+
+    /* Container */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 1px solid #E5E7EB;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2563EB;
+      text-decoration: none;
+    }
+
+    /* Content */
+    .content {
+      padding: 0 24px;
+    }
+
+    /* Typography */
+    h1 {
+      color: #1F2937;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      color: #374151;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #4B5563;
+      margin-bottom: 16px;
+    }
+
+    /* Table */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      background-color: #FFFFFF;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .table th {
+      background-color: #F3F4F6;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 2px solid #E5E7EB;
+    }
+
+    .table td {
+      padding: 12px;
+      border-bottom: 1px solid #E5E7EB;
+      color: #4B5563;
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Utilities */
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-bold { font-weight: 600; }
+    .text-blue { color: #2563EB; }
+    .text-gray { color: #6B7280; }
+    .mt-4 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 16px; }
+
+    /* Responsive */
+    @media screen and (max-width: 600px) {
+      .container {
+        width: 100%;
+        padding: 16px;
+      }
+      
+      .content {
+        padding: 0 16px;
+      }
+      
+      .table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Bud-Jet</div>
+    </div>
+    <div class="content">
+      ${content}
+    </div>
+    <div class="footer">
+      <p>© ${new Date().getFullYear()} Bud-Jet. Tutti i diritti riservati.</p>
+      <p class="mt-4">Questa è una notifica automatica. Non rispondere a questa email.</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+  }
 }

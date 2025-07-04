@@ -49,7 +49,7 @@ export const UserProfile = () => {
     setIsLoading(true);
     try {
       const data = await apiService.post<{ success: boolean; error?: string }>(
-        "/email/test",
+        "/direct/email/test",
         {
           template: selectedTemplate,
         }
