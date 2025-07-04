@@ -21,6 +21,7 @@ import RecurrentPayments from "./pages/RecurrentPayments";
 import Analytics from "./pages/Analytics";
 import NotificationsPage from "./pages/NotificationsPage";
 import TestConnection from "./pages/TestConnection";
+import { UserPreferences } from "./pages/UserPreferences";
 
 // Components
 import Layout from "./components/Layout";
@@ -71,6 +72,7 @@ function App() {
             <Route path="recurrent-payments" element={<RecurrentPayments />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="preferences" element={<UserPreferences />} />
           </Route>
 
           {/* 404 route */}
