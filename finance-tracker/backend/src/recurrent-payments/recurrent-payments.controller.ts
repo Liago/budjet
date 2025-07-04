@@ -151,6 +151,15 @@ export class RecurrentPaymentsController {
     return this.automaticTransactionsService.manualExecution();
   }
 
+  @Get("debug")
+  @ApiOperation({
+    summary: "Debug endpoint to check recurrent payments status",
+  })
+  @ApiResponse({ status: 200, description: "Debug information" })
+  async debug() {
+    return this.debugStatus();
+  }
+
   @Post("debug-status")
   @ApiOperation({
     summary: "Debug endpoint to check recurrent payments status",

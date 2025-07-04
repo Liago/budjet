@@ -5,6 +5,7 @@ import { logout } from "../store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
+import { apiService } from "../utils/api";
 
 type EmailTemplate = "test" | "transactions";
 
@@ -47,20 +48,13 @@ export const UserProfile = () => {
   const handleTestEmail = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/email/test", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ template: selectedTemplate }),
-      });
+      const data = await apiService.post<{ success: boolean; error?: string }>(
+        "/email/test",
+        {
+          template: selectedTemplate,
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error("Failed to send test email");
-      }
-
-      const data = await response.json();
       if (data.success) {
         toast.success("Email di test inviata con successo!");
         setShowModal(false);
