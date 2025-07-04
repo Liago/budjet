@@ -1957,4 +1957,192 @@ export class DirectController {
 </html>
 `;
   }
+
+  // 🚀 NOTIFICATIONS PREFERENCES - Direct endpoints for Netlify compatibility
+  @Get("notifications/preferences/default")
+  async getDefaultNotificationPreferences() {
+    try {
+      return [
+        {
+          type: "BUDGET_ALERT",
+          enabled: true,
+          channels: { email: false, app: true },
+        },
+        {
+          type: "PAYMENT_REMINDER",
+          enabled: true,
+          channels: { email: true, app: true },
+        },
+        {
+          type: "TRANSACTION_ALERT",
+          enabled: true,
+          channels: { email: false, app: true },
+        },
+        {
+          type: "MILESTONE_REACHED",
+          enabled: true,
+          channels: { email: true, app: true },
+        },
+        {
+          type: "PERIOD_SUMMARY",
+          enabled: true,
+          channels: { email: true, app: true },
+        },
+        {
+          type: "TAX_DEADLINE",
+          enabled: true,
+          channels: { email: true, app: true },
+        },
+        {
+          type: "NEW_FEATURE",
+          enabled: true,
+          channels: { email: false, app: true },
+        },
+        {
+          type: "PERSONALIZED_TIP",
+          enabled: true,
+          channels: { email: false, app: true },
+        },
+      ];
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Get("notifications/preferences")
+  async getNotificationPreferences(@Query("userId") userId?: string) {
+    try {
+      const prisma = this.getPrismaInstance();
+
+      // Default userId if not provided (for compatibility)
+      if (!userId) {
+        userId = "default-user-id";
+      }
+
+      const preferences = await prisma.notificationPreference.findMany({
+        where: { userId },
+      });
+
+      if (preferences.length === 0) {
+        // Return default preferences if user has no custom ones
+        return this.getDefaultNotificationPreferences();
+      }
+
+      return preferences.map((pref) => ({
+        ...pref,
+        channels: JSON.parse(pref.channels),
+      }));
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  @Post("notifications/preferences")
+  async updateNotificationPreferences(
+    @Body() body: { userId?: string; preferences: any[] }
+  ) {
+    try {
+      const prisma = this.getPrismaInstance();
+      const { userId = "default-user-id", preferences } = body;
+
+      // Delete existing preferences
+      await prisma.notificationPreference.deleteMany({
+        where: { userId },
+      });
+
+      // Create new preferences
+      const createdPrefs = await Promise.all(
+        preferences.map(async (pref) => {
+          return prisma.notificationPreference.create({
+            data: {
+              userId,
+              type: pref.type,
+              enabled: pref.enabled,
+              channels: JSON.stringify(pref.channels),
+            },
+          });
+        })
+      );
+
+      return createdPrefs.map((pref) => ({
+        ...pref,
+        channels: JSON.parse(pref.channels),
+      }));
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 USER CHANGE PASSWORD - Direct endpoint for Netlify compatibility
+  @Post("users/change-password")
+  async changePassword(
+    @Body()
+    body: {
+      currentPassword: string;
+      newPassword: string;
+      userId?: string;
+    }
+  ) {
+    try {
+      const prisma = this.getPrismaInstance();
+      const { currentPassword, newPassword, userId = "default-user-id" } = body;
+
+      // Get user
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          error: "Utente non trovato",
+        };
+      }
+
+      // Import bcrypt for password hashing
+      const bcrypt = await import("bcrypt");
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+      if (!isCurrentPasswordValid) {
+        return {
+          success: false,
+          error: "Password attuale non corretta",
+        };
+      }
+
+      // Hash new password
+      const saltRounds = 10;
+      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update user password
+      await prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedNewPassword },
+      });
+
+      return {
+        success: true,
+        message: "Password cambiata con successo",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
 }

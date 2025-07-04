@@ -11,6 +11,7 @@ import BudgetsPage from "../pages/Budgets";
 import AnalyticsPage from "../pages/Analytics";
 import NotFoundPage from "../pages/NotFound";
 import RecurrentPayments from "../pages/RecurrentPayments";
+import { UserPreferences } from "../pages/UserPreferences";
 import Layout from "./Layout";
 
 const AppRouter = () => {
@@ -38,6 +39,7 @@ const AppRouter = () => {
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="preferences" element={<UserPreferences />} />
         <Route path="recurrent-payments" element={<RecurrentPayments />} />
       </Route>
 
