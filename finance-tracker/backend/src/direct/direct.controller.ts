@@ -2150,7 +2150,7 @@ export class DirectController {
       }
 
       // Import bcryptjs for password hashing
-      const bcrypt = await import("bcryptjs");
+      const bcrypt = (await import("bcryptjs")).default;
 
       // Verify current password
       const isCurrentPasswordValid = await bcrypt.compare(
