@@ -11,6 +11,7 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import * as jwt from "jsonwebtoken";
+import * as bcrypt from "bcryptjs";
 
 // Interface for execution result
 interface ExecutionResult {
@@ -2149,10 +2150,7 @@ export class DirectController {
         };
       }
 
-      // Import bcryptjs for password hashing
-      const bcrypt = (await import("bcryptjs")).default;
-
-      // Verify current password
+      // Verify current password with bcrypt (imported statically)
       const isCurrentPasswordValid = await bcrypt.compare(
         currentPassword,
         user.password
