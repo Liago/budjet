@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CurrencyDisplay } from "@/components/ui/currency-display";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -108,10 +109,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
               Category
             </th>
             <th
-              className="text-left text-xs font-medium p-3 uppercase text-muted-foreground cursor-pointer w-1/6"
+              className="text-right text-xs font-medium p-3 uppercase text-muted-foreground cursor-pointer w-1/6"
               onClick={() => onSort("amount")}
             >
-              <div className="flex items-center">
+              <div className="flex items-center justify-end">
                 Amount
                 {sortField === "amount" &&
                   (sortDirection === "asc" ? (
@@ -152,7 +153,18 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   </div>
                 </td>
                 <td className="p-3">
-                  <div>{new Date(transaction.date).toLocaleDateString()}</div>
+                  <div className="font-mono text-sm">
+                    {new Date(transaction.date).toLocaleDateString("it-IT", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(transaction.date).toLocaleDateString("it-IT", {
+                      weekday: "short",
+                    })}
+                  </div>
                 </td>
                 <td className="p-3">
                   <div className="flex items-center">
@@ -166,19 +178,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   </div>
                 </td>
                 <td className="p-3">
-                  <Badge
-                    variant={
-                      transaction.type === "INCOME" ? "default" : "destructive"
-                    }
-                    className={
-                      transaction.type === "INCOME"
-                        ? "bg-green-100 text-green-800"
-                        : ""
-                    }
-                  >
-                    {transaction.type === "INCOME" ? "+€ " : "-€ "}
-                    {formatAmount(transaction.amount).substring(2)}
-                  </Badge>
+                  <CurrencyDisplay
+                    amount={transaction.amount}
+                    type={transaction.type}
+                    variant="default"
+                    showType={true}
+                  />
                 </td>
                 <td className="p-3 text-right">
                   <div className="flex justify-end space-x-1">
