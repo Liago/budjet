@@ -38,8 +38,8 @@ const ExpensePieChart: React.FC<ExpensePieChartProps> = ({
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
         {expensesByCategory.map((entry, index) => (
           <div key={`legend-${index}`} className="flex items-center text-sm">
-            <div
-              className="w-3 h-3 mr-2 rounded-full"
+            <div 
+              className="w-3 h-3 mr-2 rounded-full" 
               style={{ backgroundColor: entry.color }}
             />
             <span className="flex-1 truncate">{entry.name}</span>
@@ -129,4 +129,4 @@ const ExpensePieChart: React.FC<ExpensePieChartProps> = ({
   );
 };
 
-export default ExpensePieChart;
+export default ExpensePieChart; 

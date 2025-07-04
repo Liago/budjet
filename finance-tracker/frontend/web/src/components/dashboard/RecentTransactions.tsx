@@ -46,9 +46,9 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({
                 className="flex items-center justify-between"
               >
                 <div className="flex items-center">
-                  <div
+                  <div 
                     className="w-10 h-10 rounded-full mr-3 flex items-center justify-center text-white"
-                    style={{
+                    style={{ 
                       backgroundColor:
                         transaction.category?.color ||
                         (transaction.type === "INCOME" ? "#22C55E" : "#EF4444"),
@@ -109,4 +109,4 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({
   );
 };
 
-export default RecentTransactions;
+export default RecentTransactions; 

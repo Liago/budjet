@@ -7,8 +7,10 @@ import {
   Query,
   Patch,
   Delete,
+  Headers,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import * as jwt from "jsonwebtoken";
 
 // Interface for execution result
 interface ExecutionResult {
@@ -2099,14 +2101,40 @@ export class DirectController {
       currentPassword: string;
       newPassword: string;
       userId?: string;
-    }
+    },
+    @Headers("authorization") authHeader?: string
   ) {
     try {
       const { PrismaClient } = await import("@prisma/client");
       const prisma = new PrismaClient();
       await prisma.$connect();
 
-      const { currentPassword, newPassword, userId = "default-user-id" } = body;
+      let { currentPassword, newPassword, userId } = body;
+
+      // 🔧 Extract user ID from JWT token if not provided
+      if (!userId && authHeader) {
+        try {
+          const token = authHeader.replace("Bearer ", "");
+          const jwtSecret =
+            process.env.JWT_SECRET ||
+            "fallback-jwt-secret-for-development-minimum-32-chars";
+          const decoded = jwt.verify(token, jwtSecret) as any;
+          userId = decoded.sub;
+          console.log("✅ User ID extracted from JWT:", userId);
+        } catch (jwtError) {
+          console.error("❌ JWT decode error:", jwtError.message);
+          await prisma.$disconnect();
+          return {
+            success: false,
+            error: "Token non valido o scaduto",
+          };
+        }
+      }
+
+      // Fallback to default if still no userId
+      if (!userId) {
+        userId = "default-user-id";
+      }
 
       // Get user
       const user = await prisma.user.findUnique({

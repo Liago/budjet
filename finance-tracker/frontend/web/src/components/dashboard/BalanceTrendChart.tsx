@@ -82,23 +82,23 @@ const BalanceTrendChart: React.FC<BalanceTrendChartProps> = ({
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="date"
+                <XAxis 
+                  dataKey="date" 
                   tick={{ fontSize: 12 }}
                   height={40}
                   tickMargin={10}
                 />
-                <YAxis
+                <YAxis 
                   tickFormatter={(value) => "€" + formatAmount(value)}
                   width={60}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="balance"
-                  stroke="#3B82F6"
-                  fillOpacity={1}
-                  fill="url(#colorBalance)"
+                <Area 
+                  type="monotone" 
+                  dataKey="balance" 
+                  stroke="#3B82F6" 
+                  fillOpacity={1} 
+                  fill="url(#colorBalance)" 
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -129,4 +129,4 @@ const BalanceTrendChart: React.FC<BalanceTrendChartProps> = ({
   );
 };
 
-export default BalanceTrendChart;
+export default BalanceTrendChart; 

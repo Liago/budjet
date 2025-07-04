@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { RootState } from "../store";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/slices/authSlice";
@@ -14,8 +14,6 @@ import {
   TagIcon,
   ChartBarIcon,
   ChevronUpIcon,
-  MenuIcon,
-  XIcon,
   SunIcon,
   MoonIcon,
   SearchIcon,
@@ -23,7 +21,11 @@ import {
   ChevronDownIcon,
   MailIcon,
   LogOutIcon,
+  SettingsIcon,
 } from "./Icons";
+
+// New Sidebar Components
+import { Sidebar, SidebarBody, SidebarLink } from "./ui/sidebar";
 
 // Components
 import { UserProfile } from "./UserProfile";
@@ -35,7 +37,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,14 +47,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   >("test");
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     dispatch(logout() as any);
@@ -88,180 +83,109 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   };
 
+  // Definizione dei link della sidebar
+  const sidebarLinks = [
+    {
+      label: "Dashboard",
+      href: "/",
+      icon: (
+        <HomeIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Transazioni",
+      href: "/transactions",
+      icon: (
+        <CreditCardIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Categorie",
+      href: "/categories",
+      icon: (
+        <TagIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Pagamenti Ricorrenti",
+      href: "/recurrent-payments",
+      icon: (
+        <ChevronUpIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Analisi",
+      href: "/analytics",
+      icon: (
+        <ChartBarIcon className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+  ];
+
   return (
-    <div
-      className={`h-screen flex overflow-hidden ${
-        isDark ? "dark" : ""
-      } bg-background`}
-    >
-      {/* Sidebar for desktop */}
-      <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-card border-r border-border">
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex items-center h-16 flex-shrink-0 px-4 border-b border-border">
-            <h1 className="text-xl font-bold text-primary">Bud-Jet</h1>
-          </div>
-          <div className="flex-1 flex flex-col overflow-y-auto">
-            <nav className="flex-1 px-3 py-4 space-y-1">
-              <div className="space-y-0.5">
-                <NavLink
-                  to="/dashboard"
-                  className={({ isActive }) =>
-                    `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-foreground hover:bg-accent/50"
-                    }`
-                  }
-                >
-                  <HomeIcon
-                    className={({ isActive }) =>
-                      `mr-3 flex-shrink-0 h-5 w-5 ${
-                        isActive
-                          ? "text-accent-foreground"
-                          : "text-muted-foreground group-hover:text-foreground"
-                      }`
-                    }
-                  />
-                  Dashboard
-                </NavLink>
-
-                <NavLink
-                  to="/transactions"
-                  className={({ isActive }) =>
-                    `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-foreground hover:bg-accent/50"
-                    }`
-                  }
-                >
-                  <CreditCardIcon
-                    className={({ isActive }) =>
-                      `mr-3 flex-shrink-0 h-5 w-5 ${
-                        isActive
-                          ? "text-accent-foreground"
-                          : "text-muted-foreground group-hover:text-foreground"
-                      }`
-                    }
-                  />
-                  Transazioni
-                </NavLink>
-
-                <NavLink
-                  to="/categories"
-                  className={({ isActive }) =>
-                    `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-foreground hover:bg-accent/50"
-                    }`
-                  }
-                >
-                  <TagIcon
-                    className={({ isActive }) =>
-                      `mr-3 flex-shrink-0 h-5 w-5 ${
-                        isActive
-                          ? "text-accent-foreground"
-                          : "text-muted-foreground group-hover:text-foreground"
-                      }`
-                    }
-                  />
-                  Categorie
-                </NavLink>
-
-                <NavLink
-                  to="/recurrent-payments"
-                  className={({ isActive }) =>
-                    `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-foreground hover:bg-accent/50"
-                    }`
-                  }
-                >
-                  <ChevronUpIcon
-                    className={({ isActive }) =>
-                      `mr-3 flex-shrink-0 h-5 w-5 ${
-                        isActive
-                          ? "text-accent-foreground"
-                          : "text-muted-foreground group-hover:text-foreground"
-                      }`
-                    }
-                  />
-                  Pagamenti Ricorrenti
-                </NavLink>
-
-                <NavLink
-                  to="/analytics"
-                  className={({ isActive }) =>
-                    `group flex items-center px-2 py-2 text-sm font-medium rounded-lg ${
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-foreground hover:bg-accent/50"
-                    }`
-                  }
-                >
-                  <ChartBarIcon
-                    className={({ isActive }) =>
-                      `mr-3 flex-shrink-0 h-5 w-5 ${
-                        isActive
-                          ? "text-accent-foreground"
-                          : "text-muted-foreground group-hover:text-foreground"
-                      }`
-                    }
-                  />
-                  Analisi
-                </NavLink>
-              </div>
-            </nav>
-          </div>
-        </div>
-      </aside>
-
-      {/* Header bar */}
-      <div className="flex-1 flex flex-col md:pl-64">
-        <div className="sticky top-0 z-10 flex-shrink-0 h-16 bg-card border-b border-border">
-          <div className="flex items-center justify-between px-4 h-full">
-            {/* Left side - Mobile menu button & Search */}
-            <div className="flex items-center md:hidden">
-              <button
-                onClick={toggleMobileMenu}
-                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 focus:outline-none"
-              >
-                {isMobileMenuOpen ? (
-                  <XIcon className="h-6 w-6" />
-                ) : (
-                  <MenuIcon className="h-6 w-6" />
-                )}
-              </button>
-            </div>
-
-            {/* Search bar */}
-            <div className="flex-1 px-4 flex justify-center lg:justify-end">
-              <div className="w-full max-w-lg lg:max-w-xs">
-                <label htmlFor="search" className="sr-only">
-                  Search
-                </label>
-                <div className="relative text-muted-foreground focus-within:text-foreground">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                    <SearchIcon className="h-5 w-5" />
-                  </div>
-                  <input
-                    id="search"
-                    className="block w-full bg-background py-2 pl-10 pr-3 border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                    placeholder="Search or type command..."
-                    type="search"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
-                    <kbd className="inline-flex items-center border border-border rounded px-2 text-sm font-sans font-medium text-muted-foreground">
-                      ⌘K
-                    </kbd>
-                  </div>
+    <div className="h-screen flex bg-gray-100 dark:bg-neutral-800">
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
+        <SidebarBody className="justify-between gap-10">
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+            {/* Logo */}
+            <div className="mt-8 mb-8">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">B</span>
                 </div>
+                <span className="font-bold text-xl text-neutral-800 dark:text-neutral-200">
+                  Bud-Jet
+                </span>
               </div>
             </div>
 
-            {/* Right side - User menu, notifications, theme */}
+            {/* Navigation Links */}
+            <div className="flex flex-col gap-2">
+              {sidebarLinks.map((link, idx) => (
+                <SidebarLink key={idx} link={link} />
+              ))}
+            </div>
+          </div>
+
+          {/* User Profile Section */}
+          <div>
+            <SidebarLink
+              link={{
+                label: user?.firstName + " " + user?.lastName || "User",
+                href: "#",
+                icon: (
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=random`}
+                    className="h-7 w-7 flex-shrink-0 rounded-full"
+                    width={50}
+                    height={50}
+                    alt="Avatar"
+                  />
+                ),
+              }}
+            />
+          </div>
+        </SidebarBody>
+      </Sidebar>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <div className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left side - Search or title */}
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Cerca..."
+                  className="pl-10 pr-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Right side - Actions */}
             <div className="flex items-center space-x-4">
               {/* Theme toggle */}
               <button
@@ -315,29 +239,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       <button
                         onClick={() => {
                           setIsUserMenuOpen(false);
-                          window.location.href = "/preferences";
+                          navigate("/preferences");
                         }}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent/50 flex items-center"
                       >
-                        <svg
-                          className="mr-3 h-4 w-4 text-muted-foreground"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
+                        <SettingsIcon className="mr-3 h-4 w-4 text-muted-foreground" />
                         Preferenze
                       </button>
                       <button
@@ -363,7 +269,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         {/* Main content */}
-        <main className="flex-1 relative overflow-y-auto focus:outline-none p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-neutral-900 p-6">
           {/* Rendiamo il componente flessibile per mostrare o children o Outlet */}
           <div className="container mx-auto max-w-full">
             {children ? children : <Outlet />}
@@ -371,165 +277,42 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </main>
       </div>
 
-      {/* Mobile menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 flex">
-          <div
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
-            onClick={closeMobileMenu}
-          />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-card">
-            <div className="absolute top-0 right-0 -mr-12 pt-2">
-              <button
-                onClick={closeMobileMenu}
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-foreground"
-              >
-                <span className="sr-only">Close sidebar</span>
-                <XIcon className="h-6 w-6 text-foreground" />
-              </button>
-            </div>
-            {/* Mobile menu content */}
-            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-              <div className="flex-shrink-0 flex items-center px-4">
-                <h1 className="text-xl font-bold text-primary">Bud-Jet</h1>
-              </div>
-              <nav className="mt-5 px-2 space-y-1">
-                {/* Mobile navigation links */}
-                {/* ... (same NavLink components as desktop but with mobile-specific classes) ... */}
-              </nav>
-            </div>
-            {/* Mobile theme toggle */}
-            <div className="border-t border-border p-4">
-              <button
-                onClick={toggleTheme}
-                className="flex items-center w-full px-2 py-2 text-sm text-foreground hover:bg-accent/50 rounded-lg"
-              >
-                {isDark ? (
-                  <>
-                    <SunIcon className="mr-3 h-5 w-5 text-muted-foreground" />
-                    <span>Passa al tema chiaro</span>
-                  </>
-                ) : (
-                  <>
-                    <MoonIcon className="mr-3 h-5 w-5 text-muted-foreground" />
-                    <span>Passa al tema scuro</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Test Email Modal */}
+      {/* Email Test Modal */}
       {showEmailModal && (
-        <div className="fixed inset-0 z-[999] overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
-              onClick={() => setShowEmailModal(false)}
-            />
-            <div className="relative transform overflow-hidden rounded-lg bg-card text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-              <div className="bg-card px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                    <h3 className="text-lg font-semibold leading-6 text-foreground">
-                      Test Email Templates
-                    </h3>
-                    <div className="mt-4 space-y-4">
-                      <div className="flex items-center">
-                        <input
-                          type="radio"
-                          id="test-template"
-                          name="template"
-                          value="test"
-                          checked={selectedTemplate === "test"}
-                          onChange={(e) =>
-                            setSelectedTemplate(
-                              e.target.value as "test" | "transactions"
-                            )
-                          }
-                          className="h-4 w-4 text-primary focus:ring-primary border-border"
-                        />
-                        <label htmlFor="test-template" className="ml-3">
-                          <span className="block text-sm font-medium text-foreground">
-                            Template Base
-                          </span>
-                          <span className="block text-sm text-muted-foreground">
-                            Email di test base con conferma configurazione
-                          </span>
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input
-                          type="radio"
-                          id="transactions-template"
-                          name="template"
-                          value="transactions"
-                          checked={selectedTemplate === "transactions"}
-                          onChange={(e) =>
-                            setSelectedTemplate(
-                              e.target.value as "test" | "transactions"
-                            )
-                          }
-                          className="h-4 w-4 text-primary focus:ring-primary border-border"
-                        />
-                        <label htmlFor="transactions-template" className="ml-3">
-                          <span className="block text-sm font-medium text-foreground">
-                            Template Transazioni
-                          </span>
-                          <span className="block text-sm text-muted-foreground">
-                            Email con tabella transazioni e riepilogo
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-accent/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                <button
-                  type="button"
-                  onClick={handleSendTestEmail}
-                  disabled={isLoading}
-                  className="inline-flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Invio in corso...
-                    </>
-                  ) : (
-                    "Invia Test Email"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowEmailModal(false)}
-                  className="mt-3 inline-flex w-full justify-center rounded-md bg-card px-3 py-2 text-sm font-semibold text-foreground shadow-sm ring-1 ring-inset ring-border hover:bg-accent/50 sm:mt-0 sm:w-auto"
-                >
-                  Annulla
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Test Email</h3>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Template:
+              </label>
+              <select
+                value={selectedTemplate}
+                onChange={(e) =>
+                  setSelectedTemplate(e.target.value as "test" | "transactions")
+                }
+                className="w-full p-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700"
+              >
+                <option value="test">Template Base</option>
+                <option value="transactions">Template Transazioni</option>
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleSendTestEmail}
+                disabled={isLoading}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isLoading ? "Invio..." : "Invia"}
+              </button>
             </div>
           </div>
         </div>

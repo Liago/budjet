@@ -67,22 +67,22 @@ const DailySpendingChart: React.FC<DailySpendingChartProps> = ({
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="date"
+                <XAxis 
+                  dataKey="date" 
                   tick={{ fontSize: 12 }}
                   height={40}
                   tickMargin={10}
                 />
-                <YAxis
+                <YAxis 
                   tickFormatter={(value) => "€" + formatAmount(value)}
                   width={60}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#EF4444"
-                  activeDot={{ r: 6 }}
+                <Line 
+                  type="monotone" 
+                  dataKey="amount" 
+                  stroke="#EF4444" 
+                  activeDot={{ r: 6 }} 
                   strokeWidth={2}
                 />
               </LineChart>
@@ -114,4 +114,4 @@ const DailySpendingChart: React.FC<DailySpendingChartProps> = ({
   );
 };
 
-export default DailySpendingChart;
+export default DailySpendingChart; 

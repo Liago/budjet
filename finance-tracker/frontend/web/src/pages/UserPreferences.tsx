@@ -18,15 +18,6 @@ interface PasswordForm {
   confirmPassword: string;
 }
 
-interface NotificationPreference {
-  type: string;
-  enabled: boolean;
-  channels: {
-    email: boolean;
-    app: boolean;
-  };
-}
-
 export const UserPreferences = () => {
   const [passwordForm, setPasswordForm] = useState<PasswordForm>({
     currentPassword: "",
@@ -34,8 +25,6 @@ export const UserPreferences = () => {
     confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
-  const [preferencesLoading, setPreferencesLoading] = useState(false);
 
   const validatePassword = (password: string): boolean => {
     return password.length >= 8;
@@ -87,63 +76,6 @@ export const UserPreferences = () => {
       setIsLoading(false);
     }
   };
-
-  const loadNotificationPreferences = async () => {
-    setPreferencesLoading(true);
-    try {
-      const data = await apiService.get("/direct/notifications/preferences");
-      setPreferences(data);
-    } catch (error) {
-      console.error("Error loading preferences:", error);
-      toast.error("Errore nel caricamento delle preferenze");
-    } finally {
-      setPreferencesLoading(false);
-    }
-  };
-
-  const saveNotificationPreferences = async () => {
-    setPreferencesLoading(true);
-    try {
-      await apiService.post("/direct/notifications/preferences", {
-        preferences,
-      });
-      toast.success("Preferenze notifiche salvate!");
-    } catch (error) {
-      console.error("Error saving preferences:", error);
-      toast.error("Errore nel salvataggio delle preferenze");
-    } finally {
-      setPreferencesLoading(false);
-    }
-  };
-
-  const updatePreference = (index: number, field: string, value: any) => {
-    const updated = [...preferences];
-    if (field === "enabled") {
-      updated[index].enabled = value;
-    } else if (field.startsWith("channels.")) {
-      const channel = field.split(".")[1];
-      updated[index].channels[channel as "email" | "app"] = value;
-    }
-    setPreferences(updated);
-  };
-
-  const getPreferenceLabel = (type: string): string => {
-    const labels: Record<string, string> = {
-      BUDGET_ALERT: "Avvisi Budget",
-      PAYMENT_REMINDER: "Promemoria Pagamenti",
-      TRANSACTION_ALERT: "Avvisi Transazioni",
-      MILESTONE_REACHED: "Traguardi Raggiunti",
-      PERIOD_SUMMARY: "Riepilogo Periodico",
-      TAX_DEADLINE: "Scadenze Fiscali",
-      NEW_FEATURE: "Nuove Funzionalità",
-      PERSONALIZED_TIP: "Consigli Personalizzati",
-    };
-    return labels[type] || type;
-  };
-
-  React.useEffect(() => {
-    loadNotificationPreferences();
-  }, []);
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
@@ -262,12 +194,12 @@ export const UserPreferences = () => {
         </CardContent>
       </Card>
 
-      {/* Notification Preferences Section */}
-      <Card>
+      {/* Info Box about Notifications */}
+      <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-blue-800">
             <svg
-              className="w-5 h-5 text-blue-600"
+              className="w-5 h-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -281,106 +213,16 @@ export const UserPreferences = () => {
             </svg>
             Preferenze Notifiche
           </CardTitle>
-          <CardDescription>
-            Configura quando e come ricevere le notifiche
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          {preferencesLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <svg
-                className="animate-spin h-8 w-8 text-blue-600"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {preferences.map((pref, index) => (
-                <div
-                  key={pref.type}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">
-                      {getPreferenceLabel(pref.type)}
-                    </h4>
-                    <div className="mt-2 flex items-center gap-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={pref.enabled}
-                          onChange={(e) =>
-                            updatePreference(index, "enabled", e.target.checked)
-                          }
-                          className="rounded"
-                        />
-                        <span className="text-sm text-gray-600">Attiva</span>
-                      </label>
-
-                      {pref.enabled && (
-                        <>
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={pref.channels.email}
-                              onChange={(e) =>
-                                updatePreference(
-                                  index,
-                                  "channels.email",
-                                  e.target.checked
-                                )
-                              }
-                              className="rounded"
-                            />
-                            <span className="text-sm text-gray-600">Email</span>
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={pref.channels.app}
-                              onChange={(e) =>
-                                updatePreference(
-                                  index,
-                                  "channels.app",
-                                  e.target.checked
-                                )
-                              }
-                              className="rounded"
-                            />
-                            <span className="text-sm text-gray-600">App</span>
-                          </label>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                onClick={saveNotificationPreferences}
-                disabled={preferencesLoading}
-                className="w-full"
-              >
-                Salva Preferenze Notifiche
-              </Button>
-            </div>
-          )}
+          <p className="text-blue-700 mb-3">
+            Le preferenze per le notifiche sono gestite tramite l'icona delle
+            notifiche nella barra superiore.
+          </p>
+          <p className="text-blue-600 text-sm">
+            Clicca sull'icona 🔔 in alto a destra per configurare quando e come
+            ricevere le notifiche.
+          </p>
         </CardContent>
       </Card>
     </div>

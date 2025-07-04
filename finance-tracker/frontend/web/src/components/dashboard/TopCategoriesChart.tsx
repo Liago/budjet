@@ -47,11 +47,11 @@ const TopCategoriesChart: React.FC<TopCategoriesChartProps> = ({
   // Customize the bar colors based on category color
   const renderBars = () => {
     return topCategories.map((category, index) => (
-      <Bar
+      <Bar 
         key={`bar-${index}`}
-        dataKey="amount"
-        fill={category.color}
-        radius={[4, 4, 0, 0]}
+        dataKey="amount" 
+        fill={category.color} 
+        radius={[4, 4, 0, 0]} 
         barSize={25}
         background={{ fill: "#f0f0f0" }}
       />
@@ -83,14 +83,14 @@ const TopCategoriesChart: React.FC<TopCategoriesChartProps> = ({
                   bottom: 5,
                 }}
               >
-                <XAxis
-                  type="number"
+                <XAxis 
+                  type="number" 
                   tickFormatter={(value) => "€" + formatAmount(value)}
                 />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={100}
+                <YAxis 
+                  type="category" 
+                  dataKey="name" 
+                  width={100} 
                   tick={{ fontSize: 12 }}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -124,4 +124,4 @@ const TopCategoriesChart: React.FC<TopCategoriesChartProps> = ({
   );
 };
 
-export default TopCategoriesChart;
+export default TopCategoriesChart; 
