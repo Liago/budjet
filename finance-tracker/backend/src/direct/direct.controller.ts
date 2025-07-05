@@ -112,7 +112,7 @@ export class DirectController {
       // Questo è un raw query per verificare se la tabella _TagToTransaction esiste
       let tagToTransactionCount = 0;
       try {
-        const rawResult = await prisma.$queryRaw`
+        const rawResult = await prisma.$queryRaw<Array<{ count: bigint }>>`
           SELECT COUNT(*) as count 
           FROM "_TagToTransaction"
         `;
@@ -161,7 +161,9 @@ export class DirectController {
       console.log("🔧 Starting TagToTransaction relations repair...");
 
       // 1. Verifica relazioni esistenti
-      const existingRelations = await prisma.$queryRaw`
+      const existingRelations = await prisma.$queryRaw<
+        Array<{ transaction_id: string; tag_id: string }>
+      >`
         SELECT "A" as transaction_id, "B" as tag_id FROM "_TagToTransaction"
       `;
       console.log(`📊 Found ${existingRelations.length} existing relations`);
@@ -241,7 +243,7 @@ export class DirectController {
       }
 
       // 5. Verifica finale
-      const finalRelations = await prisma.$queryRaw`
+      const finalRelations = await prisma.$queryRaw<Array<{ count: bigint }>>`
         SELECT COUNT(*) as count FROM "_TagToTransaction"
       `;
       const finalCount = Number(finalRelations[0].count);
@@ -2012,10 +2014,10 @@ export class DirectController {
       };
     }
   }
-  
-    // Helper method to generate email template
-    private generateEmailTemplate(content: string): string {
-      return `
+
+  // Helper method to generate email template
+  private generateEmailTemplate(content: string): string {
+    return `
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -2158,9 +2160,9 @@ export class DirectController {
 </body>
 </html>
 `;
-    }
-  
-    // 🚀 NOTIFICATIONS PREFERENCES - Direct endpoints for Netlify compatibility
+  }
+
+  // 🚀 NOTIFICATIONS PREFERENCES - Direct endpoints for Netlify compatibility
   @Get("notifications/preferences/default")
   async getDefaultNotificationPreferences() {
     try {
