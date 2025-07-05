@@ -43,6 +43,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   enableMultiSelect,
   onBulkEdit,
 }) => {
+  // Loading spinner when no transactions to show
   if (isLoading && transactions.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -71,8 +72,32 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return transactions.filter((t) => selectedTransactions.includes(t.id));
   };
 
+  // Debug: Log transaction data to check if tags are included
+  React.useEffect(() => {
+    if (transactions.length > 0) {
+      console.log('🔍 TransactionList Debug - First transaction:', transactions[0]);
+      console.log('🔍 TransactionList Debug - Tags in first transaction:', transactions[0]?.tags);
+      
+      // Count transactions with tags
+      const transactionsWithTags = transactions.filter(t => t.tags && t.tags.length > 0);
+      console.log(`🔍 TransactionList Debug - ${transactionsWithTags.length}/${transactions.length} transactions have tags`);
+    }
+  }, [transactions]);
+
   return (
-    <div className="overflow-x-auto rounded-md border border-border">
+    <div className="relative overflow-x-auto rounded-md border border-border">
+      {/* Loading overlay when refreshing data */}
+      {isLoading && transactions.length > 0 && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+            <span className="text-sm text-muted-foreground">
+              Caricamento...
+            </span>
+          </div>
+        </div>
+      )}
+
       <table className="min-w-full divide-y divide-border table-fixed">
         <thead className="bg-muted/50">
           <tr>
