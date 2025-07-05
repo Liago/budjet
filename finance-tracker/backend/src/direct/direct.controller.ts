@@ -150,6 +150,125 @@ export class DirectController {
     }
   }
 
+  // 🚀 TAG MIGRATION FIX - Riparare relazioni TagToTransaction automaticamente
+  @Post("fix-tag-relations")
+  async fixTagRelations() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      console.log("🔧 Starting TagToTransaction relations repair...");
+
+      // 1. Verifica relazioni esistenti
+      const existingRelations = await prisma.$queryRaw`
+        SELECT "A" as transaction_id, "B" as tag_id FROM "_TagToTransaction"
+      `;
+      console.log(`📊 Found ${existingRelations.length} existing relations`);
+
+      // 2. Trova transazioni che potrebbero avere tag nei nomi/descrizioni
+      const transactions = await prisma.transaction.findMany({
+        select: {
+          id: true,
+          description: true,
+          tags: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { date: "desc" },
+      });
+
+      const tags = await prisma.tag.findMany({
+        select: { id: true, name: true },
+      });
+
+      console.log(
+        `📊 Processing ${transactions.length} transactions against ${tags.length} tags`
+      );
+
+      // 3. Algoritmo di auto-associazione intelligente
+      let matchedRelations = 0;
+      let createdRelations = 0;
+      const newRelations = [];
+
+      for (const transaction of transactions) {
+        const description = transaction.description.toLowerCase();
+        const existingTagIds = new Set(transaction.tags.map((t) => t.id));
+
+        for (const tag of tags) {
+          const tagName = tag.name.toLowerCase();
+
+          // Skip se la relazione esiste già
+          if (existingTagIds.has(tag.id)) {
+            continue;
+          }
+
+          // Verifica se il tag name è contenuto nella descrizione
+          if (description.includes(tagName) && tagName.length >= 3) {
+            matchedRelations++;
+            newRelations.push({
+              transactionId: transaction.id,
+              tagId: tag.id,
+              reason: `"${tagName}" found in "${transaction.description}"`,
+            });
+          }
+        }
+      }
+
+      console.log(`🎯 Found ${matchedRelations} potential new relations`);
+
+      // 4. Crea le nuove relazioni (batch di 10)
+      const batchSize = 10;
+      for (let i = 0; i < newRelations.length; i += batchSize) {
+        const batch = newRelations.slice(i, i + batchSize);
+
+        for (const relation of batch) {
+          try {
+            await prisma.transaction.update({
+              where: { id: relation.transactionId },
+              data: {
+                tags: {
+                  connect: { id: relation.tagId },
+                },
+              },
+            });
+            createdRelations++;
+            console.log(`✅ Created relation: ${relation.reason}`);
+          } catch (error) {
+            console.log(`❌ Failed to create relation: ${error.message}`);
+          }
+        }
+      }
+
+      // 5. Verifica finale
+      const finalRelations = await prisma.$queryRaw`
+        SELECT COUNT(*) as count FROM "_TagToTransaction"
+      `;
+      const finalCount = Number(finalRelations[0].count);
+
+      await prisma.$disconnect();
+
+      return {
+        status: "TAG_RELATIONS_FIX_COMPLETED",
+        results: {
+          initial_relations: existingRelations.length,
+          potential_matches: matchedRelations,
+          created_relations: createdRelations,
+          final_relations: finalCount,
+          improvement: `+${createdRelations} relations created`,
+        },
+        sample_new_relations: newRelations.slice(0, 10),
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        status: "TAG_RELATIONS_FIX_FAILED",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
   // 🚀 CATEGORIES - Direct endpoint
   @Get("categories")
   async getCategories() {
@@ -1893,10 +2012,10 @@ export class DirectController {
       };
     }
   }
-
-  // Helper method to generate email template
-  private generateEmailTemplate(content: string): string {
-    return `
+  
+    // Helper method to generate email template
+    private generateEmailTemplate(content: string): string {
+      return `
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -2039,9 +2158,9 @@ export class DirectController {
 </body>
 </html>
 `;
-  }
-
-  // 🚀 NOTIFICATIONS PREFERENCES - Direct endpoints for Netlify compatibility
+    }
+  
+    // 🚀 NOTIFICATIONS PREFERENCES - Direct endpoints for Netlify compatibility
   @Get("notifications/preferences/default")
   async getDefaultNotificationPreferences() {
     try {
