@@ -150,15 +150,22 @@ export class DirectController {
     }
   }
 
-  // 🚀 TAG MIGRATION FIX - Riparare relazioni TagToTransaction automaticamente
+  // 🚀 TAG MIGRATION FIX - Riparare relazioni TagToTransaction automaticamente (BATCH LIMITED)
   @Post("fix-tag-relations")
-  async fixTagRelations() {
+  async fixTagRelations(
+    @Body() body: { limit?: number; offset?: number } = {}
+  ) {
     try {
       const { PrismaClient } = await import("@prisma/client");
       const prisma = new PrismaClient();
       await prisma.$connect();
 
-      console.log("🔧 Starting TagToTransaction relations repair...");
+      const limit = body.limit || 50; // Processa solo 50 transazioni per volta
+      const offset = body.offset || 0;
+
+      console.log(
+        `🔧 Starting TagToTransaction relations repair (batch: ${limit}, offset: ${offset})...`
+      );
 
       // 1. Verifica relazioni esistenti
       const existingRelations = await prisma.$queryRaw<
@@ -168,7 +175,7 @@ export class DirectController {
       `;
       console.log(`📊 Found ${existingRelations.length} existing relations`);
 
-      // 2. Trova transazioni che potrebbero avere tag nei nomi/descrizioni
+      // 2. Trova transazioni che potrebbero avere tag nei nomi/descrizioni (BATCH LIMITED)
       const transactions = await prisma.transaction.findMany({
         select: {
           id: true,
@@ -178,6 +185,143 @@ export class DirectController {
           },
         },
         orderBy: { date: "desc" },
+        take: limit,
+        skip: offset,
+      });
+
+      const tags = await prisma.tag.findMany({
+        select: { id: true, name: true },
+      });
+
+      console.log(
+        `📊 Processing ${transactions.length} transactions against ${tags.length} tags`
+      );
+
+      // 3. Algoritmo di auto-associazione intelligente (OTTIMIZZATO)
+      let matchedRelations = 0;
+      let createdRelations = 0;
+      const newRelations = [];
+
+      for (const transaction of transactions) {
+        const description = transaction.description.toLowerCase();
+        const existingTagIds = new Set(transaction.tags.map((t) => t.id));
+
+        for (const tag of tags) {
+          const tagName = tag.name.toLowerCase();
+
+          // Skip se la relazione esiste già
+          if (existingTagIds.has(tag.id)) {
+            continue;
+          }
+
+          // Verifica se il tag name è contenuto nella descrizione
+          if (description.includes(tagName) && tagName.length >= 3) {
+            matchedRelations++;
+            newRelations.push({
+              transactionId: transaction.id,
+              tagId: tag.id,
+              reason: `"${tagName}" found in "${transaction.description}"`,
+            });
+          }
+        }
+      }
+
+      console.log(`🎯 Found ${matchedRelations} potential new relations`);
+
+      // 4. Crea le nuove relazioni (batch di 5 per evitare timeout)
+      const batchSize = 5;
+      for (let i = 0; i < newRelations.length; i += batchSize) {
+        const batch = newRelations.slice(i, i + batchSize);
+
+        for (const relation of batch) {
+          try {
+            await prisma.transaction.update({
+              where: { id: relation.transactionId },
+              data: {
+                tags: {
+                  connect: { id: relation.tagId },
+                },
+              },
+            });
+            createdRelations++;
+            console.log(`✅ Created relation: ${relation.reason}`);
+          } catch (error) {
+            console.log(`❌ Failed to create relation: ${error.message}`);
+          }
+        }
+      }
+
+      // 5. Verifica finale
+      const finalRelations = await prisma.$queryRaw<Array<{ count: bigint }>>`
+        SELECT COUNT(*) as count FROM "_TagToTransaction"
+      `;
+      const finalCount = Number(finalRelations[0].count);
+
+      // 6. Verifica se ci sono altre transazioni da processare
+      const totalTransactions = await prisma.transaction.count();
+      const hasMore = offset + limit < totalTransactions;
+
+      await prisma.$disconnect();
+
+      return {
+        status: "TAG_RELATIONS_FIX_COMPLETED",
+        batch_info: {
+          processed: transactions.length,
+          offset: offset,
+          limit: limit,
+          hasMore: hasMore,
+          nextOffset: hasMore ? offset + limit : null,
+          totalTransactions: totalTransactions,
+        },
+        results: {
+          initial_relations: existingRelations.length,
+          potential_matches: matchedRelations,
+          created_relations: createdRelations,
+          final_relations: finalCount,
+          improvement: `+${createdRelations} relations created`,
+        },
+        sample_new_relations: newRelations.slice(0, 10),
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        status: "TAG_RELATIONS_FIX_FAILED",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 TAG MIGRATION QUICK FIX - Riparare velocemente le prime 25 transazioni
+  @Get("quick-fix-tags")
+  async quickFixTags() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      console.log(
+        "🔧 Quick TagToTransaction relations repair (25 transactions)..."
+      );
+
+      // 1. Verifica relazioni esistenti
+      const existingRelations = await prisma.$queryRaw<
+        Array<{ transaction_id: string; tag_id: string }>
+      >`
+        SELECT "A" as transaction_id, "B" as tag_id FROM "_TagToTransaction"
+      `;
+
+      // 2. Trova le prime 25 transazioni senza tag
+      const transactions = await prisma.transaction.findMany({
+        select: {
+          id: true,
+          description: true,
+          tags: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { date: "desc" },
+        take: 25,
       });
 
       const tags = await prisma.tag.findMany({
@@ -219,8 +363,8 @@ export class DirectController {
 
       console.log(`🎯 Found ${matchedRelations} potential new relations`);
 
-      // 4. Crea le nuove relazioni (batch di 10)
-      const batchSize = 10;
+      // 4. Crea le nuove relazioni (batch di 3 per velocità)
+      const batchSize = 3;
       for (let i = 0; i < newRelations.length; i += batchSize) {
         const batch = newRelations.slice(i, i + batchSize);
 
@@ -251,20 +395,21 @@ export class DirectController {
       await prisma.$disconnect();
 
       return {
-        status: "TAG_RELATIONS_FIX_COMPLETED",
+        status: "QUICK_TAG_FIX_COMPLETED",
         results: {
+          processed_transactions: transactions.length,
           initial_relations: existingRelations.length,
           potential_matches: matchedRelations,
           created_relations: createdRelations,
           final_relations: finalCount,
           improvement: `+${createdRelations} relations created`,
         },
-        sample_new_relations: newRelations.slice(0, 10),
+        sample_new_relations: newRelations.slice(0, 5),
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
-        status: "TAG_RELATIONS_FIX_FAILED",
+        status: "QUICK_TAG_FIX_FAILED",
         error: error.message,
         timestamp: new Date().toISOString(),
       };
