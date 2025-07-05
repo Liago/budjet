@@ -70,6 +70,86 @@ export class DirectController {
     }
   }
 
+  // 🚀 TAG MIGRATION DEBUG - Verificare migrazione TagToTransaction
+  @Get("debug-tags")
+  async getTagsDebug() {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // 1. Conteggio totale di ogni tabella
+      const [totalTransactions, totalTags, totalUsers, totalCategories] =
+        await Promise.all([
+          prisma.transaction.count(),
+          prisma.tag.count(),
+          prisma.user.count(),
+          prisma.category.count(),
+        ]);
+
+      // 2. Alcuni tag esistenti
+      const sampleTags = await prisma.tag.findMany({
+        take: 10,
+        orderBy: { name: "asc" },
+        include: {
+          _count: {
+            select: { transactions: true },
+          },
+        },
+      });
+
+      // 3. Alcuni transactions con tag
+      const transactionsWithTags = await prisma.transaction.findMany({
+        take: 10,
+        orderBy: { date: "desc" },
+        include: {
+          tags: true,
+          category: true,
+        },
+      });
+
+      // 4. Conteggio relazioni many-to-many
+      // Questo è un raw query per verificare se la tabella _TagToTransaction esiste
+      let tagToTransactionCount = 0;
+      try {
+        const rawResult = await prisma.$queryRaw`
+          SELECT COUNT(*) as count 
+          FROM "_TagToTransaction"
+        `;
+        tagToTransactionCount = Number(rawResult[0].count);
+      } catch (error) {
+        console.log("_TagToTransaction table might not exist:", error.message);
+      }
+
+      await prisma.$disconnect();
+
+      return {
+        database_stats: {
+          totalTransactions,
+          totalTags,
+          totalUsers,
+          totalCategories,
+          tagToTransactionRelations: tagToTransactionCount,
+        },
+        sample_tags: sampleTags,
+        sample_transactions_with_tags: transactionsWithTags,
+        analysis: {
+          issue_detected: tagToTransactionCount === 0 && totalTags > 0,
+          problem_description:
+            tagToTransactionCount === 0 && totalTags > 0
+              ? "Tags exist but no TagToTransaction relations found - migration issue"
+              : "Tags and relations look normal",
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
   // 🚀 CATEGORIES - Direct endpoint
   @Get("categories")
   async getCategories() {
