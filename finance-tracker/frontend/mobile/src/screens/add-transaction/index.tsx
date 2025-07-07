@@ -673,13 +673,40 @@ export default function AddTransactionScreen() {
         </View>
 
         {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
-            maximumDate={new Date()}
-          />
+          <Modal
+            transparent={true}
+            animationType="slide"
+            visible={showDatePicker}
+            onRequestClose={() => setShowDatePicker(false)}
+          >
+            <View style={styles.datePickerModal}>
+              <View style={styles.datePickerContainer}>
+                <View style={styles.datePickerHeader}>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                    style={styles.datePickerCloseButton}
+                  >
+                    <Text style={styles.datePickerCloseText}>Annulla</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.datePickerTitle}>Seleziona Data</Text>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                    style={styles.datePickerDoneButton}
+                  >
+                    <Text style={styles.datePickerDoneText}>Fatto</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleDateChange}
+                  maximumDate={new Date()}
+                  style={styles.datePicker}
+                />
+              </View>
+            </View>
+          </Modal>
         )}
 
         <View style={styles.formGroup}>
@@ -981,5 +1008,50 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+
+  // Stili per Date Picker Modal
+  datePickerModal: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  datePickerContainer: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+  },
+  datePickerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  datePickerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+  },
+  datePickerCloseButton: {
+    padding: 8,
+  },
+  datePickerCloseText: {
+    fontSize: 16,
+    color: "#007AFF",
+  },
+  datePickerDoneButton: {
+    padding: 8,
+  },
+  datePickerDoneText: {
+    fontSize: 16,
+    color: "#007AFF",
+    fontWeight: "600",
+  },
+  datePicker: {
+    marginHorizontal: 20,
   },
 });
