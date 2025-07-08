@@ -1606,8 +1606,15 @@ export class DirectController {
       );
 
       // 1. Generate monthly trends
-      const monthlyData = new Map();
-      const monthKeys = [];
+      const monthlyData = new Map<
+        string,
+        {
+          income: number;
+          expenses: number;
+          transactions: number;
+        }
+      >();
+      const monthKeys: string[] = [];
 
       // Create entries for each month
       for (let i = months - 1; i >= 0; i--) {
@@ -1624,7 +1631,7 @@ export class DirectController {
       allTransactions.forEach((transaction) => {
         const monthKey = transaction.date.toISOString().substring(0, 7);
         if (monthlyData.has(monthKey)) {
-          const data = monthlyData.get(monthKey);
+          const data = monthlyData.get(monthKey)!;
           if (transaction.type === "INCOME") {
             data.income += Number(transaction.amount);
           } else {
@@ -1635,7 +1642,7 @@ export class DirectController {
       });
 
       const trends = monthKeys.map((monthKey) => {
-        const data = monthlyData.get(monthKey);
+        const data = monthlyData.get(monthKey)!;
         return {
           period: monthKey,
           income: data.income,
@@ -1653,15 +1660,28 @@ export class DirectController {
         (tx) => tx.date >= previousPeriodStart && tx.date < currentPeriodStart
       );
 
-      console.log('🔍 getTrends Debug - Period transactions:', {
+      console.log("🔍 getTrends Debug - Period transactions:", {
         current: currentPeriodTransactions.length,
         previous: previousPeriodTransactions.length,
         currentPeriodStart: currentPeriodStart.toISOString(),
-        previousPeriodStart: previousPeriodStart.toISOString()
+        previousPeriodStart: previousPeriodStart.toISOString(),
       });
 
-      const currentCategoryMap = new Map();
-      const previousCategoryMap = new Map();
+      const currentCategoryMap = new Map<
+        string,
+        {
+          id: string;
+          name: string;
+          color: string;
+          amount: number;
+        }
+      >();
+      const previousCategoryMap = new Map<
+        string,
+        {
+          amount: number;
+        }
+      >();
 
       // Calculate current period spending by category
       currentPeriodTransactions
@@ -1676,7 +1696,7 @@ export class DirectController {
               amount: 0,
             });
           }
-          currentCategoryMap.get(categoryId).amount += Number(tx.amount);
+          currentCategoryMap.get(categoryId)!.amount += Number(tx.amount);
         });
 
       // Calculate previous period spending by category
@@ -1687,47 +1707,67 @@ export class DirectController {
           if (!previousCategoryMap.has(categoryId)) {
             previousCategoryMap.set(categoryId, { amount: 0 });
           }
-          previousCategoryMap.get(categoryId).amount += Number(tx.amount);
+          previousCategoryMap.get(categoryId)!.amount += Number(tx.amount);
         });
 
-      console.log('🔍 getTrends Debug - Category maps:', {
+      console.log("🔍 getTrends Debug - Category maps:", {
         currentCategories: currentCategoryMap.size,
         previousCategories: previousCategoryMap.size,
         currentSample: Array.from(currentCategoryMap.entries()).slice(0, 2),
-        previousSample: Array.from(previousCategoryMap.entries()).slice(0, 2)
+        previousSample: Array.from(previousCategoryMap.entries()).slice(0, 2),
       });
 
       // Generate category trends with improved logic
-      const categoryTrends = [];
-      
+      const categoryTrends: {
+        id: string;
+        name: string;
+        color: string;
+        currentAmount: number;
+        previousAmount: number;
+        change: number;
+        percentChange: number;
+      }[] = [];
+
       // Get all categories that have spending in either period
       const allCategoryIds = new Set([
         ...Array.from(currentCategoryMap.keys()),
-        ...Array.from(previousCategoryMap.keys())
+        ...Array.from(previousCategoryMap.keys()),
       ]);
 
-      console.log('🔍 getTrends Debug - All category IDs:', Array.from(allCategoryIds));
+      console.log(
+        "🔍 getTrends Debug - All category IDs:",
+        Array.from(allCategoryIds)
+      );
 
       allCategoryIds.forEach((categoryId) => {
-        const currentData = currentCategoryMap.get(categoryId) || { amount: 0, name: '', color: '', id: categoryId };
-        const previousData = previousCategoryMap.get(categoryId) || { amount: 0 };
-        
+        const currentData = currentCategoryMap.get(categoryId) || {
+          amount: 0,
+          name: "",
+          color: "",
+          id: categoryId,
+        };
+        const previousData = previousCategoryMap.get(categoryId) || {
+          amount: 0,
+        };
+
         // Get category info (prioritize current data, fallback to finding in transactions)
         let categoryInfo = currentData;
         if (!categoryInfo.name || !categoryInfo.color) {
-          const categoryTx = allTransactions.find(tx => tx.category.id === categoryId);
+          const categoryTx = allTransactions.find(
+            (tx) => tx.category.id === categoryId
+          );
           if (categoryTx) {
             categoryInfo = {
               id: categoryId,
               name: categoryTx.category.name,
               color: categoryTx.category.color,
-              amount: currentData.amount
+              amount: currentData.amount,
             };
           }
         }
 
         if (!categoryInfo.name) {
-          console.warn('🚨 Category info missing for ID:', categoryId);
+          console.warn("🚨 Category info missing for ID:", categoryId);
           return; // Skip if we can't find category info
         }
 
@@ -1751,10 +1791,10 @@ export class DirectController {
             change: Math.round(change * 100) / 100,
             percentChange: Math.round(percentChange * 100) / 100,
           };
-          
+
           categoryTrends.push(trend);
-          
-          console.log('🔍 getTrends Debug - Added trend:', trend);
+
+          console.log("🔍 getTrends Debug - Added trend:", trend);
         }
       });
 
@@ -1763,11 +1803,24 @@ export class DirectController {
         (a, b) => Math.abs(b.percentChange) - Math.abs(a.percentChange)
       );
 
-      console.log('🔍 getTrends Debug - Final category trends count:', categoryTrends.length);
-      console.log('🔍 getTrends Debug - Sample trends:', categoryTrends.slice(0, 3));
+      console.log(
+        "🔍 getTrends Debug - Final category trends count:",
+        categoryTrends.length
+      );
+      console.log(
+        "🔍 getTrends Debug - Sample trends:",
+        categoryTrends.slice(0, 3)
+      );
 
       // 3. FIXED: Detect spending anomalies with robust validation
-      const spendingAnomalies = [];
+      const spendingAnomalies: {
+        category: string;
+        color: string;
+        month: string;
+        amount: number;
+        averageAmount: number;
+        percentDeviation: number;
+      }[] = [];
 
       // Use only the analysis period (not 12 months) for more accurate anomalies
       const anomalyPeriodMonths = Math.min(months, 6); // Max 6 months for anomaly detection
@@ -1797,7 +1850,14 @@ export class DirectController {
       );
 
       // Group spending by category and month for anomaly detection
-      const categoryMonthlyMap = new Map();
+      const categoryMonthlyMap = new Map<
+        string,
+        {
+          monthlyData: Map<string, number>;
+          categoryName: string;
+          categoryColor: string;
+        }
+      >();
 
       for (let i = 0; i < anomalyPeriodMonths; i++) {
         const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -1827,13 +1887,13 @@ export class DirectController {
 
           if (!categoryMonthlyMap.has(categoryId)) {
             categoryMonthlyMap.set(categoryId, {
-              monthlyData: new Map(),
+              monthlyData: new Map<string, number>(),
               categoryName: tx.category.name,
               categoryColor: tx.category.color,
             });
           }
 
-          const categoryData = categoryMonthlyMap.get(categoryId);
+          const categoryData = categoryMonthlyMap.get(categoryId)!;
           const currentAmount = categoryData.monthlyData.get(monthKey) || 0;
           categoryData.monthlyData.set(monthKey, currentAmount + amount);
         });
@@ -1846,25 +1906,32 @@ export class DirectController {
 
       // Find anomalies with improved algorithm
       categoryMonthlyMap.forEach((categoryData, categoryId) => {
-        const monthlyAmounts = Array.from(categoryData.monthlyData.values());
+        const monthlyAmounts: number[] = Array.from(
+          categoryData.monthlyData.values()
+        );
 
         // Need at least 2 months of data for comparison
         if (monthlyAmounts.length < 2) return;
 
         // Remove zero values for average calculation
-        const nonZeroAmounts = monthlyAmounts.filter((amount) => amount > 0);
+        const nonZeroAmounts: number[] = monthlyAmounts.filter(
+          (amount: number) => amount > 0
+        );
         if (nonZeroAmounts.length === 0) return;
 
-        const sum = nonZeroAmounts.reduce((acc, val) => acc + val, 0);
-        const average = sum / nonZeroAmounts.length;
+        const sum: number = nonZeroAmounts.reduce(
+          (acc: number, val: number) => acc + val,
+          0
+        );
+        const average: number = sum / nonZeroAmounts.length;
 
         // Calculate standard deviation for better anomaly detection
-        const variance =
+        const variance: number =
           nonZeroAmounts.reduce(
-            (acc, val) => acc + Math.pow(val - average, 2),
+            (acc: number, val: number) => acc + Math.pow(val - average, 2),
             0
           ) / nonZeroAmounts.length;
-        const standardDeviation = Math.sqrt(variance);
+        const standardDeviation: number = Math.sqrt(variance);
 
         // Skip categories with very low average spending (less than 50€/month)
         if (average < 50) return;
@@ -1873,10 +1940,10 @@ export class DirectController {
           category: categoryData.categoryName,
           average: average.toFixed(2),
           standardDeviation: standardDeviation.toFixed(2),
-          monthlyAmounts: monthlyAmounts.map((a) => a.toFixed(2)),
+          monthlyAmounts: monthlyAmounts.map((a: number) => a.toFixed(2)),
         });
 
-        categoryData.monthlyData.forEach((amount, monthKey) => {
+        categoryData.monthlyData.forEach((amount: number, monthKey: string) => {
           if (amount === 0) return; // Skip zero months
 
           const deviationFromMean = Math.abs(amount - average);
