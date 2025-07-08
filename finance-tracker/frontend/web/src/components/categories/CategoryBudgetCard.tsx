@@ -8,13 +8,17 @@ import { Category } from "../../utils/types";
 interface CategoryBudgetCardProps {
   category: Category;
   spent: number;
+  monthlyAverage: number;
   onEdit: (category: Category) => void;
+  onViewDetails?: (category: Category) => void;
 }
 
 const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
   category,
   spent,
+  monthlyAverage,
   onEdit,
+  onViewDetails,
 }) => {
   const budget = Number(category.budget);
   const remaining = budget - spent;
@@ -59,11 +63,32 @@ const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
     return "text-green-600 font-semibold";
   };
 
+  // Helper function to determine trend color for monthly average
+  const getAverageTrendColor = () => {
+    if (monthlyAverage === 0) return "text-gray-500";
+    if (monthlyAverage > budget) return "text-red-500";
+    if (monthlyAverage > budget * 0.8) return "text-orange-500";
+    return "text-green-500";
+  };
+
   const percentage = calculatePercentage();
-  const isTrendingUp = isOverBudget(); // Usiamo questo per determinare se mostrare la freccia su o giù
+  const isTrendingUp = isOverBudget();
+
+  const handleCardClick = () => {
+    if (onViewDetails && spent > 0) {
+      onViewDetails(category);
+    }
+  };
 
   return (
-    <Card className="overflow-hidden bg-white">
+    <Card
+      className={`overflow-hidden bg-white transition-all duration-200 ${
+        spent > 0 && onViewDetails
+          ? "cursor-pointer hover:shadow-lg hover:border-blue-300"
+          : ""
+      }`}
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-1">
           <h3 className="font-medium text-base">{category.name}</h3>
@@ -72,7 +97,10 @@ const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
               variant="ghost"
               size="icon"
               className="h-6 w-6"
-              onClick={() => onEdit(category)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(category);
+              }}
             >
               <EditIcon className="h-3.5 w-3.5" />
             </Button>
@@ -121,6 +149,14 @@ const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
             </span>
           </div>
 
+          {/* Monthly Average */}
+          <div className="flex justify-between text-sm mb-3">
+            <span className="font-medium text-gray-600">Media mensile:</span>
+            <span className={`font-bold ${getAverageTrendColor()}`}>
+              €{monthlyAverage.toFixed(2)}
+            </span>
+          </div>
+
           <div>
             <div className="flex justify-between text-xs mb-1">
               <span className="text-gray-600">Utilizzato:</span>
@@ -140,6 +176,13 @@ const CategoryBudgetCard: React.FC<CategoryBudgetCardProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Click hint */}
+        {spent > 0 && onViewDetails && (
+          <div className="mt-3 text-xs text-gray-500 text-center">
+            Clicca per vedere i dettagli
+          </div>
+        )}
       </CardContent>
     </Card>
   );

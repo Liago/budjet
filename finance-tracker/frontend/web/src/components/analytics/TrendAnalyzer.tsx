@@ -146,9 +146,24 @@ const TrendAnalyzer = () => {
     setError(null);
 
     try {
+      console.log(
+        "🔍 TrendAnalyzer - Loading trend data for timeRange:",
+        timeRange
+      );
+
       // Chiama direttamente il servizio API con il periodo selezionato
       const response = await dashboardService.getTrendData(timeRange);
       const data = response as TrendResponse;
+
+      console.log("🔍 TrendAnalyzer - API Response received:", {
+        hasTrends: !!data.trends,
+        trendsLength: data.trends?.length || 0,
+        hasCategoryTrends: !!data.categoryTrends,
+        categoryTrendsLength: data.categoryTrends?.length || 0,
+        hasAnomalies: !!data.spendingAnomalies,
+        anomaliesLength: data.spendingAnomalies?.length || 0,
+        fullResponse: data,
+      });
 
       // Prepara i dati per il grafico
       const formattedData = data.trends.map((trend) => ({
@@ -161,22 +176,45 @@ const TrendAnalyzer = () => {
       setChartData(formattedData);
 
       // Aggiorna i dati delle tendenze delle categorie
-      if (data.categoryTrends) {
+      if (data.categoryTrends && Array.isArray(data.categoryTrends)) {
+        console.log(
+          "🔍 TrendAnalyzer - Setting category trends:",
+          data.categoryTrends
+        );
         setCategoryTrends(data.categoryTrends);
+      } else {
+        console.warn(
+          "🚨 TrendAnalyzer - No category trends data received or invalid format"
+        );
+        setCategoryTrends([]);
       }
 
       // Aggiorna le anomalie
-      if (data.spendingAnomalies) {
+      if (data.spendingAnomalies && Array.isArray(data.spendingAnomalies)) {
+        console.log(
+          "🔍 TrendAnalyzer - Setting anomalies:",
+          data.spendingAnomalies
+        );
         setAnomalies(data.spendingAnomalies);
+      } else {
+        console.warn(
+          "🚨 TrendAnalyzer - No anomalies data received or invalid format"
+        );
+        setAnomalies([]);
       }
     } catch (err) {
-      console.error("Errore nel caricamento dei dati di trend:", err);
+      console.error("🚨 TrendAnalyzer - Error loading trend data:", err);
       setError("Impossibile caricare i dati di trend");
 
       // Se l'API fallisce, usiamo i dati locali come fallback
+      console.log("🔍 TrendAnalyzer - Falling back to local data processing");
       if (rawTransactions.length > 0) {
         prepareCategoryTrends();
         findAnomalies();
+      } else {
+        console.warn(
+          "🚨 TrendAnalyzer - No raw transactions available for fallback"
+        );
       }
     } finally {
       setIsLoading(false);

@@ -6,11 +6,13 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   CheckIcon,
+  DownloadIcon,
 } from "../Icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CurrencyDisplay } from "@/components/ui/currency-display";
+import { exportTransactionsToCSV } from "../../utils/csvExport";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -70,6 +72,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   const getSelectedTransactionsData = (): Transaction[] => {
     return transactions.filter((t) => selectedTransactions.includes(t.id));
+  };
+
+  const handleExportCSV = () => {
+    const selectedTransactionsData = getSelectedTransactionsData();
+    exportTransactionsToCSV(selectedTransactionsData);
   };
 
   // Debug: Log transaction data to check if tags are included
@@ -257,6 +264,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
               onClick={() => setSelectedTransactions([])}
             >
               Deselect All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
+            >
+              <DownloadIcon className="h-4 w-4 mr-1" />
+              Export CSV
             </Button>
             <Button
               variant="default"

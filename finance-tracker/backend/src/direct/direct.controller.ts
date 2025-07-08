@@ -1572,50 +1572,362 @@ export class DirectController {
       await prisma.$connect();
 
       const months = parseInt(timeRange.replace("m", "")) || 3;
-      const startDate = new Date();
-      startDate.setMonth(startDate.getMonth() - months);
+      const now = new Date();
+      const currentPeriodStart = new Date(
+        now.getFullYear(),
+        now.getMonth() - Math.floor(months / 2),
+        1
+      );
+      const previousPeriodStart = new Date(
+        now.getFullYear(),
+        now.getMonth() - months,
+        1
+      );
+      const startDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
 
-      // Get monthly trends
-      const transactions = await prisma.transaction.findMany({
+      console.log("🔍 getTrends Debug - Date ranges:", {
+        timeRange,
+        months,
+        currentPeriodStart: currentPeriodStart.toISOString(),
+        previousPeriodStart: previousPeriodStart.toISOString(),
+        startDate: startDate.toISOString(),
+      });
+
+      // Get all transactions for analysis
+      const allTransactions = await prisma.transaction.findMany({
         where: { date: { gte: startDate } },
         include: { category: true },
         orderBy: { date: "asc" },
       });
 
-      // Group by month
+      console.log(
+        "🔍 getTrends Debug - Found transactions:",
+        allTransactions.length
+      );
+
+      // 1. Generate monthly trends
       const monthlyData = new Map();
+      const monthKeys = [];
 
-      transactions.forEach((transaction) => {
-        const monthKey = transaction.date.toISOString().substring(0, 7); // YYYY-MM
-        if (!monthlyData.has(monthKey)) {
-          monthlyData.set(monthKey, {
-            income: 0,
-            expenses: 0,
-            transactions: 0,
-          });
-        }
+      // Create entries for each month
+      for (let i = months - 1; i >= 0; i--) {
+        const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthKey = month.toISOString().substring(0, 7);
+        monthKeys.push(monthKey);
+        monthlyData.set(monthKey, {
+          income: 0,
+          expenses: 0,
+          transactions: 0,
+        });
+      }
 
-        const data = monthlyData.get(monthKey);
-        if (transaction.type === "INCOME") {
-          data.income += Number(transaction.amount);
-        } else {
-          data.expenses += Number(transaction.amount);
+      allTransactions.forEach((transaction) => {
+        const monthKey = transaction.date.toISOString().substring(0, 7);
+        if (monthlyData.has(monthKey)) {
+          const data = monthlyData.get(monthKey);
+          if (transaction.type === "INCOME") {
+            data.income += Number(transaction.amount);
+          } else {
+            data.expenses += Number(transaction.amount);
+          }
+          data.transactions += 1;
         }
-        data.transactions += 1;
       });
 
-      // Convert to array and calculate trends
-      const trends = Array.from(monthlyData.entries()).map(([month, data]) => ({
-        period: month,
-        income: data.income,
-        expenses: data.expenses,
-        balance: data.income - data.expenses,
-        transactions: data.transactions,
-      }));
+      const trends = monthKeys.map((monthKey) => {
+        const data = monthlyData.get(monthKey);
+        return {
+          period: monthKey,
+          income: data.income,
+          expenses: data.expenses,
+          balance: data.income - data.expenses,
+          transactions: data.transactions,
+        };
+      });
+
+      // 2. Calculate category trends (current vs previous period) - IMPROVED
+      const currentPeriodTransactions = allTransactions.filter(
+        (tx) => tx.date >= currentPeriodStart
+      );
+      const previousPeriodTransactions = allTransactions.filter(
+        (tx) => tx.date >= previousPeriodStart && tx.date < currentPeriodStart
+      );
+
+      console.log('🔍 getTrends Debug - Period transactions:', {
+        current: currentPeriodTransactions.length,
+        previous: previousPeriodTransactions.length,
+        currentPeriodStart: currentPeriodStart.toISOString(),
+        previousPeriodStart: previousPeriodStart.toISOString()
+      });
+
+      const currentCategoryMap = new Map();
+      const previousCategoryMap = new Map();
+
+      // Calculate current period spending by category
+      currentPeriodTransactions
+        .filter((tx) => tx.type === "EXPENSE")
+        .forEach((tx) => {
+          const categoryId = tx.category.id;
+          if (!currentCategoryMap.has(categoryId)) {
+            currentCategoryMap.set(categoryId, {
+              id: categoryId,
+              name: tx.category.name,
+              color: tx.category.color,
+              amount: 0,
+            });
+          }
+          currentCategoryMap.get(categoryId).amount += Number(tx.amount);
+        });
+
+      // Calculate previous period spending by category
+      previousPeriodTransactions
+        .filter((tx) => tx.type === "EXPENSE")
+        .forEach((tx) => {
+          const categoryId = tx.category.id;
+          if (!previousCategoryMap.has(categoryId)) {
+            previousCategoryMap.set(categoryId, { amount: 0 });
+          }
+          previousCategoryMap.get(categoryId).amount += Number(tx.amount);
+        });
+
+      console.log('🔍 getTrends Debug - Category maps:', {
+        currentCategories: currentCategoryMap.size,
+        previousCategories: previousCategoryMap.size,
+        currentSample: Array.from(currentCategoryMap.entries()).slice(0, 2),
+        previousSample: Array.from(previousCategoryMap.entries()).slice(0, 2)
+      });
+
+      // Generate category trends with improved logic
+      const categoryTrends = [];
+      
+      // Get all categories that have spending in either period
+      const allCategoryIds = new Set([
+        ...Array.from(currentCategoryMap.keys()),
+        ...Array.from(previousCategoryMap.keys())
+      ]);
+
+      console.log('🔍 getTrends Debug - All category IDs:', Array.from(allCategoryIds));
+
+      allCategoryIds.forEach((categoryId) => {
+        const currentData = currentCategoryMap.get(categoryId) || { amount: 0, name: '', color: '', id: categoryId };
+        const previousData = previousCategoryMap.get(categoryId) || { amount: 0 };
+        
+        // Get category info (prioritize current data, fallback to finding in transactions)
+        let categoryInfo = currentData;
+        if (!categoryInfo.name || !categoryInfo.color) {
+          const categoryTx = allTransactions.find(tx => tx.category.id === categoryId);
+          if (categoryTx) {
+            categoryInfo = {
+              id: categoryId,
+              name: categoryTx.category.name,
+              color: categoryTx.category.color,
+              amount: currentData.amount
+            };
+          }
+        }
+
+        if (!categoryInfo.name) {
+          console.warn('🚨 Category info missing for ID:', categoryId);
+          return; // Skip if we can't find category info
+        }
+
+        const change = currentData.amount - previousData.amount;
+        let percentChange = 0;
+
+        if (previousData.amount > 0) {
+          percentChange = (change / previousData.amount) * 100;
+        } else if (currentData.amount > 0) {
+          percentChange = 100; // 100% increase if previous was 0
+        }
+
+        // Include all categories that have meaningful spending in either period
+        if (currentData.amount > 0 || previousData.amount > 0) {
+          const trend = {
+            id: categoryId,
+            name: categoryInfo.name,
+            color: categoryInfo.color,
+            currentAmount: Math.round(currentData.amount * 100) / 100,
+            previousAmount: Math.round(previousData.amount * 100) / 100,
+            change: Math.round(change * 100) / 100,
+            percentChange: Math.round(percentChange * 100) / 100,
+          };
+          
+          categoryTrends.push(trend);
+          
+          console.log('🔍 getTrends Debug - Added trend:', trend);
+        }
+      });
+
+      // Sort by absolute percent change (most significant changes first)
+      categoryTrends.sort(
+        (a, b) => Math.abs(b.percentChange) - Math.abs(a.percentChange)
+      );
+
+      console.log('🔍 getTrends Debug - Final category trends count:', categoryTrends.length);
+      console.log('🔍 getTrends Debug - Sample trends:', categoryTrends.slice(0, 3));
+
+      // 3. FIXED: Detect spending anomalies with robust validation
+      const spendingAnomalies = [];
+
+      // Use only the analysis period (not 12 months) for more accurate anomalies
+      const anomalyPeriodMonths = Math.min(months, 6); // Max 6 months for anomaly detection
+      const anomalyStartDate = new Date(
+        now.getFullYear(),
+        now.getMonth() - anomalyPeriodMonths,
+        1
+      );
+
+      console.log("🔍 getTrends Debug - Anomaly detection period:", {
+        anomalyPeriodMonths,
+        anomalyStartDate: anomalyStartDate.toISOString(),
+      });
+
+      const anomalyTransactions = await prisma.transaction.findMany({
+        where: {
+          date: { gte: anomalyStartDate },
+          type: "EXPENSE",
+        },
+        include: { category: true },
+        orderBy: { date: "asc" },
+      });
+
+      console.log(
+        "🔍 getTrends Debug - Anomaly transactions found:",
+        anomalyTransactions.length
+      );
+
+      // Group spending by category and month for anomaly detection
+      const categoryMonthlyMap = new Map();
+
+      for (let i = 0; i < anomalyPeriodMonths; i++) {
+        const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+        const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+        const monthKey = month.toISOString().substring(0, 7);
+
+        const monthTransactions = anomalyTransactions.filter((tx) => {
+          const txDate = new Date(tx.date);
+          return txDate >= monthStart && txDate <= monthEnd;
+        });
+
+        monthTransactions.forEach((tx) => {
+          const categoryId = tx.category.id;
+          const amount = Number(tx.amount);
+
+          // Validate transaction amount
+          if (isNaN(amount) || amount < 0 || amount > 50000) {
+            console.warn("🚨 Invalid transaction amount detected:", {
+              id: tx.id,
+              amount: tx.amount,
+              category: tx.category.name,
+              date: tx.date,
+            });
+            return; // Skip invalid transactions
+          }
+
+          if (!categoryMonthlyMap.has(categoryId)) {
+            categoryMonthlyMap.set(categoryId, {
+              monthlyData: new Map(),
+              categoryName: tx.category.name,
+              categoryColor: tx.category.color,
+            });
+          }
+
+          const categoryData = categoryMonthlyMap.get(categoryId);
+          const currentAmount = categoryData.monthlyData.get(monthKey) || 0;
+          categoryData.monthlyData.set(monthKey, currentAmount + amount);
+        });
+      }
+
+      console.log(
+        "🔍 getTrends Debug - Categories processed for anomalies:",
+        categoryMonthlyMap.size
+      );
+
+      // Find anomalies with improved algorithm
+      categoryMonthlyMap.forEach((categoryData, categoryId) => {
+        const monthlyAmounts = Array.from(categoryData.monthlyData.values());
+
+        // Need at least 2 months of data for comparison
+        if (monthlyAmounts.length < 2) return;
+
+        // Remove zero values for average calculation
+        const nonZeroAmounts = monthlyAmounts.filter((amount) => amount > 0);
+        if (nonZeroAmounts.length === 0) return;
+
+        const sum = nonZeroAmounts.reduce((acc, val) => acc + val, 0);
+        const average = sum / nonZeroAmounts.length;
+
+        // Calculate standard deviation for better anomaly detection
+        const variance =
+          nonZeroAmounts.reduce(
+            (acc, val) => acc + Math.pow(val - average, 2),
+            0
+          ) / nonZeroAmounts.length;
+        const standardDeviation = Math.sqrt(variance);
+
+        // Skip categories with very low average spending (less than 50€/month)
+        if (average < 50) return;
+
+        console.log("🔍 getTrends Debug - Category analysis:", {
+          category: categoryData.categoryName,
+          average: average.toFixed(2),
+          standardDeviation: standardDeviation.toFixed(2),
+          monthlyAmounts: monthlyAmounts.map((a) => a.toFixed(2)),
+        });
+
+        categoryData.monthlyData.forEach((amount, monthKey) => {
+          if (amount === 0) return; // Skip zero months
+
+          const deviationFromMean = Math.abs(amount - average);
+          const zScore =
+            standardDeviation > 0 ? deviationFromMean / standardDeviation : 0;
+
+          // Use Z-score for more scientific anomaly detection
+          // Z-score > 1.5 indicates significant deviation (roughly 87% of data falls within 1.5 standard deviations)
+          if (zScore > 1.5 && deviationFromMean > 50) {
+            // Also require at least 50€ difference
+            const percentDeviation = ((amount - average) / average) * 100;
+
+            console.log("🔍 getTrends Debug - Anomaly found:", {
+              category: categoryData.categoryName,
+              month: monthKey,
+              amount: amount.toFixed(2),
+              average: average.toFixed(2),
+              zScore: zScore.toFixed(2),
+              percentDeviation: percentDeviation.toFixed(2),
+            });
+
+            spendingAnomalies.push({
+              category: categoryData.categoryName,
+              color: categoryData.categoryColor,
+              month: monthKey,
+              amount: Math.round(amount * 100) / 100,
+              averageAmount: Math.round(average * 100) / 100,
+              percentDeviation: Math.round(percentDeviation * 100) / 100,
+            });
+          }
+        });
+      });
+
+      // Sort anomalies by absolute percent deviation
+      spendingAnomalies.sort(
+        (a, b) => Math.abs(b.percentDeviation) - Math.abs(a.percentDeviation)
+      );
+
+      console.log(
+        "🔍 getTrends Debug - Final anomalies:",
+        spendingAnomalies.length
+      );
 
       await prisma.$disconnect();
-      return { trends, categoryTrends: [] }; // Simplified version
+      return {
+        trends,
+        categoryTrends,
+        spendingAnomalies,
+      };
     } catch (error) {
+      console.error("Error in getTrends:", error);
       return {
         error: error.message,
         timestamp: new Date().toISOString(),

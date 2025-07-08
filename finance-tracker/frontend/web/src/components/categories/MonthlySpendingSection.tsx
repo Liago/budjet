@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -11,10 +11,12 @@ import {
 import { CalendarIcon } from "../Icons";
 import { Category } from "../../utils/types";
 import CategoryBudgetCard from "./CategoryBudgetCard";
+import CategorySpendingModal from "./CategorySpendingModal";
 
 interface MonthlySpendingProps {
   categories: Category[];
   categorySpending: { [key: string]: number };
+  monthlyAverages: { [key: string]: number };
   timeFilter: string;
   availableMonths: { value: string; label: string }[];
   loadingSpending: boolean;
@@ -25,12 +27,18 @@ interface MonthlySpendingProps {
 const MonthlySpendingSection: React.FC<MonthlySpendingProps> = ({
   categories,
   categorySpending,
+  monthlyAverages,
   timeFilter,
   availableMonths,
   loadingSpending,
   onTimeFilterChange,
   onEditCategory,
 }) => {
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Filtra le categorie con budget e ordinale per budget decrescente
   const categoriesWithBudget = categories
     .filter((category) => category.budget)
@@ -38,6 +46,16 @@ const MonthlySpendingSection: React.FC<MonthlySpendingProps> = ({
 
   // Prendi la prima categoria come predefinita per l'aggiunta di budget (se disponibile)
   const defaultCategory = categories.length > 0 ? categories[0] : undefined;
+
+  const handleViewCategoryDetails = (category: Category) => {
+    setSelectedCategory(category);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCategory(null);
+  };
 
   return (
     <div className="mb-6">
@@ -64,7 +82,7 @@ const MonthlySpendingSection: React.FC<MonthlySpendingProps> = ({
         </div>
         <p className="text-gray-600 mt-1">
           Visualizza quanto speso nel periodo selezionato per ciascuna categoria
-          con budget allocato.
+          con budget allocato. Clicca su una categoria per vedere i dettagli.
         </p>
       </div>
 
@@ -81,7 +99,9 @@ const MonthlySpendingSection: React.FC<MonthlySpendingProps> = ({
                 key={category.id}
                 category={category}
                 spent={categorySpending[category.id] || 0}
+                monthlyAverage={monthlyAverages[category.id] || 0}
                 onEdit={onEditCategory}
+                onViewDetails={handleViewCategoryDetails}
               />
             ))}
           </div>
@@ -112,6 +132,15 @@ const MonthlySpendingSection: React.FC<MonthlySpendingProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Category Spending Modal */}
+      <CategorySpendingModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        category={selectedCategory}
+        timeFilter={timeFilter}
+        availableMonths={availableMonths}
+      />
     </div>
   );
 };

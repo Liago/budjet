@@ -50,8 +50,12 @@ const Categories = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Custom hooks
-  const { categorySpending, loadingSpending, availableMonths } =
-    useCategorySpending(categories, timeFilter);
+  const {
+    categorySpending,
+    monthlyAverages,
+    loadingSpending,
+    availableMonths,
+  } = useCategorySpending(categories, timeFilter);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -65,101 +69,81 @@ const Categories = () => {
     }
   }, [isModalOpen, dispatch]);
 
-  // Handle form submission
-  const handleSubmit = (formData: CategoryFormData) => {
-    const validationRules = {
-      name: (value: string) => (!value ? "Category name is required" : null),
-      color: (value: string) => (!value ? "Color is required" : null),
-      icon: (value: string) => (!value ? "Icon is required" : null),
-      budget: (value: string) =>
-        value && parseFloat(value) < 0 ? "Budget cannot be negative" : null,
-    };
+  // Filter categories based on search term and filter type
+  const filteredCategories = categories.filter((category) => {
+    const matchesSearch = category.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesFilter = filterType === "all"; // We only have "all" for now
+    return matchesSearch && matchesFilter;
+  });
 
-    if (validate(formData, validationRules)) {
-      if (currentCategory) {
-        const updateData: UpdateCategoryData = {
-          name: formData.name,
-          icon: formData.icon,
-          color: formData.color,
-          budget: formData.budget ? parseFloat(formData.budget) : undefined,
-        };
-
-        dispatch(
-          updateCategory({
-            id: currentCategory.id,
-            data: updateData,
-          })
-        )
-          .unwrap()
-          .then(() => {
-            setIsModalOpen(false);
-          })
-          .catch((error) => {
-            console.error("Error updating category:", error);
-          });
-      } else {
-        const createData: CreateCategoryData = {
-          name: formData.name,
-          icon: formData.icon,
-          color: formData.color,
-          budget: formData.budget ? parseFloat(formData.budget) : undefined,
-        };
-
-        dispatch(createCategory(createData))
-          .unwrap()
-          .then(() => {
-            setIsModalOpen(false);
-          })
-          .catch((error) => {
-            console.error("Error creating category:", error);
-          });
-      }
-    }
-  };
-
-  // Handle opening the modal for editing
+  // Handlers
   const handleOpenModal = (category?: Category) => {
-    clearErrors();
     if (category) {
       dispatch(setCurrentCategory(category));
     } else {
       dispatch(setCurrentCategory(null));
     }
+    clearErrors();
     setIsModalOpen(true);
   };
 
-  // Handle close modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     clearErrors();
   };
 
-  // Handle delete
-  const handleDelete = (id: string) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this category? This will affect all transactions using this category."
-      )
-    ) {
-      dispatch(deleteCategory(id))
-        .unwrap()
-        .catch((error) => {
-          console.error("Error deleting category:", error);
-        });
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+    formData: CategoryFormData
+  ) => {
+    event.preventDefault();
+
+    // Validate the form
+    const validationResult = validate(formData, {
+      name: "required",
+      color: "required",
+      icon: "required",
+    });
+
+    if (!validationResult.isValid) {
+      return;
+    }
+
+    try {
+      if (currentCategory) {
+        // Update existing category
+        const updateData: UpdateCategoryData = {
+          ...formData,
+          budget: formData.budget ? Number(formData.budget) : undefined,
+        };
+        await dispatch(
+          updateCategory({ id: currentCategory.id, ...updateData })
+        );
+      } else {
+        // Create new category
+        const createData: CreateCategoryData = {
+          ...formData,
+          budget: formData.budget ? Number(formData.budget) : undefined,
+        };
+        await dispatch(createCategory(createData));
+      }
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error saving category:", error);
     }
   };
 
-  // Filter categories with safe null/undefined checks
-  const filteredCategories = categories.filter((category) => {
-    // Safety check: ensure category and category.name exist
-    if (!category || !category.name) {
-      console.warn("Category with missing name found:", category);
-      return false;
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this category?")) {
+      try {
+        await dispatch(deleteCategory(id));
+      } catch (error) {
+        console.error("Error deleting category:", error);
+      }
     }
-
-    // Filter by search term
-    return category.name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
@@ -178,6 +162,7 @@ const Categories = () => {
       <MonthlySpendingSection
         categories={categories}
         categorySpending={categorySpending}
+        monthlyAverages={monthlyAverages}
         timeFilter={timeFilter}
         availableMonths={availableMonths}
         loadingSpending={loadingSpending}
