@@ -12,6 +12,7 @@ import {
 import { ApiTags } from "@nestjs/swagger";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
+import { PrismaService } from "../prisma/prisma.service";
 
 // Interface for execution result
 interface ExecutionResult {
@@ -29,6 +30,82 @@ interface ExecutionResult {
 @ApiTags("direct")
 @Controller("direct")
 export class DirectController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  // Helper function to determine category type from name
+  private getCategoryType(categoryName: string): "INCOME" | "EXPENSE" {
+    const name = categoryName.toLowerCase();
+
+    // Income categories
+    const incomeCategories = [
+      "salary",
+      "stipendio",
+      "bonus",
+      "gift",
+      "regalo",
+      "investment",
+      "investimento",
+      "refund",
+      "rimborso",
+      "special",
+      "speciale",
+      "income",
+      "entrata",
+    ];
+
+    // Expense categories
+    const expenseCategories = [
+      "grocery",
+      "alimentari",
+      "spesa",
+      "bar",
+      "restaurant",
+      "ristorante",
+      "car",
+      "auto",
+      "transport",
+      "trasporti",
+      "health",
+      "salute",
+      "home",
+      "casa",
+      "utilities",
+      "bollette",
+      "pets",
+      "animali",
+      "shopping",
+      "acquisti",
+      "technology",
+      "tecnologia",
+      "taxes",
+      "tasse",
+      "food",
+      "cibo",
+      "entertainment",
+      "svago",
+      "travel",
+      "viaggi",
+      "education",
+      "istruzione",
+      "medical",
+      "medico",
+      "uncategorized",
+    ];
+
+    // Check for income first
+    if (incomeCategories.some((income) => name.includes(income))) {
+      return "INCOME";
+    }
+
+    // Check for expense
+    if (expenseCategories.some((expense) => name.includes(expense))) {
+      return "EXPENSE";
+    }
+
+    // Default to EXPENSE if unclear
+    return "EXPENSE";
+  }
+
   // 🚀 DEBUG ENDPOINT - Temporary for debugging
   @Get("debug-data")
   async getDebugData() {
@@ -1465,10 +1542,19 @@ export class DirectController {
           startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       }
 
-      // Get categories with budget
-      const categories = await prisma.category.findMany({
+      // Get categories with budget - 🔧 BUG FIX: Filter out INCOME categories
+      const allCategories = await prisma.category.findMany({
         where: { budget: { not: null } },
       });
+
+      // Filter out INCOME categories (like "Salary") from budget analysis
+      const categories = allCategories.filter(
+        (category) => this.getCategoryType(category.name) === "EXPENSE"
+      );
+
+      console.log(
+        `🔧 Budget Analysis: Found ${allCategories.length} categories with budget, ${categories.length} are EXPENSE categories`
+      );
 
       const budgetAnalysis = await Promise.all(
         categories.map(async (category) => {
@@ -1573,23 +1659,11 @@ export class DirectController {
 
       const months = parseInt(timeRange.replace("m", "")) || 3;
       const now = new Date();
-      const currentPeriodStart = new Date(
-        now.getFullYear(),
-        now.getMonth() - Math.floor(months / 2),
-        1
-      );
-      const previousPeriodStart = new Date(
-        now.getFullYear(),
-        now.getMonth() - months,
-        1
-      );
       const startDate = new Date(now.getFullYear(), now.getMonth() - months, 1);
 
       console.log("🔍 getTrends Debug - Date ranges:", {
         timeRange,
         months,
-        currentPeriodStart: currentPeriodStart.toISOString(),
-        previousPeriodStart: previousPeriodStart.toISOString(),
         startDate: startDate.toISOString(),
       });
 
@@ -1652,21 +1726,68 @@ export class DirectController {
         };
       });
 
-      // 2. Calculate category trends (current vs previous period) - IMPROVED
+      // 2. Calculate category trends (current vs previous period) - FIXED LOGIC
+      // For realistic comparison, use month-based periods instead of arbitrary divisions
+      let currentPeriodStart: Date;
+      let previousPeriodStart: Date;
+      let previousPeriodEnd: Date;
+
+      if (months === 1) {
+        // For 1 month: current month vs previous month
+        currentPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        previousPeriodStart = new Date(
+          now.getFullYear(),
+          now.getMonth() - 1,
+          1
+        );
+        previousPeriodEnd = new Date(now.getFullYear(), now.getMonth(), 0); // Last day of previous month
+      } else if (months === 3) {
+        // For 3 months: last month vs month before that (not cumulative)
+        currentPeriodStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        previousPeriodStart = new Date(
+          now.getFullYear(),
+          now.getMonth() - 2,
+          1
+        );
+        previousPeriodEnd = new Date(now.getFullYear(), now.getMonth() - 1, 0);
+      } else {
+        // For other periods: divide equally
+        const halfMonths = Math.floor(months / 2);
+        currentPeriodStart = new Date(
+          now.getFullYear(),
+          now.getMonth() - halfMonths,
+          1
+        );
+        previousPeriodStart = new Date(
+          now.getFullYear(),
+          now.getMonth() - months,
+          1
+        );
+        previousPeriodEnd = new Date(
+          now.getFullYear(),
+          now.getMonth() - halfMonths,
+          0
+        );
+      }
+
       const currentPeriodTransactions = allTransactions.filter(
         (tx) => tx.date >= currentPeriodStart
       );
       const previousPeriodTransactions = allTransactions.filter(
-        (tx) => tx.date >= previousPeriodStart && tx.date < currentPeriodStart
+        (tx) => tx.date >= previousPeriodStart && tx.date <= previousPeriodEnd
       );
 
-      console.log("🔍 getTrends Debug - Period transactions:", {
-        current: currentPeriodTransactions.length,
-        previous: previousPeriodTransactions.length,
+      console.log("🔍 getTrends Debug - FIXED Period transactions:", {
+        timeRange,
+        months,
         currentPeriodStart: currentPeriodStart.toISOString(),
         previousPeriodStart: previousPeriodStart.toISOString(),
+        previousPeriodEnd: previousPeriodEnd.toISOString(),
+        current: currentPeriodTransactions.length,
+        previous: previousPeriodTransactions.length,
       });
 
+      // 3. Calculate category trends (current vs previous period) - IMPROVED
       const currentCategoryMap = new Map<
         string,
         {
@@ -2080,6 +2201,149 @@ export class DirectController {
         timestamp: new Date().toISOString(),
       };
     }
+  }
+
+  // 🚀 FEATURE: Expense Forecast with Recurring Payments - Direct endpoint
+  @Get("dashboard/expense-forecast")
+  async getExpenseForecast(
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string
+  ) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      // Default to current month if no dates provided
+      const start = startDate
+        ? new Date(startDate)
+        : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const end = endDate
+        ? new Date(endDate)
+        : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+      // Get actual expenses for the period
+      const actualExpenses = await prisma.transaction.aggregate({
+        where: {
+          date: { gte: start, lte: end },
+          type: "EXPENSE",
+        },
+        _sum: { amount: true },
+      });
+
+      const actualExpensesAmount = Number(actualExpenses._sum.amount || 0);
+
+      // Get all active recurring payments that should be executed in the current month
+      const recurringPayments = await prisma.recurrentPayment.findMany({
+        where: {
+          isActive: true,
+          startDate: { lte: end }, // Started before or on the end date
+          OR: [
+            { endDate: null }, // No end date
+            { endDate: { gte: start } }, // End date is after or on the start date
+          ],
+        },
+        include: {
+          category: true,
+        },
+      });
+
+      // Calculate forecast from recurring payments for the current month
+      let recurringForecast = 0;
+      const recurringDetails = [];
+
+      for (const payment of recurringPayments) {
+        // Check if this payment is due in the current month
+        const isPaymentDue = this.isPaymentDueInPeriod(payment, start, end);
+
+        if (isPaymentDue) {
+          const paymentAmount = Number(payment.amount);
+          recurringForecast += paymentAmount;
+
+          recurringDetails.push({
+            id: payment.id,
+            name: payment.name,
+            amount: paymentAmount,
+            category: payment.category.name,
+            categoryColor: payment.category.color,
+            interval: payment.interval,
+            nextPaymentDate: payment.nextPaymentDate,
+          });
+        }
+      }
+
+      // Total forecast (actual + recurring)
+      const totalForecast = actualExpensesAmount + recurringForecast;
+
+      console.log("🔍 Expense Forecast Debug:", {
+        period: { start: start.toISOString(), end: end.toISOString() },
+        actualExpenses: actualExpensesAmount,
+        recurringForecast,
+        totalForecast,
+        recurringPaymentsCount: recurringPayments.length,
+        duePaymentsCount: recurringDetails.length,
+      });
+
+      await prisma.$disconnect();
+
+      return {
+        actualExpenses: Math.round(actualExpensesAmount * 100) / 100,
+        recurringForecast: Math.round(recurringForecast * 100) / 100,
+        totalForecast: Math.round(totalForecast * 100) / 100,
+        recurringDetails,
+        period: {
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // Helper method to check if a payment is due in a specific period
+  private isPaymentDueInPeriod(
+    payment: any,
+    periodStart: Date,
+    periodEnd: Date
+  ): boolean {
+    // Simple check: if nextPaymentDate is within the period
+    if (
+      payment.nextPaymentDate >= periodStart &&
+      payment.nextPaymentDate <= periodEnd
+    ) {
+      return true;
+    }
+
+    // More complex check: calculate if any payment would be due in this period
+    // based on the payment schedule
+    const currentDate = new Date(payment.nextPaymentDate);
+    let iterationCount = 0;
+    const maxIterations = 50; // Prevent infinite loops
+
+    while (currentDate <= periodEnd && iterationCount < maxIterations) {
+      if (currentDate >= periodStart) {
+        return true;
+      }
+
+      // Calculate next payment date
+      currentDate.setTime(
+        this.calculateNextPaymentDate(
+          currentDate,
+          payment.interval,
+          payment.dayOfMonth,
+          payment.dayOfWeek
+        ).getTime()
+      );
+
+      iterationCount++;
+    }
+
+    return false;
   }
 
   @Get("dashboard/savings")

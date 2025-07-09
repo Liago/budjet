@@ -360,6 +360,11 @@ const Transactions = () => {
       hasUpdate = true;
     }
 
+    if (updates.updateTags && updates.tags) {
+      updateData.tags = updates.tags;
+      hasUpdate = true;
+    }
+
     // Verifica che ci sia almeno un campo da aggiornare
     if (!hasUpdate || Object.keys(updateData).length === 0) {
       toast.warning(

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { dashboardService } from "@/utils/apiServices";
 
 interface DashboardStatsProps {
   totalIncome: number;
@@ -15,6 +16,22 @@ interface DashboardStatsProps {
   budgetRemaining: number;
   budgetPercentage: number;
   formatAmount: (amount: number | string) => string;
+  selectedTimeRange?: string;
+  customStartDate?: string; // Stringa in formato "yyyy-MM-dd"
+  customEndDate?: string; // Stringa in formato "yyyy-MM-dd"
+}
+
+interface ExpenseForecast {
+  actualExpenses: number;
+  recurringForecast: number;
+  totalForecast: number;
+  recurringDetails: Array<{
+    id: string;
+    name: string;
+    amount: number;
+    category: string;
+    categoryColor: string;
+  }>;
 }
 
 const DashboardStats: React.FC<DashboardStatsProps> = ({
@@ -24,7 +41,14 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
   budgetRemaining,
   budgetPercentage,
   formatAmount,
+  selectedTimeRange,
+  customStartDate,
+  customEndDate,
 }) => {
+  const [expenseForecast, setExpenseForecast] =
+    useState<ExpenseForecast | null>(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+
   // Protezione per valori NaN o undefined
   const safeIncome = isNaN(totalIncome) ? 0 : totalIncome;
   const safeExpense = isNaN(totalExpense) ? 0 : totalExpense;
@@ -34,6 +58,38 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
 
   // Calcola il bilancio come differenza tra entrate e uscite
   const balance = safeIncome - safeExpense;
+
+  // Fetch expense forecast
+  const fetchExpenseForecast = async () => {
+    // 🎯 FORECAST: Ha senso solo per il mese corrente, non per periodi passati
+    if (selectedTimeRange !== "current-month" && !customStartDate) {
+      setExpenseForecast(null);
+      return;
+    }
+
+    setForecastLoading(true);
+    try {
+      // customStartDate e customEndDate sono già stringhe in formato "yyyy-MM-dd"
+      const startDate = customStartDate || undefined;
+      const endDate = customEndDate || undefined;
+
+      const data = await dashboardService.getExpenseForecast(
+        startDate,
+        endDate
+      );
+
+      setExpenseForecast(data);
+    } catch (error) {
+      console.error("Error fetching expense forecast:", error);
+      setExpenseForecast(null);
+    } finally {
+      setForecastLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchExpenseForecast();
+  }, [selectedTimeRange, customStartDate, customEndDate]);
 
   return (
     <>
@@ -86,7 +142,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
         </CardFooter>
       </Card>
 
-      {/* Expense Card */}
+      {/* Expense Card - ENHANCED with Forecast */}
       <Card className="overflow-hidden h-full flex flex-col">
         <CardHeader className="pb-2 bg-gradient-to-r from-red-50 to-rose-50">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -112,26 +168,57 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
           <p className="text-3xl font-bold text-red-600">
             €{formatAmount(safeExpense)}
           </p>
+
+          {/* Forecast Section */}
+          {expenseForecast && !forecastLoading && (
+            <div className="mt-3 p-2 bg-red-50 rounded-lg">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-red-700 font-medium">Forecast:</span>
+                <span className="text-red-800 font-semibold">
+                  €{formatAmount(expenseForecast.totalForecast)}
+                </span>
+              </div>
+              {expenseForecast.recurringForecast > 0 && (
+                <div className="mt-1 text-xs text-red-600">
+                  +€{formatAmount(expenseForecast.recurringForecast)} ricorrenti
+                </div>
+              )}
+            </div>
+          )}
+
+          {forecastLoading && (
+            <div className="mt-3 text-sm text-gray-500 animate-pulse">
+              Caricamento forecast...
+            </div>
+          )}
         </CardContent>
         <CardFooter className="border-t bg-gradient-to-r from-red-50 to-rose-50">
-          <p className="text-sm font-medium flex items-center gap-1.5">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-red-600"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-            Questo periodo
-          </p>
+          <div className="flex flex-col w-full gap-1">
+            <p className="text-sm font-medium flex items-center gap-1.5">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-red-600"
+              >
+                <rect width="20" height="14" x="2" y="5" rx="2" />
+                <path d="M2 10h20" />
+              </svg>
+              Questo periodo
+            </p>
+
+            {expenseForecast && expenseForecast.recurringDetails.length > 0 && (
+              <div className="text-xs text-red-600">
+                {expenseForecast.recurringDetails.length} pagamenti ricorrenti
+              </div>
+            )}
+          </div>
         </CardFooter>
       </Card>
 

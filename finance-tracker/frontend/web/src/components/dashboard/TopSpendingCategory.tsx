@@ -23,7 +23,7 @@ const TopSpendingCategory: React.FC<TopSpendingCategoryProps> = ({
   formatAmount,
 }) => {
   return (
-    <Card className="overflow-hidden h-full">
+    <Card className="overflow-hidden h-full flex flex-col">
       <CardHeader className="pb-2 bg-gradient-to-r from-violet-50 to-fuchsia-50">
         <CardTitle className="text-lg flex items-center gap-2">
           <svg
@@ -47,7 +47,7 @@ const TopSpendingCategory: React.FC<TopSpendingCategoryProps> = ({
           Categoria Prin...
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="pt-4 flex-1">
         <p className="text-3xl font-bold text-violet-600 mb-1">
           {categoryName}
         </p>

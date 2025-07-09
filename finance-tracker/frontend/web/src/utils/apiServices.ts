@@ -188,7 +188,28 @@ export const dashboardService = {
       }[];
       averageIncome: number;
       averageExpense: number;
-    }>("/direct/dashboard/forecast", { months }), // 🔧 Use direct endpoint
+    }>("/direct/dashboard/forecast", { months }),
+
+  // 🚀 FEATURE: Expense Forecast with Recurring Payments
+  getExpenseForecast: (startDate?: string, endDate?: string) =>
+    apiService.get<{
+      actualExpenses: number;
+      recurringForecast: number;
+      totalForecast: number;
+      recurringDetails: Array<{
+        id: string;
+        name: string;
+        amount: number;
+        category: string;
+        categoryColor: string;
+        interval: string;
+        nextPaymentDate: string;
+      }>;
+      period: {
+        startDate: string;
+        endDate: string;
+      };
+    }>("/direct/dashboard/expense-forecast", { startDate, endDate }),
 
   // Nuovo endpoint per i suggerimenti di risparmio
   getSavingSuggestions: () =>

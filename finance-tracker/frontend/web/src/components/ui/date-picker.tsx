@@ -16,7 +16,7 @@ interface DatePickerProps {
   className?: string;
 }
 
-// Enhanced Safari detection function
+// Enhanced Safari detection function - more aggressive approach
 const isSafari = () => {
   if (typeof window === "undefined") return false;
 
@@ -29,7 +29,10 @@ const isSafari = () => {
       !userAgent.includes("chrome") &&
       !userAgent.includes("chromium")) ||
     vendor.includes("apple") ||
-    /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)
+    /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent) ||
+    // Additional Safari patterns
+    (userAgent.includes("version/") && userAgent.includes("safari")) ||
+    (/safari/i.test(userAgent) && /apple/i.test(vendor))
   );
 };
 
@@ -43,7 +46,10 @@ const hasPopoverIssues = () => {
   return (
     isSafari() ||
     userAgent.includes("safari") ||
-    /iphone|ipad|ipod|android|mobile/i.test(userAgent)
+    /iphone|ipad|ipod|android|mobile/i.test(userAgent) ||
+    // Additional mobile checks
+    /tablet|ipad/i.test(userAgent) ||
+    "ontouchstart" in window // Touch device detection
   );
 };
 
@@ -55,17 +61,20 @@ export function DatePicker({
 }: DatePickerProps) {
   const [useNativeInput, setUseNativeInput] = React.useState(false);
   const [popoverError, setPopoverError] = React.useState(false);
+  const [clickAttempts, setClickAttempts] = React.useState(0);
 
   React.useEffect(() => {
-    // Check if we should use native input
+    // Check if we should use native input - be more aggressive for Safari
     const shouldUseNative = hasPopoverIssues();
     setUseNativeInput(shouldUseNative);
 
     console.log("DatePicker - Browser detection:", {
       userAgent: window.navigator.userAgent,
+      vendor: window.navigator.vendor,
       isSafari: isSafari(),
       hasPopoverIssues: hasPopoverIssues(),
       useNativeInput: shouldUseNative,
+      touchDevice: "ontouchstart" in window,
     });
   }, []);
 
@@ -125,12 +134,25 @@ export function DatePicker({
               className
             )}
             onClick={(e) => {
-              // Additional Safari handling - if click doesn't work, fallback
+              // Increment click attempts
+              setClickAttempts((prev) => prev + 1);
+
+              // Additional Safari handling - if click doesn't work, fallback quickly
+              if (isSafari() || clickAttempts >= 2) {
+                console.log(
+                  "Safari click detected or multiple attempts, using fallback"
+                );
+                handlePopoverError();
+                return;
+              }
+
+              // For Safari, try a more aggressive fallback
               setTimeout(() => {
                 if (isSafari()) {
+                  console.log("Safari timeout fallback triggered");
                   handlePopoverError();
                 }
-              }, 100);
+              }, 50); // Reduced timeout for faster fallback
             }}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />

@@ -481,6 +481,9 @@ const Dashboard: React.FC = () => {
                 budgetRemaining={budgetData.budgetRemaining}
                 budgetPercentage={budgetData.budgetPercentage}
                 formatAmount={formatAmount}
+                selectedTimeRange={selectedTimeRange}
+                customStartDate={customStartDate}
+                customEndDate={customEndDate}
               />
             </div>
 

@@ -41,11 +41,13 @@ interface BulkUpdateData {
   date?: string;
   type?: "INCOME" | "EXPENSE";
   description?: string;
+  tags?: string[];
   // Campi da aggiornare (vero = aggiorna, falso = ignora)
   updateCategory: boolean;
   updateDate: boolean;
   updateType: boolean;
   updateDescription: boolean;
+  updateTags: boolean;
 }
 
 const BulkEditModal: React.FC<BulkEditModalProps> = ({
@@ -60,6 +62,7 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({
     updateDate: false,
     updateType: false,
     updateDescription: false,
+    updateTags: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -70,6 +73,7 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({
     "EXPENSE"
   );
   const [description, setDescription] = useState<string>("");
+  const [tags, setTags] = useState<string>("");
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -79,6 +83,7 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({
       updateDate: bulkData.updateDate,
       updateType: bulkData.updateType,
       updateDescription: bulkData.updateDescription,
+      updateTags: bulkData.updateTags,
     };
 
     if (bulkData.updateCategory) {
@@ -95,6 +100,13 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({
 
     if (bulkData.updateDescription) {
       updates.description = description;
+    }
+
+    if (bulkData.updateTags) {
+      updates.tags = tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
     }
 
     try {
@@ -157,6 +169,13 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({
               <div className="col-span-2">
                 Cambia il tipo (Entrata/Uscita) per tutte le transazioni
                 selezionate
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 py-1">
+              <div className="font-medium">Tag</div>
+              <div className="col-span-2">
+                Assegna gli stessi tag a tutte le transazioni selezionate
               </div>
             </div>
           </div>
@@ -300,6 +319,32 @@ const BulkEditModal: React.FC<BulkEditModalProps> = ({
                   <SelectItem value="EXPENSE">Uscita</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Tag */}
+          <div className="flex items-start space-x-4">
+            <div className="flex items-center h-5">
+              <Checkbox
+                id="update-tags"
+                checked={bulkData.updateTags}
+                onCheckedChange={(checked) =>
+                  setBulkData({ ...bulkData, updateTags: checked === true })
+                }
+              />
+            </div>
+            <div className="grid gap-1.5 w-full">
+              <Label htmlFor="update-tags">Aggiorna tag</Label>
+              <Input
+                id="tags"
+                disabled={!bulkData.updateTags}
+                placeholder="es. spesa, essenziali, mensile"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Separare i tag con la virgola
+              </p>
             </div>
           </div>
         </div>
