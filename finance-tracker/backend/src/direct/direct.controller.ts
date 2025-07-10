@@ -2134,7 +2134,7 @@ export class DirectController {
       await prisma.$connect();
 
       const now = new Date();
-      
+
       // SEMPRE usa il mese corrente completo - IGNORA i parametri ricevuti
       const start = new Date(now.getFullYear(), now.getMonth(), 1); // 1° del mese corrente
       const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Ultimo giorno del mese corrente
@@ -2143,7 +2143,9 @@ export class DirectController {
         today: now.toISOString(),
         monthStart: start.toISOString(),
         monthEnd: end.toISOString(),
-        periodDescription: `Mese corrente: ${start.toLocaleDateString('it-IT')} - ${end.toLocaleDateString('it-IT')}`,
+        periodDescription: `Mese corrente: ${start.toLocaleDateString(
+          "it-IT"
+        )} - ${end.toLocaleDateString("it-IT")}`,
         ignoredParams: { startDate, endDate }, // Log per debug
       });
 
@@ -2224,7 +2226,9 @@ export class DirectController {
           startDate: start.toISOString(),
           endDate: end.toISOString(),
           currentDate: now.toISOString(),
-          description: `Mese corrente: ${start.toLocaleDateString('it-IT')} - ${end.toLocaleDateString('it-IT')}`,
+          description: `Mese corrente: ${start.toLocaleDateString(
+            "it-IT"
+          )} - ${end.toLocaleDateString("it-IT")}`,
         },
         timestamp: new Date().toISOString(),
       };
@@ -3292,6 +3296,107 @@ export class DirectController {
         count: results.length,
         message: `Successfully imported ${results.length} transactions`,
         transactions: results,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 BULK UPDATE TRANSACTIONS - Direct endpoint compatible with Netlify Functions
+  @Post("transactions/bulk-update")
+  @ApiOperation({ summary: "Update multiple transactions at once" })
+  @ApiResponse({ status: 200, description: "Batch update successful" })
+  async bulkUpdateTransactions(@Body() body: { ids: string[]; data: any }) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      if (!body.ids || !Array.isArray(body.ids) || body.ids.length === 0) {
+        throw new Error("No transaction IDs provided");
+      }
+
+      if (!body.data || Object.keys(body.data).length === 0) {
+        throw new Error("No update data provided");
+      }
+
+      // 🔧 Handle tags like in TransactionsService
+      const { tags, ...transactionData } = body.data;
+
+      // Process each transaction update
+      const results = [];
+      for (const id of body.ids) {
+        try {
+          // Get userId from existing transaction for tag management
+          const existingTransaction = await prisma.transaction.findUnique({
+            where: { id },
+            select: { userId: true },
+          });
+
+          if (!existingTransaction) {
+            results.push({
+              id,
+              success: false,
+              error: "Transaction not found",
+            });
+            continue;
+          }
+
+          const userId = existingTransaction.userId;
+
+          // If tags are provided, update them
+          let tagsUpdate = {};
+          if (tags) {
+            tagsUpdate = {
+              tags: {
+                set: [], // First disconnect all existing tags
+                connectOrCreate: tags.map((tagName: string) => ({
+                  where: { name_userId: { name: tagName, userId } },
+                  create: { name: tagName, userId },
+                })),
+              },
+            };
+          }
+
+          const transaction = await prisma.transaction.update({
+            where: { id },
+            data: {
+              amount: transactionData.amount
+                ? Number(transactionData.amount)
+                : undefined,
+              description: transactionData.description,
+              date: transactionData.date
+                ? new Date(transactionData.date)
+                : undefined,
+              type: transactionData.type,
+              categoryId: transactionData.categoryId,
+              ...tagsUpdate,
+            },
+            include: {
+              category: true,
+              tags: true,
+            },
+          });
+
+          results.push({ id, success: true, transaction });
+        } catch (error) {
+          results.push({ id, success: false, error: error.message });
+        }
+      }
+
+      await prisma.$disconnect();
+
+      const successCount = results.filter((r) => r.success).length;
+
+      return {
+        success: true,
+        count: successCount,
+        message: `Updated ${successCount} of ${body.ids.length} transactions`,
+        results,
       };
     } catch (error) {
       return {

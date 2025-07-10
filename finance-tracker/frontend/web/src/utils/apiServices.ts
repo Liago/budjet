@@ -116,19 +116,19 @@ export const transactionService = {
   // Aggiorna multiple transazioni contemporaneamente
   bulkUpdate: (ids: string[], updateData: Partial<UpdateTransactionData>) =>
     apiService.post<{ success: boolean; count: number }>(
-      "/transactions/bulk-update",
+      "/direct/transactions/bulk-update",
       {
         ids,
         data: updateData,
       }
     ),
 
-  importCsv: (formData: FormData) =>
-    apiService.upload<{
+  importCsv: (payload: { csvData: string; defaultCategoryId?: string }) =>
+    apiService.post<{
       success: boolean;
       count: number;
       transactions: Transaction[];
-    }>("/transactions/import/csv", formData),
+    }>("/direct/transactions/import/csv", payload),
 };
 
 // Dashboard Service

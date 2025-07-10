@@ -40,14 +40,17 @@ const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess }) => {
     setSuccess(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      if (defaultCategoryId) {
-        formData.append("defaultCategoryId", defaultCategoryId);
-      }
+      // Read file content as text
+      const csvData = await file.text();
+
+      // Prepare JSON payload for direct endpoint
+      const payload = {
+        csvData,
+        defaultCategoryId: defaultCategoryId || undefined,
+      };
 
       const result = await dispatch(
-        importTransactionsFromCsv(formData)
+        importTransactionsFromCsv(payload)
       ).unwrap();
       setSuccess(`Successfully imported ${result.count} transactions`);
       setFile(null);

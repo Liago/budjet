@@ -131,9 +131,12 @@ export const deleteAllTransactions = createAsyncThunk(
 // Import transactions from CSV
 export const importTransactionsFromCsv = createAsyncThunk(
   "transactions/importFromCsv",
-  async (formData: FormData, { rejectWithValue, dispatch }) => {
+  async (
+    payload: { csvData: string; defaultCategoryId?: string },
+    { rejectWithValue, dispatch }
+  ) => {
     try {
-      const result = await transactionService.importCsv(formData);
+      const result = await transactionService.importCsv(payload);
       // Refresh transactions list after import
       dispatch(fetchTransactions());
       return result;

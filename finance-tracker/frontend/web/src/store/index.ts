@@ -4,6 +4,7 @@ import categoryReducer from "./slices/categorySlice";
 import transactionReducer from "./slices/transactionSlice";
 import dashboardReducer from "./slices/dashboardSlice";
 import recurrentPaymentReducer from "./slices/recurrentPaymentSlice";
+import uiReducer from "./slices/uiSlice";
 import { createLogger } from "redux-logger";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 
@@ -32,6 +33,7 @@ export const store = configureStore({
     transactions: transactionReducer,
     dashboard: dashboardReducer,
     recurrentPayments: recurrentPaymentReducer,
+    ui: uiReducer,
   },
   middleware: (getDefaultMiddleware) => {
     const middleware = getDefaultMiddleware({
