@@ -9,7 +9,7 @@ import {
   Delete,
   Headers,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
@@ -2123,87 +2123,6 @@ export class DirectController {
     }
   }
 
-  @Get("dashboard/forecast")
-  async getForecastData(@Query("months") months = "6") {
-    try {
-      const { PrismaClient } = await import("@prisma/client");
-      const prisma = new PrismaClient();
-      await prisma.$connect();
-
-      const monthsNum = parseInt(months.toString()) || 6;
-      const now = new Date();
-      const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-
-      // Get historical data
-      const transactions = await prisma.transaction.findMany({
-        where: { date: { gte: threeMonthsAgo } },
-        orderBy: { date: "asc" },
-      });
-
-      // Calculate averages
-      const totalIncome = transactions
-        .filter((t) => t.type === "INCOME")
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-
-      const totalExpenses = transactions
-        .filter((t) => t.type === "EXPENSE")
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-
-      const avgIncome = totalIncome / 3;
-      const avgExpense = totalExpenses / 3;
-
-      // Generate historical data
-      const historicalData = [];
-      for (let i = 2; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthTransactions = transactions.filter(
-          (t) =>
-            t.date.getMonth() === date.getMonth() &&
-            t.date.getFullYear() === date.getFullYear()
-        );
-
-        const monthIncome = monthTransactions
-          .filter((t) => t.type === "INCOME")
-          .reduce((sum, t) => sum + Number(t.amount), 0);
-
-        const monthExpenses = monthTransactions
-          .filter((t) => t.type === "EXPENSE")
-          .reduce((sum, t) => sum + Number(t.amount), 0);
-
-        historicalData.push({
-          period: date.toISOString().substring(0, 7),
-          value: monthIncome - monthExpenses,
-          forecast: false,
-        });
-      }
-
-      // Generate forecast data
-      const forecastData = [];
-      for (let i = 1; i <= monthsNum; i++) {
-        const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        forecastData.push({
-          period: date.toISOString().substring(0, 7),
-          value: Math.round(avgIncome - avgExpense),
-          forecast: true,
-        });
-      }
-
-      await prisma.$disconnect();
-      return {
-        historicalData,
-        forecastData,
-        averageIncome: Math.round(avgIncome),
-        averageExpense: Math.round(avgExpense),
-      };
-    } catch (error) {
-      return {
-        error: error.message,
-        timestamp: new Date().toISOString(),
-      };
-    }
-  }
-
-  // 🚀 FEATURE: Expense Forecast with Recurring Payments - Direct endpoint
   @Get("dashboard/expense-forecast")
   async getExpenseForecast(
     @Query("startDate") startDate?: string,
@@ -2214,18 +2133,24 @@ export class DirectController {
       const prisma = new PrismaClient();
       await prisma.$connect();
 
-      // Default to current month if no dates provided
-      const start = startDate
-        ? new Date(startDate)
-        : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-      const end = endDate
-        ? new Date(endDate)
-        : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+      const now = new Date();
+      
+      // SEMPRE usa il mese corrente completo - IGNORA i parametri ricevuti
+      const start = new Date(now.getFullYear(), now.getMonth(), 1); // 1° del mese corrente
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Ultimo giorno del mese corrente
 
-      // Get actual expenses for the period
+      console.log("🔍 Forecast Debug - FORCED Current Month:", {
+        today: now.toISOString(),
+        monthStart: start.toISOString(),
+        monthEnd: end.toISOString(),
+        periodDescription: `Mese corrente: ${start.toLocaleDateString('it-IT')} - ${end.toLocaleDateString('it-IT')}`,
+        ignoredParams: { startDate, endDate }, // Log per debug
+      });
+
+      // Spese attuali: dal 1° del mese corrente fino ad OGGI
       const actualExpenses = await prisma.transaction.aggregate({
         where: {
-          date: { gte: start, lte: end },
+          date: { gte: start, lte: now },
           type: "EXPENSE",
         },
         _sum: { amount: true },
@@ -2233,14 +2158,14 @@ export class DirectController {
 
       const actualExpensesAmount = Number(actualExpenses._sum.amount || 0);
 
-      // Get all active recurring payments that should be executed in the current month
+      // Pagamenti ricorrenti attivi
       const recurringPayments = await prisma.recurrentPayment.findMany({
         where: {
           isActive: true,
-          startDate: { lte: end }, // Started before or on the end date
+          startDate: { lte: end }, // Iniziati prima della fine del mese
           OR: [
-            { endDate: null }, // No end date
-            { endDate: { gte: start } }, // End date is after or on the start date
+            { endDate: null }, // Nessuna data di fine
+            { endDate: { gte: now } }, // Data di fine dopo oggi
           ],
         },
         include: {
@@ -2248,13 +2173,19 @@ export class DirectController {
         },
       });
 
-      // Calculate forecast from recurring payments for the current month
+      // Calcola forecast: pagamenti ricorrenti da OGGI alla fine del mese
       let recurringForecast = 0;
       const recurringDetails = [];
 
+      console.log("🔍 Forecast Debug - Recurring Payments Period:", {
+        forecastPeriodStart: now.toISOString(),
+        forecastPeriodEnd: end.toISOString(),
+        recurringPaymentsFound: recurringPayments.length,
+      });
+
       for (const payment of recurringPayments) {
-        // Check if this payment is due in the current month
-        const isPaymentDue = this.isPaymentDueInPeriod(payment, start, end);
+        // Controlla se questo pagamento è dovuto da OGGI alla fine del mese
+        const isPaymentDue = this.isPaymentDueInPeriod(payment, now, end);
 
         if (isPaymentDue) {
           const paymentAmount = Number(payment.amount);
@@ -2272,15 +2203,13 @@ export class DirectController {
         }
       }
 
-      // Total forecast (actual + recurring)
+      // Forecast totale: spese attuali + pagamenti ricorrenti rimasti
       const totalForecast = actualExpensesAmount + recurringForecast;
 
-      console.log("🔍 Expense Forecast Debug:", {
-        period: { start: start.toISOString(), end: end.toISOString() },
-        actualExpenses: actualExpensesAmount,
-        recurringForecast,
-        totalForecast,
-        recurringPaymentsCount: recurringPayments.length,
+      console.log("🔍 Expense Forecast Debug - Final Calculation:", {
+        actualExpensesThisMonth: actualExpensesAmount,
+        recurringPaymentsRemaining: recurringForecast,
+        totalForecast: totalForecast,
         duePaymentsCount: recurringDetails.length,
       });
 
@@ -2294,6 +2223,8 @@ export class DirectController {
         period: {
           startDate: start.toISOString(),
           endDate: end.toISOString(),
+          currentDate: now.toISOString(),
+          description: `Mese corrente: ${start.toLocaleDateString('it-IT')} - ${end.toLocaleDateString('it-IT')}`,
         },
         timestamp: new Date().toISOString(),
       };
@@ -3167,6 +3098,200 @@ export class DirectController {
       return {
         success: true,
         message: "Password cambiata con successo",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚀 CSV IMPORT - Direct endpoint compatible with Netlify Functions
+  @Post("transactions/import/csv")
+  @ApiOperation({ summary: "Import transactions from CSV data" })
+  @ApiResponse({
+    status: 201,
+    description: "Transactions successfully imported",
+  })
+  async importTransactionsFromCsv(
+    @Body()
+    body: {
+      csvData: string;
+      userId?: string;
+      defaultCategoryId?: string;
+    }
+  ) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const { csvData, defaultCategoryId } = body;
+
+      // Get userId - fallback to first user if not provided
+      let userId = body.userId;
+      if (!userId) {
+        const firstUser = await prisma.user.findFirst();
+        if (firstUser) {
+          userId = firstUser.id;
+        } else {
+          throw new Error("No user found");
+        }
+      }
+
+      // Get user's categories
+      const userCategories = await prisma.category.findMany({
+        where: { userId },
+      });
+
+      // Create default category if needed
+      let defaultCategory;
+      if (!defaultCategoryId) {
+        defaultCategory = userCategories.find(
+          (cat) => cat.name.toLowerCase() === "uncategorized"
+        );
+
+        if (!defaultCategory) {
+          defaultCategory = await prisma.category.create({
+            data: {
+              name: "Uncategorized",
+              icon: "question-mark",
+              color: "#808080",
+              userId,
+            },
+          });
+        }
+      }
+
+      const finalDefaultCategoryId = defaultCategoryId || defaultCategory.id;
+
+      // Parse CSV data
+      const lines = csvData.split("\n");
+      const headers = lines[0]
+        .split(",")
+        .map((h) => h.trim().replace(/"/g, ""));
+      const results = [];
+
+      // Function to find category ID by name
+      const findCategoryId = (categoryName: string) => {
+        if (!categoryName) return finalDefaultCategoryId;
+
+        const category = userCategories.find(
+          (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
+        );
+        return category?.id || finalDefaultCategoryId;
+      };
+
+      // Process each row
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+        const record: any = {};
+
+        // Map values to headers
+        headers.forEach((header, index) => {
+          record[header] = values[index] || "";
+        });
+
+        try {
+          if (!record.Type || !record.Transaction) {
+            console.warn("Skipping row with missing required fields", record);
+            continue;
+          }
+
+          // Process transaction type
+          const type = record.Type.toLowerCase().includes("expense")
+            ? "EXPENSE"
+            : "INCOME";
+
+          // Process amount
+          const amountStr = record.Transaction.replace("−", "-").replace(
+            ",",
+            "."
+          );
+          const amount = Math.abs(
+            parseFloat(amountStr.replace(/[^\d.-]/g, ""))
+          );
+
+          if (isNaN(amount)) {
+            console.warn("Skipping row with invalid amount", record);
+            continue;
+          }
+
+          // Process date
+          let date;
+          try {
+            if (record.Date) {
+              if (record.Date.includes("T")) {
+                date = new Date(record.Date);
+              } else {
+                // Try parsing different date formats
+                const dateStr = record.Date;
+                if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                  date = new Date(dateStr);
+                } else {
+                  date = new Date(dateStr);
+                }
+              }
+            } else {
+              date = new Date();
+            }
+          } catch (error) {
+            console.warn("Error parsing date, using current date", error);
+            date = new Date();
+          }
+
+          // Find category
+          const categoryId = findCategoryId(record.Category);
+
+          // Extract tags from note
+          const note = record.Note || "";
+          const tags =
+            note.match(/#(\w+)/g)?.map((tag) => tag.substring(1)) || [];
+
+          // Create or connect tags
+          const tagConnectOrCreate = tags.map((tagName: string) => ({
+            where: { name_userId: { name: tagName, userId } },
+            create: { name: tagName, userId },
+          }));
+
+          const transaction = await prisma.transaction.create({
+            data: {
+              type: type as "EXPENSE" | "INCOME",
+              amount: Number(amount),
+              date: date,
+              description:
+                note.replace(/#\w+/g, "").trim() ||
+                `Imported ${type.toLowerCase()}`,
+              categoryId: categoryId,
+              userId: userId,
+              tags: {
+                connectOrCreate: tagConnectOrCreate,
+              },
+            },
+            include: {
+              category: true,
+              tags: true,
+            },
+          });
+
+          results.push(transaction);
+        } catch (error) {
+          console.error("Error processing CSV row:", error, record);
+        }
+      }
+
+      await prisma.$disconnect();
+
+      return {
+        success: true,
+        count: results.length,
+        message: `Successfully imported ${results.length} transactions`,
+        transactions: results,
       };
     } catch (error) {
       return {
