@@ -8,6 +8,12 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { dashboardService } from "@/utils/apiServices";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface DashboardStatsProps {
   totalIncome: number;
@@ -31,6 +37,7 @@ interface ExpenseForecast {
     amount: number;
     category: string;
     categoryColor: string;
+    nextPaymentDate?: string; // Aggiunto per la data del prossimo pagamento
   }>;
 }
 
@@ -48,6 +55,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
   const [expenseForecast, setExpenseForecast] =
     useState<ExpenseForecast | null>(null);
   const [forecastLoading, setForecastLoading] = useState(false);
+  const [showForecastModal, setShowForecastModal] = useState(false);
 
   // Protezione per valori NaN o undefined
   const safeIncome = isNaN(totalIncome) ? 0 : totalIncome;
@@ -59,25 +67,26 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
   // Calcola il bilancio come differenza tra entrate e uscite
   const balance = safeIncome - safeExpense;
 
-  // Fetch expense forecast
-  const fetchExpenseForecast = async () => {
-    // 🎯 FORECAST: Ha senso solo per il mese corrente, non per periodi passati
-    if (selectedTimeRange !== "current-month" && !customStartDate) {
-      setExpenseForecast(null);
-      return;
-    }
+  // Utility per calcolare primo e ultimo giorno del mese corrente
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return {
+      startDate: start.toISOString().slice(0, 10),
+      endDate: end.toISOString().slice(0, 10),
+    };
+  };
 
+  // Fetch expense forecast SOLO per il mese corrente
+  const fetchExpenseForecast = async () => {
+    const { startDate, endDate } = getCurrentMonthRange();
     setForecastLoading(true);
     try {
-      // customStartDate e customEndDate sono già stringhe in formato "yyyy-MM-dd"
-      const startDate = customStartDate || undefined;
-      const endDate = customEndDate || undefined;
-
       const data = await dashboardService.getExpenseForecast(
         startDate,
         endDate
       );
-
       setExpenseForecast(data);
     } catch (error) {
       console.error("Error fetching expense forecast:", error);
@@ -89,7 +98,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
 
   useEffect(() => {
     fetchExpenseForecast();
-  }, [selectedTimeRange, customStartDate, customEndDate]);
+  }, []); // Solo al mount
 
   return (
     <>
@@ -169,9 +178,13 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
             €{formatAmount(safeExpense)}
           </p>
 
-          {/* Forecast Section */}
+          {/* Forecast Section - ora cliccabile */}
           {expenseForecast && !forecastLoading && (
-            <div className="mt-3 p-2 bg-red-50 rounded-lg">
+            <div
+              className="mt-3 p-2 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition"
+              onClick={() => setShowForecastModal(true)}
+              title="Clicca per dettagli pagamenti ricorrenti"
+            >
               <div className="flex justify-between items-center text-sm">
                 <span className="text-red-700 font-medium">Forecast:</span>
                 <span className="text-red-800 font-semibold">
@@ -365,6 +378,50 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
           </p>
         </CardFooter>
       </Card>
+
+      {/* Modale dettagli forecast ricorrenti */}
+      <Dialog open={showForecastModal} onOpenChange={setShowForecastModal}>
+        <DialogContent>
+          <DialogTitle>Dettaglio pagamenti ricorrenti previsti</DialogTitle>
+          <div className="mt-2 space-y-2">
+            {expenseForecast?.recurringDetails?.length ? (
+              expenseForecast.recurringDetails.map((item) => (
+                <div key={item.id} className="border-b pb-2 mb-2">
+                  <div className="font-semibold text-red-700">{item.name}</div>
+                  <div className="text-sm">
+                    <span className="font-medium">Importo:</span> €
+                    {formatAmount(item.amount)}
+                    <br />
+                    <span className="font-medium">Categoria:</span>{" "}
+                    <span style={{ color: item.categoryColor }}>
+                      {item.category}
+                    </span>
+                    <br />
+                    <span className="font-medium">Prossima data:</span>{" "}
+                    {item.nextPaymentDate
+                      ? new Date(item.nextPaymentDate).toLocaleDateString(
+                          "it-IT"
+                        )
+                      : "-"}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-500">
+                Nessun pagamento ricorrente previsto per il periodo.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <button
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded"
+              onClick={() => setShowForecastModal(false)}
+            >
+              Chiudi
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
