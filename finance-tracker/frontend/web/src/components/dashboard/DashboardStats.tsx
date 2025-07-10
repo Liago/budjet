@@ -67,18 +67,24 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
   // Calcola il bilancio come differenza tra entrate e uscite
   const balance = safeIncome - safeExpense;
 
-  // Utility per calcolare primo e ultimo giorno del mese corrente
+  // Utility per calcolare primo e ultimo giorno del mese corrente (robusta, sempre UTC)
   const getCurrentMonthRange = () => {
     const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    // Primo giorno del mese corrente
+    const start = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
+    );
+    // Ultimo giorno del mese corrente
+    const end = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)
+    );
     return {
       startDate: start.toISOString().slice(0, 10),
       endDate: end.toISOString().slice(0, 10),
     };
   };
 
-  // Fetch expense forecast SOLO per il mese corrente
+  // Fetch expense forecast SOLO per il mese corrente, senza override
   const fetchExpenseForecast = async () => {
     const { startDate, endDate } = getCurrentMonthRange();
     setForecastLoading(true);
@@ -98,7 +104,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
 
   useEffect(() => {
     fetchExpenseForecast();
-  }, []); // Solo al mount
+  }, []); // Solo al mount, nessun altro trigger
 
   return (
     <>
