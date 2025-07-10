@@ -1,41 +1,15 @@
-import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import {
-  loadPreferencesFromStorage,
-  updatePreferences,
   setSidebarOpen,
   toggleSidebar,
   setSidebarAlwaysOpen,
+  updatePreferences,
   UIPreferences,
 } from "../../store/slices/uiSlice";
-
-const STORAGE_KEY = "budjet-ui-preferences";
 
 export const useUIPreferences = () => {
   const dispatch = useAppDispatch();
   const { preferences, sidebarOpen } = useAppSelector((state) => state.ui);
-
-  // Carica le preferenze dal localStorage all'avvio
-  useEffect(() => {
-    try {
-      const storedPreferences = localStorage.getItem(STORAGE_KEY);
-      if (storedPreferences) {
-        const parsed = JSON.parse(storedPreferences) as Partial<UIPreferences>;
-        dispatch(loadPreferencesFromStorage(parsed));
-      }
-    } catch (error) {
-      console.warn("Errore nel caricamento delle preferenze UI:", error);
-    }
-  }, [dispatch]);
-
-  // Salva le preferenze nel localStorage quando cambiano
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-    } catch (error) {
-      console.warn("Errore nel salvataggio delle preferenze UI:", error);
-    }
-  }, [preferences]);
 
   // Funzioni di utilità
   const updateUIPreferences = (newPreferences: Partial<UIPreferences>) => {

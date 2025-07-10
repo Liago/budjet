@@ -21,10 +21,56 @@ const logger = createLogger({
   },
 });
 
+// Middleware per persistenza automatica dello stato UI
+const uiPersistenceMiddleware =
+  (store: any) => (next: any) => (action: any) => {
+    const result = next(action);
+
+    // Se l'azione modifica lo stato UI, salva nel localStorage
+    if (action.type?.startsWith("ui/")) {
+      try {
+        const state = store.getState();
+        localStorage.setItem(
+          "budjet-ui-preferences",
+          JSON.stringify(state.ui.preferences)
+        );
+      } catch (error) {
+        console.warn(
+          "Errore nel salvataggio automatico delle preferenze UI:",
+          error
+        );
+      }
+    }
+
+    return result;
+  };
+
+// Funzione per caricare lo stato UI dal localStorage
+const loadUIStateFromStorage = () => {
+  try {
+    const storedPreferences = localStorage.getItem("budjet-ui-preferences");
+    if (storedPreferences) {
+      const preferences = JSON.parse(storedPreferences);
+      return {
+        preferences,
+        sidebarOpen: preferences.sidebarAlwaysOpen || false,
+      };
+    }
+  } catch (error) {
+    console.warn("Errore nel caricamento delle preferenze UI:", error);
+  }
+  return undefined;
+};
+
 // Middleware condizionale in base all'ambiente
 const isDevelopment =
   process.env.NODE_ENV === "development" ||
   import.meta.env?.MODE === "development";
+
+// Stato iniziale con preferenze caricate dal localStorage
+const preloadedState = {
+  ui: loadUIStateFromStorage(),
+};
 
 export const store = configureStore({
   reducer: {
@@ -35,10 +81,11 @@ export const store = configureStore({
     recurrentPayments: recurrentPaymentReducer,
     ui: uiReducer,
   },
+  preloadedState: preloadedState.ui ? { ui: preloadedState.ui } : undefined,
   middleware: (getDefaultMiddleware) => {
     const middleware = getDefaultMiddleware({
       serializableCheck: false,
-    });
+    }).concat(uiPersistenceMiddleware);
 
     // Aggiungi logger solo in sviluppo
     if (isDevelopment) {

@@ -527,6 +527,7 @@ export class DirectController {
     @Query("startDate") startDate?: string,
     @Query("endDate") endDate?: string,
     @Query("categoryId") categoryId?: string,
+    @Query("type") type?: string, // 🔧 BUG FIX: Aggiunto parametro type mancante
     @Query("page") page = "1",
     @Query("limit") limit = "50"
   ) {
@@ -553,6 +554,19 @@ export class DirectController {
         where.categoryId = categoryId;
       }
 
+      // 🔧 BUG FIX: Add type filter - CRITICO per calcoli corretti
+      if (type && (type === "EXPENSE" || type === "INCOME")) {
+        where.type = type;
+      }
+
+      console.log("🔧 Transactions Debug - Applied filters:", {
+        startDate,
+        endDate,
+        categoryId,
+        type,
+        whereClause: where,
+      });
+
       // Get transactions with relations
       const [transactions, total] = await Promise.all([
         prisma.transaction.findMany({
@@ -568,6 +582,23 @@ export class DirectController {
         prisma.transaction.count({ where }),
       ]);
 
+      // 🔧 BUG FIX: Calculate sum for verification when type filter is applied
+      let totalAmount = 0;
+      if (type === "EXPENSE" || type === "INCOME") {
+        const sumResult = await prisma.transaction.aggregate({
+          where,
+          _sum: { amount: true },
+        });
+        totalAmount = Number(sumResult._sum.amount || 0);
+      }
+
+      console.log("🔧 Transactions Debug - Results:", {
+        totalTransactions: total,
+        returnedTransactions: transactions.length,
+        totalAmount: type ? totalAmount : "N/A (no type filter)",
+        typeFilter: type || "none",
+      });
+
       await prisma.$disconnect();
 
       return {
@@ -577,6 +608,13 @@ export class DirectController {
           page: pageNum,
           limit: limitNum,
           totalPages: Math.ceil(total / limitNum),
+          totalAmount: type ? totalAmount : undefined, // Include sum when filtering by type
+          appliedFilters: {
+            startDate,
+            endDate,
+            categoryId,
+            type,
+          },
         },
       };
     } catch (error) {
@@ -2135,36 +2173,91 @@ export class DirectController {
 
       const now = new Date();
 
-      // SEMPRE usa il mese corrente completo - IGNORA i parametri ricevuti
-      const start = new Date(now.getFullYear(), now.getMonth(), 1); // 1° del mese corrente
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Ultimo giorno del mese corrente
+      // 🔧 BUG FIX: Rispetta i parametri di data invece di forzare sempre il mese corrente
+      let start: Date;
+      let end: Date;
 
-      console.log("🔍 Forecast Debug - FORCED Current Month:", {
+      if (startDate && endDate) {
+        // Usa le date fornite come parametri
+        start = new Date(startDate);
+        end = new Date(endDate);
+      } else {
+        // Fallback al mese corrente se non fornite
+        start = new Date(now.getFullYear(), now.getMonth(), 1); // 1° del mese corrente
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Ultimo giorno del mese corrente
+      }
+
+      console.log("🔧 Expense Forecast Debug - Date Range:", {
+        providedStartDate: startDate,
+        providedEndDate: endDate,
+        actualStart: start.toISOString(),
+        actualEnd: end.toISOString(),
         today: now.toISOString(),
-        monthStart: start.toISOString(),
-        monthEnd: end.toISOString(),
-        periodDescription: `Mese corrente: ${start.toLocaleDateString(
+        periodDescription: `${start.toLocaleDateString(
           "it-IT"
         )} - ${end.toLocaleDateString("it-IT")}`,
-        ignoredParams: { startDate, endDate }, // Log per debug
       });
 
-      // Spese attuali: dal 1° del mese corrente fino ad OGGI
-      const actualExpenses = await prisma.transaction.aggregate({
-        where: {
-          date: { gte: start, lte: now },
+      // 🔧 BUG FIX CRITICO: Gestione corretta di periodi passati, presenti e futuri
+      let actualEndDate: Date;
+      let actualExpensesAmount: number;
+
+      if (startDate && endDate) {
+        // Se l'utente specifica date esplicite, usa sempre l'intero periodo richiesto
+        actualEndDate = end;
+        console.log("🔧 Expense Forecast Debug - Explicit date range provided, using full period");
+      } else {
+        // Solo per il caso "default" (mese corrente), limita fino ad oggi
+        if (end < now) {
+          actualEndDate = end;
+          console.log("🔧 Expense Forecast Debug - Past period detected, using full range");
+        } else if (start > now) {
+          actualEndDate = start;
+          actualExpensesAmount = 0;
+          console.log("🔧 Expense Forecast Debug - Future period detected, no actual expenses");
+        } else {
+          actualEndDate = now;
+          console.log("🔧 Expense Forecast Debug - Current period detected, calculating until today");
+        }
+      }
+
+      console.log("🔧 Expense Forecast Debug - Date Logic Check:", {
+        providedStartDate: startDate,
+        providedEndDate: endDate,
+        start: start.toISOString(),
+        end: end.toISOString(), 
+        now: now.toISOString(),
+        selectedActualEndDate: actualEndDate.toISOString(),
+        logic: startDate && endDate ? "explicit_range" : "default_behavior",
+      });
+
+      // Calcola actualExpenses (sempre, tranne per periodi futuri senza date esplicite)
+      if (!(start > now && !startDate && !endDate)) {
+        const actualExpenses = await prisma.transaction.aggregate({
+          where: {
+            date: { gte: start, lte: actualEndDate },
+            type: "EXPENSE",
+          },
+          _sum: { amount: true },
+        });
+        actualExpensesAmount = Number(actualExpenses._sum.amount || 0);
+      }
+
+      console.log("🔧 Expense Forecast Debug - Actual Expenses Calculation:", {
+        actualExpensesQuery: {
+          dateGte: start.toISOString(),
+          dateLte: actualEndDate.toISOString(),
           type: "EXPENSE",
         },
-        _sum: { amount: true },
+        actualExpensesAmount,
+        periodType: end < now ? "past" : start > now ? "future" : "current",
       });
-
-      const actualExpensesAmount = Number(actualExpenses._sum.amount || 0);
 
       // Pagamenti ricorrenti attivi
       const recurringPayments = await prisma.recurrentPayment.findMany({
         where: {
           isActive: true,
-          startDate: { lte: end }, // Iniziati prima della fine del mese
+          startDate: { lte: end }, // Iniziati prima della fine del periodo
           OR: [
             { endDate: null }, // Nessuna data di fine
             { endDate: { gte: now } }, // Data di fine dopo oggi
@@ -2175,41 +2268,47 @@ export class DirectController {
         },
       });
 
-      // Calcola forecast: pagamenti ricorrenti da OGGI alla fine del mese
+      // Calcola forecast: pagamenti ricorrenti da now alla fine del periodo (solo se now < end)
       let recurringForecast = 0;
       const recurringDetails = [];
 
-      console.log("🔍 Forecast Debug - Recurring Payments Period:", {
-        forecastPeriodStart: now.toISOString(),
-        forecastPeriodEnd: end.toISOString(),
-        recurringPaymentsFound: recurringPayments.length,
-      });
+      if (now < end) {
+        console.log("🔧 Expense Forecast Debug - Recurring Payments Period:", {
+          forecastPeriodStart: now.toISOString(),
+          forecastPeriodEnd: end.toISOString(),
+          recurringPaymentsFound: recurringPayments.length,
+        });
 
-      for (const payment of recurringPayments) {
-        // Controlla se questo pagamento è dovuto da OGGI alla fine del mese
-        const isPaymentDue = this.isPaymentDueInPeriod(payment, now, end);
+        for (const payment of recurringPayments) {
+          // Controlla se questo pagamento è dovuto da now alla fine del periodo
+          const isPaymentDue = this.isPaymentDueInPeriod(payment, now, end);
 
-        if (isPaymentDue) {
-          const paymentAmount = Number(payment.amount);
-          recurringForecast += paymentAmount;
+          if (isPaymentDue) {
+            const paymentAmount = Number(payment.amount);
+            recurringForecast += paymentAmount;
 
-          recurringDetails.push({
-            id: payment.id,
-            name: payment.name,
-            amount: paymentAmount,
-            category: payment.category.name,
-            categoryColor: payment.category.color,
-            interval: payment.interval,
-            nextPaymentDate: payment.nextPaymentDate,
-          });
+            recurringDetails.push({
+              id: payment.id,
+              name: payment.name,
+              amount: paymentAmount,
+              category: payment.category.name,
+              categoryColor: payment.category.color,
+              interval: payment.interval,
+              nextPaymentDate: payment.nextPaymentDate,
+            });
+          }
         }
+      } else {
+        console.log(
+          "🔧 Expense Forecast Debug - No recurring forecast: period is in the past"
+        );
       }
 
       // Forecast totale: spese attuali + pagamenti ricorrenti rimasti
       const totalForecast = actualExpensesAmount + recurringForecast;
 
-      console.log("🔍 Expense Forecast Debug - Final Calculation:", {
-        actualExpensesThisMonth: actualExpensesAmount,
+      console.log("🔧 Expense Forecast Debug - Final Calculation:", {
+        actualExpensesInPeriod: actualExpensesAmount,
         recurringPaymentsRemaining: recurringForecast,
         totalForecast: totalForecast,
         duePaymentsCount: recurringDetails.length,
@@ -2226,9 +2325,11 @@ export class DirectController {
           startDate: start.toISOString(),
           endDate: end.toISOString(),
           currentDate: now.toISOString(),
-          description: `Mese corrente: ${start.toLocaleDateString(
+          actualEndDate: actualEndDate.toISOString(),
+          description: `Periodo: ${start.toLocaleDateString(
             "it-IT"
           )} - ${end.toLocaleDateString("it-IT")}`,
+          isCurrentPeriod: startDate === undefined && endDate === undefined,
         },
         timestamp: new Date().toISOString(),
       };
@@ -3401,6 +3502,203 @@ export class DirectController {
     } catch (error) {
       return {
         success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // 🚨 DEBUG ENDPOINT - Analisi discrepanze calcolo spese luglio 2025
+  @Get("debug/expense-analysis")
+  async debugExpenseAnalysis(
+    @Query("startDate") startDate = "2025-07-01",
+    @Query("endDate") endDate = "2025-07-31"
+  ) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const now = new Date();
+
+      console.log("🚨 DEBUG Expense Analysis - Date Setup:", {
+        startDate,
+        endDate,
+        start: start.toISOString(),
+        end: end.toISOString(),
+        now: now.toISOString(),
+      });
+
+      // 1. Ottieni TUTTE le transazioni del periodo (senza filtri)
+      const allTransactions = await prisma.transaction.findMany({
+        where: {
+          date: { gte: start, lte: end },
+        },
+        include: { category: true },
+        orderBy: { date: "asc" },
+      });
+
+      // 2. Separa per tipo
+      const expenseTransactions = allTransactions.filter(
+        (tx) => tx.type === "EXPENSE"
+      );
+      const incomeTransactions = allTransactions.filter(
+        (tx) => tx.type === "INCOME"
+      );
+
+      // 3. Calcola totali
+      const totalExpenses = expenseTransactions.reduce(
+        (sum, tx) => sum + Number(tx.amount),
+        0
+      );
+      const totalIncome = incomeTransactions.reduce(
+        (sum, tx) => sum + Number(tx.amount),
+        0
+      );
+
+      // 4. Calcolo con Prisma aggregate (come nell'endpoint originale)
+      const aggregateExpenses = await prisma.transaction.aggregate({
+        where: {
+          date: { gte: start, lte: end },
+          type: "EXPENSE",
+        },
+        _sum: { amount: true },
+        _count: { id: true },
+      });
+
+      // 5. Calcolo actualEndDate come nell'expense-forecast - FIXED LOGIC
+      let actualEndDate: Date;
+
+      if (end < now) {
+        // Periodo completamente nel passato: usa tutto il periodo richiesto
+        actualEndDate = end;
+      } else if (start > now) {
+        // Periodo completamente nel futuro: usa start (nessuna spesa attuale)
+        actualEndDate = start;
+      } else {
+        // Periodo che include oggi: calcola fino ad oggi
+        actualEndDate = now;
+      }
+
+      const actualExpensesAggregate = await prisma.transaction.aggregate({
+        where: {
+          date: { gte: start, lte: actualEndDate },
+          type: "EXPENSE",
+        },
+        _sum: { amount: true },
+        _count: { id: true },
+      });
+
+      // 6. Analisi per categoria
+      const categoryBreakdown = expenseTransactions.reduce((acc, tx) => {
+        const categoryName = tx.category?.name || "Unknown";
+        if (!acc[categoryName]) {
+          acc[categoryName] = {
+            count: 0,
+            total: 0,
+            transactions: [],
+          };
+        }
+        acc[categoryName].count++;
+        acc[categoryName].total += Number(tx.amount);
+        acc[categoryName].transactions.push({
+          id: tx.id,
+          date: tx.date.toISOString().split("T")[0],
+          amount: Number(tx.amount),
+          description: tx.description,
+        });
+        return acc;
+      }, {} as Record<string, any>);
+
+      // 7. Transazioni sospette (importi molto alti o molto bassi)
+      const suspiciousTransactions = expenseTransactions.filter((tx) => {
+        const amount = Number(tx.amount);
+        return amount > 1000 || amount < 0.01 || isNaN(amount);
+      });
+
+      // 8. Verifica duplicati potenziali
+      const duplicateCandidates = expenseTransactions.filter((tx1, index1) => {
+        return expenseTransactions.some((tx2, index2) => {
+          if (index1 >= index2) return false;
+          return (
+            Math.abs(Number(tx1.amount) - Number(tx2.amount)) < 0.01 &&
+            tx1.date.toDateString() === tx2.date.toDateString() &&
+            tx1.categoryId === tx2.categoryId
+          );
+        });
+      });
+
+      await prisma.$disconnect();
+
+      return {
+        period: {
+          startDate,
+          endDate,
+          actualEndDate: actualEndDate.toISOString(),
+          isCurrentPeriod: now >= start && now <= end,
+        },
+        totals: {
+          allTransactionsCount: allTransactions.length,
+          expenseTransactionsCount: expenseTransactions.length,
+          incomeTransactionsCount: incomeTransactions.length,
+          manualExpenseSum: Math.round(totalExpenses * 100) / 100,
+          manualIncomeSum: Math.round(totalIncome * 100) / 100,
+          aggregateExpenseSum: Number(aggregateExpenses._sum.amount || 0),
+          aggregateExpenseCount: aggregateExpenses._count,
+          actualExpensesSum: Number(actualExpensesAggregate._sum.amount || 0),
+          actualExpensesCount: actualExpensesAggregate._count,
+        },
+        discrepancies: {
+          manualVsAggregate: Math.abs(
+            totalExpenses - Number(aggregateExpenses._sum.amount || 0)
+          ),
+          aggregateVsActual: Math.abs(
+            Number(aggregateExpenses._sum.amount || 0) -
+              Number(actualExpensesAggregate._sum.amount || 0)
+          ),
+          manualVsUserCalculation: Math.abs(totalExpenses - 1052.82),
+        },
+        categoryBreakdown: Object.entries(categoryBreakdown)
+          .map(([name, data]: [string, any]) => ({
+            category: name,
+            count: data.count,
+            total: Math.round(data.total * 100) / 100,
+            transactions: data.transactions,
+          }))
+          .sort((a, b) => b.total - a.total),
+        suspiciousTransactions: suspiciousTransactions.map((tx) => ({
+          id: tx.id,
+          date: tx.date.toISOString().split("T")[0],
+          amount: Number(tx.amount),
+          description: tx.description,
+          category: tx.category?.name,
+          reason:
+            Number(tx.amount) > 1000
+              ? "High amount"
+              : Number(tx.amount) < 0.01
+              ? "Very low amount"
+              : "Invalid amount",
+        })),
+        duplicateCandidates: duplicateCandidates.map((tx) => ({
+          id: tx.id,
+          date: tx.date.toISOString().split("T")[0],
+          amount: Number(tx.amount),
+          description: tx.description,
+          category: tx.category?.name,
+        })),
+        rawExpenseTransactions: expenseTransactions.map((tx) => ({
+          id: tx.id,
+          date: tx.date.toISOString().split("T")[0],
+          amount: Number(tx.amount),
+          description: tx.description,
+          category: tx.category?.name,
+          type: tx.type,
+        })),
+      };
+    } catch (error) {
+      return {
         error: error.message,
         timestamp: new Date().toISOString(),
       };

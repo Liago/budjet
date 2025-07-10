@@ -106,6 +106,10 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
     fetchExpenseForecast();
   }, []); // Solo al mount, nessun altro trigger
 
+  // BUG FIX: Usa actualExpenses dal forecast invece di totalExpense del periodo selezionato
+  // per mantenere coerenza tra il valore principale e il forecast
+  const displayExpenseAmount = expenseForecast?.actualExpenses ?? safeExpense;
+
   return (
     <>
       {/* Income Card */}
@@ -157,7 +161,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
         </CardFooter>
       </Card>
 
-      {/* Expense Card - ENHANCED with Forecast */}
+      {/* Expense Card - ENHANCED with Forecast - BUG FIX: Usa actualExpenses */}
       <Card className="overflow-hidden h-full flex flex-col">
         <CardHeader className="pb-2 bg-gradient-to-r from-red-50 to-rose-50">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -181,7 +185,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
         </CardHeader>
         <CardContent className="pt-4 flex-1">
           <p className="text-3xl font-bold text-red-600">
-            €{formatAmount(safeExpense)}
+            €{formatAmount(displayExpenseAmount)}
           </p>
 
           {/* Forecast Section - ora cliccabile */}
@@ -229,7 +233,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
                 <rect width="20" height="14" x="2" y="5" rx="2" />
                 <path d="M2 10h20" />
               </svg>
-              Questo periodo
+              Mese corrente
             </p>
 
             {expenseForecast && expenseForecast.recurringDetails.length > 0 && (
