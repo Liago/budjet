@@ -69,11 +69,19 @@ export const Sidebar = ({
   );
 };
 
-export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
+export const SidebarBody = (props: React.ComponentProps<typeof motion.div> & {
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+}) => {
+  const { onMouseEnter, onMouseLeave, ...otherProps } = props;
   return (
     <>
-      <DesktopSidebar {...props} />
-      <MobileSidebar {...(props as React.ComponentProps<"div">)} />
+      <DesktopSidebar 
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        {...otherProps} 
+      />
+      <MobileSidebar {...(otherProps as React.ComponentProps<"div">)} />
     </>
   );
 };
@@ -81,9 +89,19 @@ export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
 export const DesktopSidebar = ({
   className,
   children,
+  onMouseEnter,
+  onMouseLeave,
   ...props
-}: React.ComponentProps<typeof motion.div>) => {
+}: React.ComponentProps<typeof motion.div> & {
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+}) => {
   const { open, setOpen, animate } = useSidebar();
+
+  // Use custom handlers if provided, otherwise use default behavior
+  const handleMouseEnter = onMouseEnter || (() => setOpen(true));
+  const handleMouseLeave = onMouseLeave || (() => setOpen(false));
+
   return (
     <>
       <motion.div
@@ -94,8 +112,8 @@ export const DesktopSidebar = ({
         animate={{
           width: animate ? (open ? "300px" : "60px") : "300px",
         }}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         {...props}
       >
         {children}

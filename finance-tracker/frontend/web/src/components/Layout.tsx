@@ -6,6 +6,7 @@ import { logout } from "../store/slices/authSlice";
 import { toast } from "sonner";
 import { apiService } from "../utils/api";
 import { useTheme } from "../utils/hooks/useTheme";
+import { useUIPreferences } from "../utils/hooks/useUIPreferences";
 
 // Icons
 import {
@@ -37,7 +38,16 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Rimpiazzo lo stato locale con il hook Redux
+  const {
+    sidebarOpen,
+    preferences,
+    setSidebarOpenState,
+    toggleSidebarState,
+    handleSidebarMouseEnter,
+    handleSidebarMouseLeave,
+  } = useUIPreferences();
+
   const { isDark, toggleTheme } = useTheme();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -124,8 +134,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="h-screen flex bg-gray-100 dark:bg-neutral-800">
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-        <SidebarBody className="justify-between gap-10">
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpenState}>
+        <SidebarBody
+          className="justify-between gap-10"
+          onMouseEnter={handleSidebarMouseEnter}
+          onMouseLeave={handleSidebarMouseLeave}
+        >
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
             {/* Logo */}
             <div className="mt-8 mb-8">
