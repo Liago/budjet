@@ -23,12 +23,13 @@ if (PUBLIC_API_URL) {
   console.log("Using API URL from app config:", CONFIG_API_URL);
   API_BASE_URL = CONFIG_API_URL;
 } else {
-  // Altrimenti usa l'URL di sviluppo locale basato sulla piattaforma
-  API_BASE_URL =
-    Platform.OS === "ios"
+  // 🔧 UPDATED: Allineamento al web frontend - usa lo stesso URL di produzione
+  API_BASE_URL = __DEV__
+    ? Platform.OS === "ios"
       ? "http://localhost:3000/api"
-      : "http://10.0.2.2:3000/api"; // Android emulator uses 10.0.2.2 to reach localhost
-  console.log("Using default development API URL:", API_BASE_URL);
+      : "http://10.0.2.2:3000/api"
+    : "https://bud-jet-be.netlify.app/.netlify/functions/api";
+  console.log("Using aligned API URL:", API_BASE_URL);
 }
 
 // Create axios instance
@@ -73,22 +74,45 @@ export const apiService = {
   get: async <T>(endpoint: string, params?: any): Promise<T> => {
     try {
       // Log della richiesta effettivamente inviata
-      console.log(`API Request to ${endpoint} with params:`, params);
+      console.log(`🔍 [API-DEBUG] GET Request to ${endpoint}`);
+      console.log(`📋 [API-DEBUG] Params:`, JSON.stringify(params, null, 2));
+      console.log(
+        `🌐 [API-DEBUG] Full URL will be: ${API_BASE_URL}${endpoint}`
+      );
 
       // Formatta i parametri per le API - assicurati che le date siano stringhe
       const formattedParams = params ? { ...params } : {};
 
       const config: AxiosRequestConfig = { params: formattedParams };
+
+      console.log(
+        `⚙️ [API-DEBUG] Axios config:`,
+        JSON.stringify(config, null, 2)
+      );
+
       const response: AxiosResponse<T> = await axiosInstance.get(
         endpoint,
         config
       );
 
       // Log all API responses in development
-      console.log(`API Response for ${endpoint}:`, response.data);
+      console.log(`✅ [API-DEBUG] Response for ${endpoint}:`, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        dataType: typeof response.data,
+        dataKeys:
+          response.data && typeof response.data === "object"
+            ? Object.keys(response.data)
+            : [],
+        data: response.data,
+      });
 
       // Special handling for dashboard stats to ensure data consistency with web app
-      if (endpoint === "/dashboard/stats") {
+      if (
+        endpoint === "/direct/dashboard/stats" ||
+        endpoint === "/dashboard/stats"
+      ) {
         console.log("Raw dashboard stats:", response.data);
 
         // Ensure data is properly structured
@@ -114,7 +138,7 @@ export const apiService = {
       }
 
       // Special handling for transactions to ensure all fields are properly set
-      if (endpoint === "/transactions") {
+      if (endpoint === "/direct/transactions" || endpoint === "/transactions") {
         console.log("Raw transactions data:", response.data);
 
         const data = response.data as any;
@@ -137,7 +161,7 @@ export const apiService = {
       }
 
       // Special handling for categories
-      if (endpoint === "/categories") {
+      if (endpoint === "/direct/categories" || endpoint === "/categories") {
         console.log("Raw categories data:", JSON.stringify(response.data));
         if (Array.isArray(response.data)) {
           console.log(`Ricevute ${response.data.length} categorie dal server`);
@@ -169,7 +193,7 @@ export const apiService = {
       }
 
       // Se c'è un errore con le transazioni, restituisci un risultato vuoto ma non far fallire l'app
-      if (endpoint === "/transactions") {
+      if (endpoint === "/direct/transactions" || endpoint === "/transactions") {
         console.log("Returning empty transaction data for error case");
 
         // Create a properly formatted empty response that matches the expected type
@@ -188,7 +212,7 @@ export const apiService = {
       }
 
       // Se c'è un errore con le categorie, restituisci un array vuoto
-      if (endpoint === "/categories") {
+      if (endpoint === "/direct/categories" || endpoint === "/categories") {
         console.log("Returning empty categories array for error case");
         return [] as unknown as T;
       }
@@ -317,3 +341,5 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export default axiosInstance;

@@ -41,11 +41,12 @@ export const fetchDashboardStats = createAsyncThunk(
             : typeof response.totalIncome === "string"
             ? parseFloat(response.totalIncome)
             : 0,
+        // 🔧 FIX: L'API restituisce 'totalExpenses' (plurale), non 'totalExpense'
         totalExpense:
-          typeof response.totalExpense === "number"
-            ? response.totalExpense
-            : typeof response.totalExpense === "string"
-            ? parseFloat(response.totalExpense)
+          typeof response.totalExpenses === "number"
+            ? response.totalExpenses
+            : typeof response.totalExpenses === "string"
+            ? parseFloat(response.totalExpenses)
             : 0,
         balance:
           typeof response.balance === "number"
@@ -71,6 +72,7 @@ export const fetchDashboardStats = createAsyncThunk(
             : typeof response.budgetPercentage === "string"
             ? parseFloat(response.budgetPercentage)
             : 0,
+        // 🔧 FIX: Gestione recentTransactions - se non esistono, array vuoto
         recentTransactions: Array.isArray(response.recentTransactions)
           ? response.recentTransactions.map((t) => ({
               ...t,

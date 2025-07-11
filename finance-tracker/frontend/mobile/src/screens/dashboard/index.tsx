@@ -29,6 +29,7 @@ import {
   getDateRangeFromPeriod,
 } from "../../components/DateFilter";
 import { TransactionItem } from "../../components/transaction-item";
+import { transactionService } from "../../api/services";
 
 type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -49,6 +50,18 @@ export default function DashboardScreen() {
     endDate: string;
   } | null>(null);
 
+  // Local state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedTransactionIds, setSelectedTransactionIds] = useState<
+    string[]
+  >([]);
+  const [enableMultiSelect, setEnableMultiSelect] = useState(false);
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+
+  // 🔧 FIX: Stato locale per transazioni recenti
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+
   const loadData = useCallback(async () => {
     try {
       // Determina l'intervallo di date
@@ -66,6 +79,30 @@ export default function DashboardScreen() {
       // Carica i dati necessari
       await dispatch(fetchDashboardStats({ startDate, endDate }));
       await dispatch(fetchCategories());
+
+      // 🔧 FIX: Aggiungi chiamata separata per transazioni recenti come fa il web
+      console.log("🔍 [DEBUG] Fetching recent transactions separately...");
+      try {
+        const recentTransactionsResponse = await transactionService.getAll({
+          limit: 5,
+          // Recupera transazioni recenti senza filtri di data per mostrare le ultime 5
+        });
+
+        console.log("✅ [DEBUG] Recent transactions response:", {
+          count: recentTransactionsResponse?.data?.length || 0,
+          data: recentTransactionsResponse?.data?.slice(0, 2), // Log solo prime 2 per debug
+        });
+
+        // 🔧 FIX: Salva le transazioni recenti nello stato locale
+        if (recentTransactionsResponse?.data) {
+          setRecentTransactions(recentTransactionsResponse.data.slice(0, 5));
+        }
+      } catch (recentError) {
+        console.error(
+          "❌ [DEBUG] Error fetching recent transactions:",
+          recentError
+        );
+      }
     } catch (error) {
       console.error("Errore durante il caricamento dei dati:", error);
     }
@@ -147,18 +184,14 @@ export default function DashboardScreen() {
     totalBudget: stats?.totalBudget || 0,
     budgetRemaining: stats?.budgetRemaining || 0,
     budgetPercentage: stats?.budgetPercentage || 0,
-    recentTransactions: Array.isArray(stats?.recentTransactions)
-      ? stats.recentTransactions
-      : [],
+    // 🔧 REMOVED: recentTransactions ora gestite con stato locale
     budgetStatus: Array.isArray(stats?.budgetStatus) ? stats.budgetStatus : [],
   };
 
   // Renderizza le transazioni
   const renderTransactions = () => {
-    if (
-      !safeStats.recentTransactions ||
-      safeStats.recentTransactions.length === 0
-    ) {
+    // 🔧 FIX: Usa stato locale per transazioni recenti invece di safeStats
+    if (!recentTransactions || recentTransactions.length === 0) {
       return (
         <View style={styles.emptyState}>
           <Text
@@ -172,8 +205,6 @@ export default function DashboardScreen() {
         </View>
       );
     }
-
-    const recentTransactions = safeStats.recentTransactions.slice(0, 5);
 
     return (
       <View>

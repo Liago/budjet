@@ -31,7 +31,8 @@ export default {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "API_URL": process.env.API_URL || "https://budjet-backend-f1590123e946.herokuapp.com/api",
+      // 🔧 UPDATED: Allineato al web frontend
+      "API_URL": process.env.API_URL || "https://bud-jet-be.netlify.app/.netlify/functions/api",
       "eas": {
         "projectId": "c9c84e26-5b01-41ce-9f35-8927f38e8e2c"
       }
