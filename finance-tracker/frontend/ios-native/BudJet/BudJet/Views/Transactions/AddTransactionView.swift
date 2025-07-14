@@ -15,6 +15,13 @@ struct AddTransactionView: View {
     @State private var isLoading = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var showSuccess = false
+    @State private var successMessage = ""
+    
+    // Form validation errors
+    @State private var descriptionError = ""
+    @State private var amountError = ""
+    @State private var categoryError = ""
     
     var body: some View {
         NavigationView {
@@ -31,17 +38,39 @@ struct AddTransactionView: View {
                         
                         TextField("Descrizione della transazione", text: $description)
                             .textFieldStyle(CustomTextFieldStyle())
+                            .onChange(of: description) { _ in
+                                if !descriptionError.isEmpty {
+                                    descriptionError = ""
+                                }
+                            }
+                        
+                        if !descriptionError.isEmpty {
+                            Text(descriptionError)
+                                .font(ThemeManager.Typography.caption)
+                                .foregroundColor(ThemeManager.Colors.error)
+                        }
                     }
                     
                     // Amount Field
                     VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
-                        Text("Importo")
+                        Text("Importo (€)")
                             .font(ThemeManager.Typography.bodyMedium)
                             .foregroundColor(ThemeManager.Colors.text)
                         
                         TextField("0,00", text: $amount)
                             .textFieldStyle(CustomTextFieldStyle())
                             .keyboardType(.decimalPad)
+                            .onChange(of: amount) { _ in
+                                if !amountError.isEmpty {
+                                    amountError = ""
+                                }
+                            }
+                        
+                        if !amountError.isEmpty {
+                            Text(amountError)
+                                .font(ThemeManager.Typography.caption)
+                                .foregroundColor(ThemeManager.Colors.error)
+                        }
                     }
                     
                     // Date Picker
@@ -80,6 +109,8 @@ struct AddTransactionView: View {
                         }
                     }
                     .disabled(!isFormValid || isLoading)
+                    .foregroundColor(isFormValid && !isLoading ? ThemeManager.Colors.primary : ThemeManager.Colors.textSecondary)
+                    .fontWeight(.semibold)
                 }
             }
             .onAppear {
@@ -92,6 +123,35 @@ struct AddTransactionView: View {
             } message: {
                 Text(errorMessage)
             }
+            .alert("Successo", isPresented: $showSuccess) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(successMessage)
+            }
+            .overlay(
+                // Loading overlay
+                Group {
+                    if isLoading {
+                        Rectangle()
+                            .fill(Color.black.opacity(0.3))
+                            .edgesIgnoringSafeArea(.all)
+                        
+                        VStack {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                                .progressViewStyle(CircularProgressViewStyle(tint: ThemeManager.Colors.primary))
+                            
+                            Text("Salvando transazione...")
+                                .font(ThemeManager.Typography.body)
+                                .foregroundColor(ThemeManager.Colors.text)
+                                .padding(.top, ThemeManager.Spacing.sm)
+                        }
+                        .padding(ThemeManager.Spacing.lg)
+                        .background(ThemeManager.Colors.surface)
+                        .cornerRadius(ThemeManager.CornerRadius.lg)
+                    }
+                }
+            )
         }
     }
     
@@ -104,6 +164,7 @@ struct AddTransactionView: View {
             HStack {
                 Button(action: {
                     selectedType = .expense
+                    updateCategorySelection()
                 }) {
                     Text("Spesa")
                         .font(ThemeManager.Typography.bodyMedium)
@@ -118,6 +179,7 @@ struct AddTransactionView: View {
                 
                 Button(action: {
                     selectedType = .income
+                    updateCategorySelection()
                 }) {
                     Text("Entrata")
                         .font(ThemeManager.Typography.bodyMedium)
@@ -153,11 +215,20 @@ struct AddTransactionView: View {
                                 isSelected: selectedCategory?.id == category.id
                             ) {
                                 selectedCategory = category
+                                if !categoryError.isEmpty {
+                                    categoryError = ""
+                                }
                             }
                         }
                     }
                     .padding(.horizontal, ThemeManager.Spacing.xs)
                 }
+            }
+            
+            if !categoryError.isEmpty {
+                Text(categoryError)
+                    .font(ThemeManager.Typography.caption)
+                    .foregroundColor(ThemeManager.Colors.error)
             }
         }
     }
@@ -212,10 +283,83 @@ struct AddTransactionView: View {
     }
     
     private var isFormValid: Bool {
-        !description.isEmpty &&
-        !amount.isEmpty &&
-        Double(amount) != nil &&
-        selectedCategory != nil
+        validateForm(showErrors: false)
+    }
+    
+    private func validateForm(showErrors: Bool = true) -> Bool {
+        var isValid = true
+        
+        // Validate description
+        if description.isEmpty {
+            if showErrors {
+                descriptionError = "La descrizione è obbligatoria"
+            }
+            isValid = false
+        } else if description.count < 3 {
+            if showErrors {
+                descriptionError = "La descrizione deve essere almeno 3 caratteri"
+            }
+            isValid = false
+        }
+        
+        // Validate amount
+        if amount.isEmpty {
+            if showErrors {
+                amountError = "L'importo è obbligatorio"
+            }
+            isValid = false
+        } else {
+            // Handle both comma and dot as decimal separator
+            let normalizedAmount = amount.replacingOccurrences(of: ",", with: ".")
+            if let amountValue = Double(normalizedAmount) {
+                if amountValue <= 0 {
+                    if showErrors {
+                        amountError = "L'importo deve essere maggiore di zero"
+                    }
+                    isValid = false
+                } else if amountValue > 999999.99 {
+                    if showErrors {
+                        amountError = "L'importo è troppo grande"
+                    }
+                    isValid = false
+                }
+            } else {
+                if showErrors {
+                    amountError = "L'importo deve essere un numero valido"
+                }
+                isValid = false
+            }
+        }
+        
+        // Validate category
+        if selectedCategory == nil {
+            if showErrors {
+                categoryError = "La categoria è obbligatoria"
+            }
+            isValid = false
+        }
+        
+        return isValid
+    }
+    
+    private func updateCategorySelection() {
+        // Filter categories by current transaction type
+        let filteredCategories = categories.filter { category in
+            // If category doesn't have a type specified, show for both
+            if category.type == nil {
+                return true
+            }
+            return category.type == selectedType.rawValue
+        }
+        
+        // If current selection doesn't match new type, select first appropriate category
+        if let current = selectedCategory,
+           let currentType = current.type,
+           currentType != selectedType.rawValue {
+            selectedCategory = filteredCategories.first ?? categories.first
+        } else if selectedCategory == nil {
+            selectedCategory = filteredCategories.first ?? categories.first
+        }
     }
     
     private func addTag() {
@@ -226,25 +370,55 @@ struct AddTransactionView: View {
     
     private func loadCategories() async {
         do {
+            print("📱 [DEBUG] Loading categories...")
             let categoriesResponse = try await apiManager.getCategories()
+            print("📱 [DEBUG] Loaded \(categoriesResponse.count) categories")
+            
             await MainActor.run {
                 categories = categoriesResponse
-                // Select first category by default
-                if let firstCategory = categories.first {
+                
+                // Filter categories by current transaction type for better UX
+                let filteredCategories = categoriesResponse.filter { category in
+                    // If category doesn't have a type specified, show for both
+                    if category.type == nil {
+                        return true
+                    }
+                    return category.type == selectedType.rawValue
+                }
+                
+                // Select first appropriate category by default
+                if selectedCategory == nil, let firstCategory = filteredCategories.first ?? categoriesResponse.first {
                     selectedCategory = firstCategory
                 }
             }
         } catch {
+            print("❌ [ERROR] Error loading categories: \(error)")
             await MainActor.run {
-                errorMessage = "Errore nel caricamento delle categorie"
+                errorMessage = "Errore nel caricamento delle categorie. Riprova più tardi."
                 showError = true
             }
         }
     }
     
     private func saveTransaction() async {
-        guard let category = selectedCategory,
-              let amountValue = Double(amount) else {
+        // Validate form first
+        guard validateForm(showErrors: true) else {
+            return
+        }
+        
+        guard let category = selectedCategory else {
+            await MainActor.run {
+                categoryError = "La categoria è obbligatoria"
+            }
+            return
+        }
+        
+        // Parse amount with proper decimal handling
+        let normalizedAmount = amount.replacingOccurrences(of: ",", with: ".")
+        guard let amountValue = Double(normalizedAmount) else {
+            await MainActor.run {
+                amountError = "L'importo deve essere un numero valido"
+            }
             return
         }
         
@@ -255,7 +429,7 @@ struct AddTransactionView: View {
         
         let transaction = CreateTransactionRequest(
             amount: amountValue,
-            description: description,
+            description: description.trimmingCharacters(in: .whitespacesAndNewlines),
             date: formatter.string(from: selectedDate),
             type: selectedType,
             categoryId: category.id,
@@ -263,13 +437,40 @@ struct AddTransactionView: View {
         )
         
         do {
+            print("📱 [DEBUG] Saving transaction: \(transaction)")
             _ = try await apiManager.createTransaction(transaction)
+            
             await MainActor.run {
-                dismiss()
+                successMessage = "Transazione salvata con successo"
+                showSuccess = true
+                isLoading = false
+                
+                // Dismiss after a short delay to show success message
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    dismiss()
+                }
             }
         } catch {
+            print("❌ [ERROR] Error saving transaction: \(error)")
+            
             await MainActor.run {
-                errorMessage = "Errore nel salvare la transazione"
+                let errorMsg: String
+                if let apiError = error as? APIError {
+                    switch apiError {
+                    case .invalidCredentials:
+                        errorMsg = "Credenziali non valide"
+                    case .networkError:
+                        errorMsg = "Errore di connessione"
+                    case .serverError:
+                        errorMsg = "Errore del server"
+                    case .decodingError:
+                        errorMsg = "Errore nei dati"
+                    }
+                } else {
+                    errorMsg = "Errore nel salvare la transazione"
+                }
+                
+                errorMessage = errorMsg
                 showError = true
                 isLoading = false
             }
