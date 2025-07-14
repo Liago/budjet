@@ -7,13 +7,92 @@ struct User: Codable, Identifiable {
     let id: String
     let email: String
     let name: String
-    let createdAt: String
+    let createdAt: String?
     let updatedAt: String?
+    
+    // Campi aggiuntivi del backend
+    let firstName: String?
+    let lastName: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case id, email, createdAt, updatedAt
+        case firstName, lastName
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        email = try container.decode(String.self, forKey: .email)
+        createdAt = try? container.decode(String.self, forKey: .createdAt)
+        updatedAt = try? container.decode(String.self, forKey: .updatedAt)
+        
+        // Gestisci firstName e lastName
+        firstName = try? container.decode(String.self, forKey: .firstName)
+        lastName = try? container.decode(String.self, forKey: .lastName)
+        
+        // Costruisci name da firstName e lastName se disponibili
+        if let first = firstName, let last = lastName {
+            name = "\(first) \(last)"
+        } else if let first = firstName {
+            name = first
+        } else if let last = lastName {
+            name = last
+        } else {
+            // Fallback per compatibilità
+            name = "Unknown"
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(email, forKey: .email)
+        try container.encodeIfPresent(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+        try container.encodeIfPresent(firstName, forKey: .firstName)
+        try container.encodeIfPresent(lastName, forKey: .lastName)
+    }
+    
+    // Computed property per il nome completo
+    var fullName: String {
+        return name
+    }
 }
 
 struct AuthResponse: Codable {
     let accessToken: String
     let user: User
+    
+    // Custom decoder per gestire sia accessToken che access_token
+    private enum CodingKeys: String, CodingKey {
+        case accessToken = "accessToken"
+        case access_token = "access_token"
+        case user
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Prova prima accessToken (camelCase), poi access_token (snake_case)
+        if let token = try? container.decode(String.self, forKey: .accessToken) {
+            accessToken = token
+        } else if let token = try? container.decode(String.self, forKey: .access_token) {
+            accessToken = token
+        } else {
+            throw DecodingError.keyNotFound(CodingKeys.accessToken, 
+                DecodingError.Context(codingPath: decoder.codingPath, 
+                                     debugDescription: "Nessun token trovato"))
+        }
+        
+        user = try container.decode(User.self, forKey: .user)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(accessToken, forKey: .accessToken)
+        try container.encode(user, forKey: .user)
+    }
 }
 
 struct LoginRequest: Codable {

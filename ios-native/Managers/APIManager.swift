@@ -9,6 +9,24 @@ class APIManager: ObservableObject {
     
     init() {}
     
+    // MARK: - Health Check
+    
+    func healthCheck() async throws -> Bool {
+        let url = URL(string: "\(baseURL)/health")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        print("🔍 Health check: \(url)")
+        
+        let (data, response) = try await session.data(for: request)
+        
+        print("📥 Health response: \(String(data: data, encoding: .utf8) ?? "nil")")
+        print("📊 Health status: \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+        
+        try validateResponse(response)
+        return true
+    }
+    
     // MARK: - Authentication
     
     func login(email: String, password: String) async throws -> AuthResponse {
@@ -20,10 +38,22 @@ class APIManager: ObservableObject {
         let body = LoginRequest(email: email, password: password)
         request.httpBody = try JSONEncoder().encode(body)
         
+        print("🔍 Login request to: \(url)")
+        print("📤 Request body: \(String(data: request.httpBody!, encoding: .utf8) ?? "nil")")
+        
         let (data, response) = try await session.data(for: request)
+        
+        print("📥 Response data: \(String(data: data, encoding: .utf8) ?? "nil")")
+        print("📊 Response status: \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+        
         try validateResponse(response)
         
-        return try JSONDecoder().decode(AuthResponse.self, from: data)
+        do {
+            return try JSONDecoder().decode(AuthResponse.self, from: data)
+        } catch {
+            print("❌ JSON decode error: \(error)")
+            throw APIError.decodingError(error.localizedDescription)
+        }
     }
     
     func register(email: String, password: String, name: String) async throws -> AuthResponse {
@@ -179,6 +209,7 @@ class APIManager: ObservableObject {
             throw APIError.invalidResponse
         }
         
+        // Accetta 200-299 (incluso 201 per il login)
         guard 200...299 ~= httpResponse.statusCode else {
             throw APIError.serverError(httpResponse.statusCode)
         }
@@ -189,6 +220,7 @@ enum APIError: Error, LocalizedError {
     case invalidResponse
     case serverError(Int)
     case networkError
+    case decodingError(String)
     
     var errorDescription: String? {
         switch self {
@@ -198,6 +230,8 @@ enum APIError: Error, LocalizedError {
             return "Errore del server: \(code)"
         case .networkError:
             return "Errore di rete"
+        case .decodingError(let message):
+            return "Errore di decodifica: \(message)"
         }
     }
 } 
