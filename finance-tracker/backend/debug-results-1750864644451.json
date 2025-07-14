@@ -1,0 +1,123 @@
+{
+  "timestamp": "2025-06-25T15:17:10.864Z",
+  "tests": {
+    "connectivity": {
+      "description": "Base API Connectivity",
+      "success": true,
+      "statusCode": 200,
+      "statusMessage": "OK",
+      "data": {
+        "status": "OK",
+        "message": "Bud-Jet Backend API is running",
+        "timestamp": "2025-06-25T15:17:13.849Z",
+        "service": "finance-tracker-backend",
+        "version": "1.0.0"
+      },
+      "raw": "{\"status\":\"OK\",\"message\":\"Bud-Jet Backend API is running\",\"timestamp\":\"2025-06-25T15:17:13.849Z\",\"service\":\"finance-tracker-backend\",\"version\":\"1.0.0\"}"
+    },
+    "cors_preflight": {
+      "description": "CORS Preflight Check",
+      "success": true,
+      "statusCode": 200,
+      "statusMessage": "OK",
+      "data": {
+        "message": "CORS preflight successful"
+      },
+      "raw": "{\"message\":\"CORS preflight successful\"}"
+    },
+    "health_check": {
+      "description": "Health Check Endpoint",
+      "success": true,
+      "statusCode": 200,
+      "statusMessage": "OK",
+      "data": {
+        "status": "healthy",
+        "uptime": 6.170991219,
+        "timestamp": "2025-06-25T15:17:18.154Z",
+        "environment": "production",
+        "checks": {
+          "server": "up",
+          "database": "connected",
+          "databaseError": null,
+          "email": "configured"
+        },
+        "netlify": {
+          "region": "us-east-2",
+          "requestId": "local"
+        },
+        "debug": {
+          "databaseTest": {
+            "connected": true,
+            "latency": 1659,
+            "provider": "postgresql"
+          },
+          "hasJwtSecret": true,
+          "hasDatabaseUrl": true,
+          "databaseUrlPrefix": "postgresql://postgre...",
+          "prismaInjected": true,
+          "prismaType": "PrismaService"
+        }
+      },
+      "raw": "{\"status\":\"healthy\",\"uptime\":6.170991219,\"timestamp\":\"2025-06-25T15:17:18.154Z\",\"environment\":\"production\",\"checks\":{\"server\":\"up\",\"database\":\"connected\",\"databaseError\":null,\"email\":\"configured\"},\"netlify\":{\"region\":\"us-east-2\",\"requestId\":\"local\"},\"debug\":{\"databaseTest\":{\"connected\":true,\"latency\":1659,\"provider\":\"postgresql\"},\"hasJwtSecret\":true,\"hasDatabaseUrl\":true,\"databaseUrlPrefix\":\"postgresql://postgre...\",\"prismaInjected\":true,\"prismaType\":\"PrismaService\"}}"
+    },
+    "register_user": {
+      "description": "User Registration",
+      "success": false,
+      "statusCode": 500,
+      "statusMessage": "Internal Server Error",
+      "data": {
+        "statusCode": 500,
+        "message": "Internal server error"
+      },
+      "raw": "{\"statusCode\":500,\"message\":\"Internal server error\"}"
+    },
+    "test_login_debug": {
+      "description": "Test Login (Bypasses Guards)",
+      "success": true,
+      "statusCode": 201,
+      "statusMessage": "Created",
+      "data": {
+        "success": false,
+        "message": "Cannot read properties of undefined (reading 'validateUser')",
+        "step": "Exception thrown",
+        "error": "TypeError"
+      },
+      "raw": "{\"success\":false,\"message\":\"Cannot read properties of undefined (reading 'validateUser')\",\"step\":\"Exception thrown\",\"error\":\"TypeError\"}"
+    },
+    "normal_login": {
+      "description": "Normal Login Flow",
+      "success": false,
+      "statusCode": 401,
+      "statusMessage": "Unauthorized",
+      "data": {
+        "message": "Invalid email or password",
+        "error": "Unauthorized",
+        "statusCode": 401
+      },
+      "raw": "{\"message\":\"Invalid email or password\",\"error\":\"Unauthorized\",\"statusCode\":401}"
+    },
+    "andrea_login": {
+      "description": "Login with Andrea Account",
+      "success": false,
+      "statusCode": 401,
+      "statusMessage": "Unauthorized",
+      "data": {
+        "message": "Invalid email or password",
+        "error": "Unauthorized",
+        "statusCode": 401
+      },
+      "raw": "{\"message\":\"Invalid email or password\",\"error\":\"Unauthorized\",\"statusCode\":401}"
+    }
+  },
+  "summary": {
+    "total": 7,
+    "passed": 2,
+    "failed": 4,
+    "errors": [
+      "Server error in registration",
+      "Debug login error: 201",
+      "Login 401: Invalid credentials for debug@example.com",
+      "Login 401: Invalid credentials for andrea.zampierolo@me.com"
+    ]
+  }
+}

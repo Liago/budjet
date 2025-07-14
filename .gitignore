@@ -1,134 +1,93 @@
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# Xcode
+#
+# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
 
-# testing
-/coverage
+## User settings
+xcuserdata/
 
-# next.js
-/.next/
-/out/
+## compatibility with Xcode 8 and earlier (ignoring not required starting Xcode 9)
+*.xcscmblueprint
+*.xccheckout
 
-# production
-/build
+## compatibility with Xcode 3 and earlier (ignoring not required starting Xcode 4)
+build/
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
 
-# misc
+## Obj-C/Swift specific
+*.hmap
+
+## App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+#
+# Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
+# Packages/
+# Package.pins
+# Package.resolved
+# *.xcodeproj
+#
+# Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
+# hence it is not needed unless you have added a package configuration file to your project
+# .swiftpm
+
+.build/
+
+# CocoaPods
+#
+# We recommend against adding the Pods directory to your .gitignore. However
+# you should judge for yourself, the pros and cons are mentioned at:
+# https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
+#
+# Pods/
+#
+# Add this line if you want to avoid checking in source code from the Xcode workspace
+# *.xcworkspace
+
+# Carthage
+#
+# Add this line if you want to avoid checking in source code from Carthage dependencies.
+# Carthage/Checkouts
+
+Carthage/Build/
+
+# Accio dependency management
+Dependencies/
+.accio/
+
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo.
+# Instead, use fastlane to re-generate the screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+#
+# After new code Injection tools there's a generated folder /iOSInjectionProject
+# https://github.com/johnno1962/injectionforxcode
+
+iOSInjectionProject/
+
+# Mac
 .DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env*.local
-.env
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts 
-.qodo
-
-*.sqlite
-
-finance-tracker/backend/.env.development
-
-finance-tracker/backend/.env.production
-
-database/
-
-db-export-advanced.js
-
-export-db.ts
-
-export-simple.js
-
-finance-tracker/backend/quick-diagnosis.sh
-
-README_EXPORT.md
-
-setup_export.sh
-
-finance-tracker/backend/check-users.js
-
-finance-tracker/backend/quick-login-test.js
-
-finance-tracker/backend/test-login-detailed.js
-
-finance-tracker/backend/MISSION-ACCOMPLISHED.md
-
-finance-tracker/backend/test-complete-integration.sh
-
-finance-tracker/backend/test-frontend-compatibility.js
-
-finance-tracker/backend/test-netlify-backend.js
-
-finance-tracker/frontend/web/FRONTEND-ANALYSIS-COMPLETE.md
-
-finance-tracker/backend/create-debug-user.js
-
-finance-tracker/backend/debug-login-netlify.js
-
-finance-tracker/backend/debug-results-1750864644451.json
-
-finance-tracker/backend/fix-andrea-login.js
-
-finance-tracker/backend/RISOLUZIONE-LOGIN-401.md
-
-finance-tracker/backend/setup-andrea-user.js
-
-ISSUES-JUNE-30.md
-
-# Local Netlify folder
-.netlify
-
-finance-tracker/backend/check-table-structure.ts
-
-finance-tracker/backend/create-final-csv.ts
-
-finance-tracker/backend/create-simple-csv.ts
-
-finance-tracker/backend/DATA_MANAGEMENT.md
-
-finance-tracker/backend/fix-transaction-tags-csv.ts
-
-finance-tracker/backend/fix-with-real-ids.ts
-
-finance-tracker/backend/generate-complete-csv-final.ts
-
-finance-tracker/backend/generate-simple-complete.ts
-
-finance-tracker/backend/import-postgresql-fast.ts
-
-finance-tracker/backend/import-relations-sql.ts
-
-finance-tracker/backend/import-supabase-robust.ts
-
-finance-tracker/backend/json-to-csv-supabase.ts
-
-finance-tracker/backend/validate-and-clean-csv.ts
-
-generate-complete-csv-final.ts
-
-generate-complete-csv.ts
-
-import-postgresql-fast.ts
-
-create-complete-csv.ts
-
-finance-tracker/backend/quick-fix-csv.ts
-
-json-to-csv-supabase-complete.ts
-
-finance-tracker/backend/sqlite-export.json
-
-ISSUES_JULY.md
-
-IMPLEMENTATIONS.md
-
-.expo/
