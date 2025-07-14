@@ -106,30 +106,25 @@ struct DashboardView: View {
     // MARK: - Stats Cards
     private func statsCardsView(stats: DashboardStats) -> some View {
         VStack(spacing: ThemeManager.Spacing.md) {
-            // Balance Card
-            StatsCard(
-                title: "Bilancio",
-                value: formatCurrency(stats.balance),
-                color: stats.balance >= 0 ? ThemeManager.Colors.success : ThemeManager.Colors.error,
-                icon: stats.balance >= 0 ? "arrow.up.circle.fill" : "arrow.down.circle.fill"
+            // Enhanced Balance Card
+            BalanceCard(
+                balance: stats.balance,
+                totalIncome: stats.totalIncome,
+                totalExpenses: stats.totalExpenses,
+                period: getPeriodDisplayName(selectedPeriod)
             )
-            
-            // Income and Expense Cards
-            HStack(spacing: ThemeManager.Spacing.md) {
-                StatsCard(
-                    title: "Entrate",
-                    value: formatCurrency(stats.totalIncome),
-                    color: ThemeManager.Colors.income,
-                    icon: "arrow.up.circle.fill"
-                )
-                
-                StatsCard(
-                    title: "Uscite",
-                    value: formatCurrency(stats.totalExpenses),
-                    color: ThemeManager.Colors.expense,
-                    icon: "arrow.down.circle.fill"
-                )
-            }
+        }
+    }
+    
+    // MARK: - Period Display Name
+    private func getPeriodDisplayName(_ period: DateFilterPeriod) -> String {
+        switch period {
+        case .current:
+            return "Mese Corrente"
+        case .previous:
+            return "Mese Precedente"
+        case .custom:
+            return "Periodo Personalizzato"
         }
     }
     
@@ -175,10 +170,11 @@ struct DashboardView: View {
                 
                 Spacer()
                 
-                Button("Vedi tutte") {
-                    // TODO: Navigate to transactions view
+                NavigationLink(destination: TransactionsView()) {
+                    Text("Vedi tutte")
+                        .font(ThemeManager.Typography.footnote)
+                        .foregroundColor(ThemeManager.Colors.primary)
                 }
-                .font(ThemeManager.Typography.footnote)
                 .foregroundColor(ThemeManager.Colors.primary)
             }
             
