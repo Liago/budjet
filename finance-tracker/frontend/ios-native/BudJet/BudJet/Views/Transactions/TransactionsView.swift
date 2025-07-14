@@ -1,5 +1,10 @@
 import SwiftUI
 
+struct TransactionGroup {
+    let date: Date
+    let transactions: [Transaction]
+}
+
 struct TransactionsView: View {
     @EnvironmentObject var apiManager: APIManager
     @State private var transactions: [Transaction] = []
@@ -86,7 +91,7 @@ struct TransactionsView: View {
                         Spacer()
                     }
                 } else if filteredTransactions.isEmpty {
-                    VStack {
+                    VStack(spacing: ThemeManager.Spacing.md) {
                         Spacer()
                         Image(systemName: "list.bullet")
                             .font(.system(size: 50))
@@ -96,16 +101,39 @@ struct TransactionsView: View {
                             .font(ThemeManager.Typography.body)
                             .foregroundColor(ThemeManager.Colors.textSecondary)
                         
+                        if !searchText.isEmpty || selectedType != nil {
+                            Text("Prova a cambiare i filtri di ricerca")
+                                .font(ThemeManager.Typography.footnote)
+                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                        } else {
+                            Text("Aggiungi la tua prima transazione")
+                                .font(ThemeManager.Typography.footnote)
+                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                        }
+                        
                         Spacer()
                     }
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: ThemeManager.Spacing.sm) {
-                            ForEach(filteredTransactions) { transaction in
-                                TransactionRow(transaction: transaction)
+                        LazyVStack(spacing: ThemeManager.Spacing.md) {
+                            ForEach(groupedTransactions, id: \.date) { group in
+                                VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+                                    // Data del gruppo
+                                    Text(formatDate(group.date))
+                                        .font(ThemeManager.Typography.bodyMedium)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(ThemeManager.Colors.text)
+                                        .padding(.horizontal, ThemeManager.Spacing.md)
+                                        .padding(.top, ThemeManager.Spacing.sm)
+                                    
+                                    // Transazioni del giorno
+                                    ForEach(group.transactions) { transaction in
+                                        TransactionRow(transaction: transaction)
+                                            .padding(.horizontal, ThemeManager.Spacing.md)
+                                    }
+                                }
                             }
                         }
-                        .padding(.horizontal, ThemeManager.Spacing.md)
                         .padding(.vertical, ThemeManager.Spacing.sm)
                     }
                 }
@@ -120,6 +148,11 @@ struct TransactionsView: View {
                         Image(systemName: "plus")
                             .foregroundColor(ThemeManager.Colors.primary)
                     }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if !filteredTransactions.isEmpty {
+                    summaryView
                 }
             }
             .sheet(isPresented: $showingAddTransaction) {
@@ -154,21 +187,126 @@ struct TransactionsView: View {
         return filtered
     }
     
+    private var groupedTransactions: [TransactionGroup] {
+        let sorted = filteredTransactions.sorted { $0.date > $1.date }
+        
+        let grouped = Dictionary(grouping: sorted) { transaction in
+            Calendar.current.startOfDay(for: transaction.date)
+        }
+        
+        return grouped.map { date, transactions in
+            TransactionGroup(date: date, transactions: transactions)
+        }.sorted { $0.date > $1.date }
+    }
+    
+    private var summaryView: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Entrate")
+                    .font(ThemeManager.Typography.footnote)
+                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                Text(formatCurrency(totalIncome))
+                    .font(ThemeManager.Typography.bodyMedium)
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeManager.Colors.income)
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .center, spacing: 4) {
+                Text("Uscite")
+                    .font(ThemeManager.Typography.footnote)
+                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                Text(formatCurrency(totalExpenses))
+                    .font(ThemeManager.Typography.bodyMedium)
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeManager.Colors.expense)
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 4) {
+                Text("Saldo")
+                    .font(ThemeManager.Typography.footnote)
+                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                Text(formatCurrency(totalBalance))
+                    .font(ThemeManager.Typography.bodyMedium)
+                    .fontWeight(.bold)
+                    .foregroundColor(totalBalance >= 0 ? ThemeManager.Colors.success : ThemeManager.Colors.error)
+            }
+        }
+        .padding(.horizontal, ThemeManager.Spacing.md)
+        .padding(.vertical, ThemeManager.Spacing.sm)
+        .background(ThemeManager.Colors.surface)
+        .cornerRadius(ThemeManager.CornerRadius.md)
+        .shadow(color: ThemeManager.Colors.border.opacity(0.1), radius: 2, x: 0, y: -1)
+        .padding(.horizontal, ThemeManager.Spacing.md)
+        .padding(.bottom, ThemeManager.Spacing.sm)
+    }
+    
+    private var totalIncome: Double {
+        filteredTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+    }
+    
+    private var totalExpenses: Double {
+        filteredTransactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+    }
+    
+    private var totalBalance: Double {
+        totalIncome - totalExpenses
+    }
+    
     private func loadTransactions() async {
         isLoading = true
         
         do {
+            print("📱 [DEBUG] Caricamento transazioni...")
             let response = try await apiManager.getTransactions(limit: 100)
+            print("📱 [DEBUG] Transazioni caricate: \(response.data.count)")
+            
             await MainActor.run {
                 transactions = response.data
                 isLoading = false
             }
         } catch {
-            print("Errore nel caricamento delle transazioni: \(error)")
+            print("❌ [ERROR] Errore nel caricamento delle transazioni: \(error)")
+            
+            // Gestione errori più dettagliata
+            if let apiError = error as? APIError {
+                print("❌ [ERROR] API Error: \(apiError)")
+            }
+            
             await MainActor.run {
                 isLoading = false
             }
         }
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "it_IT")
+        
+        if Calendar.current.isDateInToday(date) {
+            return "Oggi"
+        } else if Calendar.current.isDateInYesterday(date) {
+            return "Ieri"
+        } else if Calendar.current.isDate(date, equalTo: Date(), toGranularity: .year) {
+            // Stesso anno: mostra solo giorno e mese
+            formatter.dateFormat = "EEEE, d MMMM"
+            return formatter.string(from: date).capitalized
+        } else {
+            // Anno diverso: mostra tutto
+            formatter.dateFormat = "EEEE, d MMMM yyyy"
+            return formatter.string(from: date).capitalized
+        }
+    }
+    
+    private func formatCurrency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "EUR"
+        formatter.locale = Locale(identifier: "it_IT")
+        return formatter.string(from: NSNumber(value: amount)) ?? "€0,00"
     }
 }
 
