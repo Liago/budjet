@@ -12,6 +12,7 @@ struct TransactionsView: View {
     @State private var showingAddTransaction = false
     @State private var searchText = ""
     @State private var selectedType: TransactionType? = nil
+    @State private var selectedTransaction: Transaction? = nil
     
     // DateFormatter per convertire le stringhe di data in Date objects
     private let dateFormatter: DateFormatter = {
@@ -138,6 +139,9 @@ struct TransactionsView: View {
                                     ForEach(group.transactions) { transaction in
                                         TransactionRow(transaction: transaction)
                                             .padding(.horizontal, ThemeManager.Spacing.md)
+                                            .onTapGesture {
+                                                selectedTransaction = transaction
+                                            }
                                     }
                                 }
                             }
@@ -165,6 +169,21 @@ struct TransactionsView: View {
             }
             .sheet(isPresented: $showingAddTransaction) {
                 AddTransactionView()
+                    .onDisappear {
+                        // Ricarica i dati quando si chiude la vista di aggiunta
+                        Task {
+                            await loadTransactions()
+                        }
+                    }
+            }
+            .sheet(item: $selectedTransaction) { transaction in
+                TransactionDetailView(transaction: transaction)
+                    .onDisappear {
+                        // Ricarica i dati quando la vista di dettaglio si chiude
+                        Task {
+                            await loadTransactions()
+                        }
+                    }
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())

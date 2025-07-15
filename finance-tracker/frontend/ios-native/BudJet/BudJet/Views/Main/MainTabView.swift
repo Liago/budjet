@@ -12,17 +12,17 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
-            StatisticsView()
-                .tabItem {
-                    Image(systemName: "chart.bar")
-                    Text("Statistiche")
-                }
-                .tag(1)
-            
             TransactionsView()
                 .tabItem {
                     Image(systemName: "list.bullet")
                     Text("Transazioni")
+                }
+                .tag(1)
+            
+            StatisticsView()
+                .tabItem {
+                    Image(systemName: "chart.bar")
+                    Text("Statistiche")
                 }
                 .tag(2)
             

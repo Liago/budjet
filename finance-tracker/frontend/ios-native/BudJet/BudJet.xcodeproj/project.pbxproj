@@ -28,6 +28,7 @@
 		532FBBF82E254F9E00D099DD /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE52E254F9E00D099DD /* LoadingView.swift */; };
 		532FBBF92E254F9E00D099DD /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE72E254F9E00D099DD /* MainTabView.swift */; };
 		532FBBFA2E254F9E00D099DD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE82E254F9E00D099DD /* ContentView.swift */; };
+		532FBBFC2E26921E00D099DD /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBFB2E26921D00D099DD /* TransactionDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +55,7 @@
 		532FBBE52E254F9E00D099DD /* LoadingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		532FBBE72E254F9E00D099DD /* MainTabView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		532FBBE82E254F9E00D099DD /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		532FBBFB2E26921D00D099DD /* TransactionDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -190,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				532FBBE22E254F9E00D099DD /* TransactionsView.swift */,
+				532FBBFB2E26921D00D099DD /* TransactionDetailView.swift */,
 				532FBBE32E254F9E00D099DD /* AddTransactionView.swift */,
 			);
 			path = Transactions;
@@ -287,6 +290,7 @@
 				532FBBEB2E254F9E00D099DD /* ThemeManager.swift in Sources */,
 				532FBBF92E254F9E00D099DD /* MainTabView.swift in Sources */,
 				532FBBFA2E254F9E00D099DD /* ContentView.swift in Sources */,
+				532FBBFC2E26921E00D099DD /* TransactionDetailView.swift in Sources */,
 				532FBBF72E254F9E00D099DD /* AddTransactionView.swift in Sources */,
 				532FBBF62E254F9E00D099DD /* TransactionsView.swift in Sources */,
 				532FBBF52E254F9E00D099DD /* StatsCard.swift in Sources */,
