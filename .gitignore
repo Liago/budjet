@@ -93,3 +93,4 @@ iOSInjectionProject/
 .DS_Store
 
 ios-native/IOS_IMPLEMENTATIONS.md
+.env
