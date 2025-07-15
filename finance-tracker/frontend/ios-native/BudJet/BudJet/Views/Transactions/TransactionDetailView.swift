@@ -269,36 +269,454 @@ struct DetailRow: View {
 
 // MARK: - Edit Transaction View
 struct EditTransactionView: View {
+    @EnvironmentObject var apiManager: APIManager
     @Environment(\.dismiss) private var dismiss
-    @State private var transaction: Transaction
+    
+    private let originalTransaction: Transaction
     let onSave: (Transaction) -> Void
     
+    @State private var description = ""
+    @State private var amount = ""
+    @State private var selectedType: TransactionType = .expense
+    @State private var selectedDate = Date()
+    @State private var selectedCategory: Category?
+    @State private var categories: [Category] = []
+    @State private var tags: [String] = []
+    @State private var newTag = ""
+    @State private var isLoading = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    
+    // Form validation errors
+    @State private var descriptionError = ""
+    @State private var amountError = ""
+    @State private var categoryError = ""
+    
     init(transaction: Transaction, onSave: @escaping (Transaction) -> Void) {
-        self._transaction = State(initialValue: transaction)
+        self.originalTransaction = transaction
         self.onSave = onSave
+        
+        // Pre-popola i valori
+        self._description = State(initialValue: transaction.description)
+        self._amount = State(initialValue: String(transaction.amount))
+        self._selectedType = State(initialValue: transaction.type)
+        self._tags = State(initialValue: transaction.tags)
+        
+        // Converti la data stringa in Date
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        if let date = formatter.date(from: transaction.date) {
+            self._selectedDate = State(initialValue: date)
+        } else {
+            self._selectedDate = State(initialValue: Date())
+        }
     }
     
     var body: some View {
         NavigationView {
-            Text("Modifica Transazione")
-                .navigationTitle("Modifica")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Annulla") {
-                            dismiss()
-                        }
-                    }
+            ScrollView {
+                VStack(spacing: ThemeManager.Spacing.lg) {
+                    // Type Selector
+                    typeSelector
                     
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Salva") {
-                            onSave(transaction)
-                            dismiss()
-                        }
-                        .foregroundColor(ThemeManager.Colors.primary)
+                    // Description Field
+                    descriptionField
+                    
+                    // Amount Field
+                    amountField
+                    
+                    // Date Picker
+                    datePickerField
+                    
+                    // Category Selector
+                    categorySelector
+                    
+                    // Tags Section
+                    tagsSection
+                    
+                    // Save Button
+                    saveButton
+                }
+                .padding(ThemeManager.Spacing.md)
+            }
+            .navigationTitle("Modifica Transazione")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Annulla") {
+                        dismiss()
                     }
                 }
+            }
+            .onAppear {
+                Task {
+                    await loadCategories()
+                }
+            }
+            .alert("Errore", isPresented: $showError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
         }
+        .overlay {
+            if isLoading {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .overlay(
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .scaleEffect(1.5)
+                            .foregroundColor(.white)
+                    )
+            }
+        }
+    }
+    
+    // MARK: - Type Selector
+    private var typeSelector: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            Text("Tipo")
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.medium)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            HStack {
+                ForEach(TransactionType.allCases, id: \.self) { type in
+                    Button(action: {
+                        selectedType = type
+                    }) {
+                        Text(type.displayName)
+                            .font(ThemeManager.Typography.bodyMedium)
+                            .foregroundColor(selectedType == type ? .white : ThemeManager.Colors.text)
+                            .padding(.horizontal, ThemeManager.Spacing.md)
+                            .padding(.vertical, ThemeManager.Spacing.sm)
+                            .background(
+                                selectedType == type ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
+                            )
+                            .cornerRadius(ThemeManager.CornerRadius.sm)
+                    }
+                }
+                
+                Spacer()
+            }
+        }
+        .padding(ThemeManager.Spacing.md)
+        .background(ThemeManager.Colors.surface)
+        .cornerRadius(ThemeManager.CornerRadius.md)
+    }
+    
+    // MARK: - Description Field
+    private var descriptionField: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            Text("Descrizione")
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.medium)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            TextField("Inserisci la descrizione...", text: $description)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .onChange(of: description) { _ in
+                    validateDescription()
+                }
+            
+            if !descriptionError.isEmpty {
+                Text(descriptionError)
+                    .font(ThemeManager.Typography.caption)
+                    .foregroundColor(ThemeManager.Colors.error)
+            }
+        }
+        .padding(ThemeManager.Spacing.md)
+        .background(ThemeManager.Colors.surface)
+        .cornerRadius(ThemeManager.CornerRadius.md)
+    }
+    
+    // MARK: - Amount Field
+    private var amountField: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            Text("Importo")
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.medium)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            TextField("0,00", text: $amount)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .keyboardType(.decimalPad)
+                .onChange(of: amount) { _ in
+                    validateAmount()
+                }
+            
+            if !amountError.isEmpty {
+                Text(amountError)
+                    .font(ThemeManager.Typography.caption)
+                    .foregroundColor(ThemeManager.Colors.error)
+            }
+        }
+        .padding(ThemeManager.Spacing.md)
+        .background(ThemeManager.Colors.surface)
+        .cornerRadius(ThemeManager.CornerRadius.md)
+    }
+    
+    // MARK: - Date Picker
+    private var datePickerField: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            Text("Data")
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.medium)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                .datePickerStyle(GraphicalDatePickerStyle())
+        }
+        .padding(ThemeManager.Spacing.md)
+        .background(ThemeManager.Colors.surface)
+        .cornerRadius(ThemeManager.CornerRadius.md)
+    }
+    
+    // MARK: - Category Selector
+    private var categorySelector: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            Text("Categoria")
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.medium)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: ThemeManager.Spacing.sm) {
+                    ForEach(categories) { category in
+                        Button(action: {
+                            selectedCategory = category
+                            validateCategory()
+                        }) {
+                            VStack(spacing: ThemeManager.Spacing.xs) {
+                                Circle()
+                                    .fill(category.colorObject)
+                                    .frame(width: 40, height: 40)
+                                    .overlay(
+                                        Image(systemName: category.icon ?? "questionmark.circle")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(.white)
+                                    )
+                                
+                                Text(category.name)
+                                    .font(ThemeManager.Typography.caption)
+                                    .foregroundColor(ThemeManager.Colors.text)
+                                    .lineLimit(1)
+                            }
+                            .padding(ThemeManager.Spacing.xs)
+                            .background(
+                                selectedCategory?.id == category.id ? ThemeManager.Colors.primary.opacity(0.1) : Color.clear
+                            )
+                            .cornerRadius(ThemeManager.CornerRadius.sm)
+                        }
+                    }
+                }
+                .padding(.horizontal, ThemeManager.Spacing.sm)
+            }
+            
+            if !categoryError.isEmpty {
+                Text(categoryError)
+                    .font(ThemeManager.Typography.caption)
+                    .foregroundColor(ThemeManager.Colors.error)
+            }
+        }
+        .padding(ThemeManager.Spacing.md)
+        .background(ThemeManager.Colors.surface)
+        .cornerRadius(ThemeManager.CornerRadius.md)
+    }
+    
+    // MARK: - Tags Section
+    private var tagsSection: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            Text("Tags")
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.medium)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            // Existing tags
+            if !tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: ThemeManager.Spacing.xs) {
+                        ForEach(tags, id: \.self) { tag in
+                            HStack(spacing: ThemeManager.Spacing.xs) {
+                                Text(tag)
+                                    .font(ThemeManager.Typography.caption)
+                                    .foregroundColor(ThemeManager.Colors.text)
+                                
+                                Button(action: {
+                                    tags.removeAll { $0 == tag }
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                                }
+                            }
+                            .padding(.horizontal, ThemeManager.Spacing.sm)
+                            .padding(.vertical, ThemeManager.Spacing.xs)
+                            .background(ThemeManager.Colors.surface)
+                            .cornerRadius(ThemeManager.CornerRadius.sm)
+                        }
+                    }
+                    .padding(.horizontal, ThemeManager.Spacing.sm)
+                }
+            }
+            
+            // Add new tag
+            HStack {
+                TextField("Aggiungi tag...", text: $newTag)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                Button(action: {
+                    if !newTag.isEmpty && !tags.contains(newTag) {
+                        tags.append(newTag)
+                        newTag = ""
+                    }
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(ThemeManager.Colors.primary)
+                }
+                .disabled(newTag.isEmpty)
+            }
+        }
+        .padding(ThemeManager.Spacing.md)
+        .background(ThemeManager.Colors.surface)
+        .cornerRadius(ThemeManager.CornerRadius.md)
+    }
+    
+    // MARK: - Save Button
+    private var saveButton: some View {
+        Button(action: {
+            Task {
+                await updateTransaction()
+            }
+        }) {
+            HStack {
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .scaleEffect(0.8)
+                        .foregroundColor(.white)
+                } else {
+                    Image(systemName: "checkmark")
+                    Text("Salva Modifiche")
+                }
+            }
+            .font(ThemeManager.Typography.bodyMedium)
+            .fontWeight(.medium)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(ThemeManager.Spacing.md)
+            .background(isFormValid ? ThemeManager.Colors.primary : ThemeManager.Colors.textSecondary)
+            .cornerRadius(ThemeManager.CornerRadius.md)
+        }
+        .disabled(!isFormValid || isLoading)
+    }
+    
+    // MARK: - Helper Methods
+    private func loadCategories() async {
+        do {
+            let categoriesResponse = try await apiManager.getCategories()
+            
+            await MainActor.run {
+                categories = categoriesResponse
+                // Trova la categoria corrispondente
+                if let matchingCategory = categoriesResponse.first(where: { $0.id == originalTransaction.category.id }) {
+                    selectedCategory = matchingCategory
+                }
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = "Errore nel caricamento delle categorie"
+                showError = true
+            }
+        }
+    }
+    
+    private func updateTransaction() async {
+        guard validateForm() else { return }
+        
+        isLoading = true
+        
+        do {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+            dateFormatter.timeZone = TimeZone(identifier: "UTC")
+            
+            let updateRequest = UpdateTransactionRequest(
+                amount: parseAmount(),
+                description: description.trimmingCharacters(in: .whitespacesAndNewlines),
+                date: dateFormatter.string(from: selectedDate),
+                type: selectedType,
+                categoryId: selectedCategory?.id,
+                tags: tags
+            )
+            
+            let updatedTransaction = try await apiManager.updateTransaction(
+                id: originalTransaction.id,
+                transaction: updateRequest
+            )
+            
+            await MainActor.run {
+                onSave(updatedTransaction)
+                dismiss()
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = "Errore nell'aggiornamento della transazione"
+                showError = true
+                isLoading = false
+            }
+        }
+    }
+    
+    private func validateForm() -> Bool {
+        validateDescription()
+        validateAmount()
+        validateCategory()
+        
+        return descriptionError.isEmpty && amountError.isEmpty && categoryError.isEmpty
+    }
+    
+    private func validateDescription() {
+        if description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            descriptionError = "La descrizione è obbligatoria"
+        } else if description.count > 100 {
+            descriptionError = "La descrizione non può superare i 100 caratteri"
+        } else {
+            descriptionError = ""
+        }
+    }
+    
+    private func validateAmount() {
+        if amount.isEmpty {
+            amountError = "L'importo è obbligatorio"
+        } else if parseAmount() <= 0 {
+            amountError = "L'importo deve essere maggiore di zero"
+        } else {
+            amountError = ""
+        }
+    }
+    
+    private func validateCategory() {
+        if selectedCategory == nil {
+            categoryError = "Seleziona una categoria"
+        } else {
+            categoryError = ""
+        }
+    }
+    
+    private func parseAmount() -> Double {
+        // Supporta sia virgola che punto come separatore decimale
+        let cleanAmount = amount.replacingOccurrences(of: ",", with: ".")
+        return Double(cleanAmount) ?? 0.0
+    }
+    
+    private var isFormValid: Bool {
+        return !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !amount.isEmpty &&
+               parseAmount() > 0 &&
+               selectedCategory != nil
     }
 }
 
