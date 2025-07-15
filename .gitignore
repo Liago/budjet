@@ -94,3 +94,6 @@ iOSInjectionProject/
 
 ios-native/IOS_IMPLEMENTATIONS.md
 .env
+.env
+.env.local
+.env.production
