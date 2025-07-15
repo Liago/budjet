@@ -343,22 +343,10 @@ struct AddTransactionView: View {
     }
     
     private func updateCategorySelection() {
-        // Filter categories by current transaction type
-        let filteredCategories = categories.filter { category in
-            // If category doesn't have a type specified, show for both
-            if category.type == nil {
-                return true
-            }
-            return category.type == selectedType.rawValue
-        }
-        
-        // If current selection doesn't match new type, select first appropriate category
-        if let current = selectedCategory,
-           let currentType = current.type,
-           currentType != selectedType.rawValue {
-            selectedCategory = filteredCategories.first ?? categories.first
-        } else if selectedCategory == nil {
-            selectedCategory = filteredCategories.first ?? categories.first
+        // All categories are available for both income and expense
+        // If no category is selected, select the first one
+        if selectedCategory == nil {
+            selectedCategory = categories.first
         }
     }
     
@@ -377,17 +365,8 @@ struct AddTransactionView: View {
             await MainActor.run {
                 categories = categoriesResponse
                 
-                // Filter categories by current transaction type for better UX
-                let filteredCategories = categoriesResponse.filter { category in
-                    // If category doesn't have a type specified, show for both
-                    if category.type == nil {
-                        return true
-                    }
-                    return category.type == selectedType.rawValue
-                }
-                
-                // Select first appropriate category by default
-                if selectedCategory == nil, let firstCategory = filteredCategories.first ?? categoriesResponse.first {
+                // Select first category by default if none selected
+                if selectedCategory == nil, let firstCategory = categoriesResponse.first {
                     selectedCategory = firstCategory
                 }
             }
@@ -457,14 +436,14 @@ struct AddTransactionView: View {
                 let errorMsg: String
                 if let apiError = error as? APIError {
                     switch apiError {
-                    case .invalidCredentials:
-                        errorMsg = "Credenziali non valide"
+                    case .invalidResponse:
+                        errorMsg = "Risposta non valida dal server"
                     case .networkError:
                         errorMsg = "Errore di connessione"
-                    case .serverError:
-                        errorMsg = "Errore del server"
-                    case .decodingError:
-                        errorMsg = "Errore nei dati"
+                    case .serverError(let code):
+                        errorMsg = "Errore del server (\(code))"
+                    case .decodingError(let message):
+                        errorMsg = "Errore nei dati: \(message)"
                     }
                 } else {
                     errorMsg = "Errore nel salvare la transazione"

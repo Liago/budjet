@@ -13,6 +13,14 @@ struct TransactionsView: View {
     @State private var searchText = ""
     @State private var selectedType: TransactionType? = nil
     
+    // DateFormatter per convertire le stringhe di data in Date objects
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        return formatter
+    }()
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -191,7 +199,11 @@ struct TransactionsView: View {
         let sorted = filteredTransactions.sorted { $0.date > $1.date }
         
         let grouped = Dictionary(grouping: sorted) { transaction in
-            Calendar.current.startOfDay(for: transaction.date)
+            // Converti la stringa date in Date object
+            guard let date = dateFormatter.date(from: transaction.date) else {
+                return Date() // Fallback per date invalide
+            }
+            return Calendar.current.startOfDay(for: date)
         }
         
         return grouped.map { date, transactions in

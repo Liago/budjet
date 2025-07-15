@@ -108,6 +108,14 @@ struct RegisterRequest: Codable {
 
 // MARK: - Transaction Models
 
+struct Tag: Codable, Identifiable {
+    let id: String
+    let name: String
+    let color: String?
+    let createdAt: String
+    let updatedAt: String?
+}
+
 enum TransactionType: String, Codable, CaseIterable {
     case income = "INCOME"
     case expense = "EXPENSE"
@@ -129,14 +137,84 @@ struct Transaction: Codable, Identifiable {
     let date: String
     let type: TransactionType
     let category: Category
-    let tags: [String]
+    let tags: [String]  // Manteniamo come array di stringhe per l'UI
     let createdAt: String
     let updatedAt: String?
+    
+    // Custom init per gestire la conversione amount da stringa a Double
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        description = try container.decode(String.self, forKey: .description)
+        date = try container.decode(String.self, forKey: .date)
+        type = try container.decode(TransactionType.self, forKey: .type)
+        category = try container.decode(Category.self, forKey: .category)
+        // Gestisci tags come array di oggetti Tag o array di stringhe
+        if let tagObjects = try? container.decode([Tag].self, forKey: .tags) {
+            tags = tagObjects.map { $0.name }
+        } else {
+            tags = try container.decode([String].self, forKey: .tags)
+        }
+        createdAt = try container.decode(String.self, forKey: .createdAt)
+        updatedAt = try? container.decode(String.self, forKey: .updatedAt)
+        
+        // Gestisci amount come stringa o Double
+        if let amountString = try? container.decode(String.self, forKey: .amount) {
+            amount = Double(amountString) ?? 0.0
+        } else {
+            amount = try container.decode(Double.self, forKey: .amount)
+        }
+    }
+    
+    // Costruttore normale per creazione di istanze
+    init(id: String, amount: Double, description: String, date: String, type: TransactionType, category: Category, tags: [String], createdAt: String, updatedAt: String?) {
+        self.id = id
+        self.amount = amount
+        self.description = description
+        self.date = date
+        self.type = type
+        self.category = category
+        self.tags = tags
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+    
+    // CodingKeys per la decodifica
+    private enum CodingKeys: String, CodingKey {
+        case id, amount, description, date, type, category, tags, createdAt, updatedAt
+    }
 }
 
 struct TransactionResponse: Codable {
     let data: [Transaction]
-    let pagination: Pagination
+    let pagination: Pagination?
+    
+    // Custom init per gestire risposte diverse dal backend
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Prova prima a decodificare come oggetto con data e pagination
+        if let transactionsData = try? container.decode([Transaction].self, forKey: .data) {
+            data = transactionsData
+            pagination = try? container.decode(Pagination.self, forKey: .pagination)
+        } else {
+            // Se fallisce, prova a decodificare direttamente come array di transazioni
+            let singleContainer = try decoder.singleValueContainer()
+            data = try singleContainer.decode([Transaction].self)
+            pagination = nil
+        }
+    }
+    
+    // Costruttore normale per creazione di istanze
+    init(data: [Transaction], pagination: Pagination? = nil) {
+        self.data = data
+        self.pagination = pagination
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case data, pagination
+    }
 }
 
 struct Pagination: Codable {

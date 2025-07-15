@@ -10,6 +10,7 @@ struct DashboardView: View {
     @State private var selectedPeriod: DateFilterPeriod = .current
     @State private var showingAddTransaction = false
     @State private var refreshing = false
+    @State private var loadDataTask: Task<Void, Never>?
     
     var body: some View {
         NavigationView {
@@ -55,11 +56,14 @@ struct DashboardView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
-        .onAppear {
-            Task {
-                await loadData()
+                    .onAppear {
+                Task {
+                    await loadData()
+                }
             }
-        }
+            .onDisappear {
+                loadDataTask?.cancel()
+            }
     }
     
     // MARK: - Header
@@ -196,30 +200,57 @@ struct DashboardView: View {
     
     // MARK: - Helper Methods
     private func loadData() async {
-        isLoading = true
+        // Cancella il task precedente se esistente
+        loadDataTask?.cancel()
         
-        do {
-            let dateRange = getDateRangeFromPeriod(selectedPeriod)
-            
-            async let statsTask = apiManager.getDashboardStats(
-                startDate: dateRange.startDate,
-                endDate: dateRange.endDate
-            )
-            async let transactionsTask = apiManager.getTransactions(limit: 5)
-            async let categoriesTask = apiManager.getCategories()
-            
-            let (stats, transactionResponse, categoriesResponse) = try await (statsTask, transactionsTask, categoriesTask)
-            
+        loadDataTask = Task {
             await MainActor.run {
-                dashboardStats = stats
-                recentTransactions = transactionResponse.data
-                categories = categoriesResponse
-                isLoading = false
+                isLoading = true
             }
-        } catch {
-            print("Errore nel caricamento dei dati: \(error)")
-            isLoading = false
+            
+            do {
+                let dateRange = getDateRangeFromPeriod(selectedPeriod)
+                
+                // Controlla se il task è stato cancellato
+                guard !Task.isCancelled else {
+                    return
+                }
+                
+                async let statsTask = apiManager.getDashboardStats(
+                    startDate: dateRange.startDate,
+                    endDate: dateRange.endDate
+                )
+                async let transactionsTask = apiManager.getTransactions(limit: 5)
+                async let categoriesTask = apiManager.getCategories()
+                
+                let (stats, transactionResponse, categoriesResponse) = try await (statsTask, transactionsTask, categoriesTask)
+                
+                // Controlla di nuovo se il task è stato cancellato prima di aggiornare l'UI
+                guard !Task.isCancelled else {
+                    return
+                }
+                
+                await MainActor.run {
+                    dashboardStats = stats
+                    recentTransactions = transactionResponse.data
+                    categories = categoriesResponse
+                    isLoading = false
+                }
+            } catch {
+                // Ignora errori di cancellazione
+                if let urlError = error as? URLError, urlError.code == .cancelled {
+                    print("🔄 [DEBUG] Richiesta cancellata durante il refresh")
+                    return
+                }
+                
+                print("❌ [ERROR] Errore nel caricamento dei dati: \(error)")
+                await MainActor.run {
+                    isLoading = false
+                }
+            }
         }
+        
+        await loadDataTask?.value
     }
     
     private func formatCurrency(_ amount: Double) -> String {
