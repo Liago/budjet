@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 struct SlidingStatsCardsView: View {
     let balance: Double
@@ -9,6 +10,7 @@ struct SlidingStatsCardsView: View {
     let period: String
     
     @State private var currentIndex = 0
+    @State private var timer: Timer?
     
     var body: some View {
         VStack(spacing: ThemeManager.Spacing.md) {
@@ -37,12 +39,13 @@ struct SlidingStatsCardsView: View {
                 .animation(.easeInOut(duration: 0.3), value: currentIndex)
                 .gesture(
                     DragGesture()
-                        .onEnded { value in
-                            let threshold = geometry.size.width * 0.3
+                        .onEnded { gesture in
+                            let threshold: CGFloat = geometry.size.width * 0.3
+                            let translationX = gesture.translation.width
                             
-                            if value.translation.x > threshold && currentIndex > 0 {
+                            if translationX > threshold && currentIndex > 0 {
                                 currentIndex -= 1
-                            } else if value.translation.x < -threshold && currentIndex < 1 {
+                            } else if translationX < -threshold && currentIndex < 1 {
                                 currentIndex += 1
                             }
                         }
@@ -65,11 +68,14 @@ struct SlidingStatsCardsView: View {
         }
         .onAppear {
             // Auto-scroll every 5 seconds
-            Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
+            timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
                 withAnimation(.easeInOut(duration: 0.5)) {
                     currentIndex = (currentIndex + 1) % 2
                 }
             }
+        }
+        .onDisappear {
+            timer?.invalidate()
         }
     }
 }
