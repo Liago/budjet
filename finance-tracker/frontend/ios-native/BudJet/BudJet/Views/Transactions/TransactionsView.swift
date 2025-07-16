@@ -3,6 +3,8 @@ import SwiftUI
 struct TransactionGroup {
     let date: Date
     let transactions: [Transaction]
+    let dailyTotal: Double
+    let transactionCount: Int
 }
 
 struct TransactionsView: View {
@@ -42,224 +44,92 @@ struct TransactionsView: View {
         NavigationView {
             VStack(spacing: 0) {
                 // Search and Filter
-                VStack(spacing: ThemeManager.Spacing.sm) {
-                    // Selected Period Display
-                    if hasActiveFilters {
+                VStack(spacing: 12) {
+                    // Search Bar
+                    HStack(spacing: 8) {
                         HStack {
-                            Text("Periodo: \(getSelectedPeriodText())")
-                                .font(ThemeManager.Typography.footnote)
-                                .foregroundColor(ThemeManager.Colors.primary)
-                                .padding(.horizontal, ThemeManager.Spacing.sm)
-                                .padding(.vertical, ThemeManager.Spacing.xs)
-                                .background(ThemeManager.Colors.primary.opacity(0.1))
-                                .cornerRadius(ThemeManager.CornerRadius.sm)
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                                .font(.system(size: 16))
                             
-                            Spacer()
+                            TextField("Search transactions...", text: $searchText)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .font(.system(size: 16))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+                        
+                        Button(action: {
+                            showingFilters.toggle()
+                        }) {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 16))
+                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                                .padding(10)
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(8)
                         }
                     }
-                    // Search Bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(ThemeManager.Colors.textSecondary)
-                        
-                        TextField("Cerca transazioni...", text: $searchText)
-                            .textFieldStyle(PlainTextFieldStyle())
-                    }
-                    .padding(.horizontal, ThemeManager.Spacing.md)
-                    .padding(.vertical, ThemeManager.Spacing.sm)
-                    .background(ThemeManager.Colors.surface)
-                    .cornerRadius(ThemeManager.CornerRadius.md)
                     
                     // Type Filter
-                    HStack {
+                    HStack(spacing: 8) {
                         Button(action: {
                             selectedType = nil
                         }) {
-                            Text("Tutte")
-                                .font(ThemeManager.Typography.footnote)
-                                .foregroundColor(selectedType == nil ? .white : ThemeManager.Colors.textSecondary)
-                                .padding(.horizontal, ThemeManager.Spacing.sm)
-                                .padding(.vertical, ThemeManager.Spacing.xs)
-                                .background(
-                                    selectedType == nil ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
-                                )
-                                .cornerRadius(ThemeManager.CornerRadius.sm)
-                        }
-                        
-                        Button(action: {
-                            selectedType = .expense
-                        }) {
-                            Text("Uscite")
-                                .font(ThemeManager.Typography.footnote)
-                                .foregroundColor(selectedType == .expense ? .white : ThemeManager.Colors.textSecondary)
-                                .padding(.horizontal, ThemeManager.Spacing.sm)
-                                .padding(.vertical, ThemeManager.Spacing.xs)
-                                .background(
-                                    selectedType == .expense ? ThemeManager.Colors.expense : ThemeManager.Colors.surface
-                                )
-                                .cornerRadius(ThemeManager.CornerRadius.sm)
+                            let isSelected = selectedType == nil
+                            let textColor = isSelected ? Color.white : ThemeManager.Colors.textSecondary
+                            let backgroundColor = isSelected ? Color.red : Color.gray.opacity(0.1)
+                            
+                            Text("All")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(textColor)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(backgroundColor)
+                                .cornerRadius(20)
                         }
                         
                         Button(action: {
                             selectedType = .income
                         }) {
-                            Text("Entrate")
-                                .font(ThemeManager.Typography.footnote)
-                                .foregroundColor(selectedType == .income ? .white : ThemeManager.Colors.textSecondary)
-                                .padding(.horizontal, ThemeManager.Spacing.sm)
-                                .padding(.vertical, ThemeManager.Spacing.xs)
-                                .background(
-                                    selectedType == .income ? ThemeManager.Colors.income : ThemeManager.Colors.surface
-                                )
-                                .cornerRadius(ThemeManager.CornerRadius.sm)
+                            let isSelected = selectedType == .income
+                            let textColor = isSelected ? Color.white : ThemeManager.Colors.textSecondary
+                            let backgroundColor = isSelected ? Color.red : Color.gray.opacity(0.1)
+                            
+                            Text("Income")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(textColor)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(backgroundColor)
+                                .cornerRadius(20)
+                        }
+                        
+                        Button(action: {
+                            selectedType = .expense
+                        }) {
+                            let isSelected = selectedType == .expense
+                            let textColor = isSelected ? Color.white : ThemeManager.Colors.textSecondary
+                            let backgroundColor = isSelected ? Color.red : Color.gray.opacity(0.1)
+                            
+                            Text("Expenses")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(textColor)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(backgroundColor)
+                                .cornerRadius(20)
                         }
                         
                         Spacer()
-                        
-                        Button(action: {
-                            showingFilters.toggle()
-                        }) {
-                            Image(systemName: "line.3.horizontal.decrease.circle")
-                                .font(.title3)
-                                .foregroundColor(hasActiveFilters ? ThemeManager.Colors.primary : ThemeManager.Colors.textSecondary)
-                        }
                     }
                     
-                    // Advanced Filters (collapsible)
-                    if showingFilters {
-                        VStack(spacing: ThemeManager.Spacing.sm) {
-                            // Category Filter
-                            if !categories.isEmpty {
-                                VStack(alignment: .leading, spacing: ThemeManager.Spacing.xs) {
-                                    Text("Filtra per Categoria")
-                                        .font(ThemeManager.Typography.footnote)
-                                        .foregroundColor(ThemeManager.Colors.text)
-                                    
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: ThemeManager.Spacing.xs) {
-                                            Button(action: {
-                                                selectedCategory = nil
-                                            }) {
-                                                Text("Tutte")
-                                                    .font(ThemeManager.Typography.caption)
-                                                    .foregroundColor(selectedCategory == nil ? .white : ThemeManager.Colors.textSecondary)
-                                                    .padding(.horizontal, ThemeManager.Spacing.sm)
-                                                    .padding(.vertical, ThemeManager.Spacing.xs)
-                                                    .background(
-                                                        selectedCategory == nil ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
-                                                    )
-                                                    .cornerRadius(ThemeManager.CornerRadius.sm)
-                                            }
-                                            
-                                            ForEach(categories) { category in
-                                                Button(action: {
-                                                    selectedCategory = category
-                                                }) {
-                                                    HStack(spacing: ThemeManager.Spacing.xs) {
-                                                        Circle()
-                                                            .fill(category.colorObject)
-                                                            .frame(width: 8, height: 8)
-                                                        
-                                                        Text(category.name)
-                                                            .font(ThemeManager.Typography.caption)
-                                                            .foregroundColor(selectedCategory?.id == category.id ? .white : ThemeManager.Colors.textSecondary)
-                                                    }
-                                                    .padding(.horizontal, ThemeManager.Spacing.sm)
-                                                    .padding(.vertical, ThemeManager.Spacing.xs)
-                                                    .background(
-                                                        selectedCategory?.id == category.id ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
-                                                    )
-                                                    .cornerRadius(ThemeManager.CornerRadius.sm)
-                                                }
-                                            }
-                                        }
-                                        .padding(.horizontal, ThemeManager.Spacing.xs)
-                                    }
-                                }
-                            }
-                            
-                            // Date Filter
-                            VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
-                                Text("Filtra per Data")
-                                    .font(ThemeManager.Typography.footnote)
-                                    .foregroundColor(ThemeManager.Colors.text)
-                                
-                                // Date filter mode selector
-                                HStack {
-                                    Button(action: {
-                                        dateFilterMode = .month
-                                    }) {
-                                        Text("Mese")
-                                            .font(ThemeManager.Typography.caption)
-                                            .foregroundColor(dateFilterMode == .month ? .white : ThemeManager.Colors.textSecondary)
-                                            .padding(.horizontal, ThemeManager.Spacing.sm)
-                                            .padding(.vertical, ThemeManager.Spacing.xs)
-                                            .background(
-                                                dateFilterMode == .month ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
-                                            )
-                                            .cornerRadius(ThemeManager.CornerRadius.sm)
-                                    }
-                                    
-                                    Button(action: {
-                                        dateFilterMode = .range
-                                    }) {
-                                        Text("Periodo")
-                                            .font(ThemeManager.Typography.caption)
-                                            .foregroundColor(dateFilterMode == .range ? .white : ThemeManager.Colors.textSecondary)
-                                            .padding(.horizontal, ThemeManager.Spacing.sm)
-                                            .padding(.vertical, ThemeManager.Spacing.xs)
-                                            .background(
-                                                dateFilterMode == .range ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
-                                            )
-                                            .cornerRadius(ThemeManager.CornerRadius.sm)
-                                    }
-                                    
-                                    Spacer()
-                                }
-                                
-                                // Date picker based on mode
-                                if dateFilterMode == .month {
-                                    DatePicker("", selection: $selectedMonth, displayedComponents: .date)
-                                        .datePickerStyle(CompactDatePickerStyle())
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                } else {
-                                    VStack(spacing: ThemeManager.Spacing.xs) {
-                                        HStack {
-                                            Text("Dal:")
-                                                .font(ThemeManager.Typography.caption)
-                                                .foregroundColor(ThemeManager.Colors.textSecondary)
-                                            
-                                            DatePicker("", selection: $startDate, displayedComponents: .date)
-                                                .datePickerStyle(CompactDatePickerStyle())
-                                        }
-                                        
-                                        HStack {
-                                            Text("Al:")
-                                                .font(ThemeManager.Typography.caption)
-                                                .foregroundColor(ThemeManager.Colors.textSecondary)
-                                            
-                                            DatePicker("", selection: $endDate, displayedComponents: .date)
-                                                .datePickerStyle(CompactDatePickerStyle())
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Clear Filters Button
-                            if hasActiveFilters {
-                                Button(action: clearFilters) {
-                                    Text("Rimuovi Filtri")
-                                        .font(ThemeManager.Typography.footnote)
-                                        .foregroundColor(ThemeManager.Colors.primary)
-                                }
-                            }
-                        }
-                        .padding(.top, ThemeManager.Spacing.sm)
-                    }
                 }
-                .padding(.horizontal, ThemeManager.Spacing.md)
-                .padding(.vertical, ThemeManager.Spacing.sm)
-                .background(ThemeManager.Colors.background)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .background(Color.white)
                 
                 // Transactions List
                 if isLoading {
@@ -296,23 +166,45 @@ struct TransactionsView: View {
                     ScrollView {
                         LazyVStack(spacing: ThemeManager.Spacing.md) {
                             ForEach(groupedTransactions, id: \.date) { group in
-                                VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
-                                    // Data del gruppo
-                                    Text(formatDate(group.date))
-                                        .font(ThemeManager.Typography.bodyMedium)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(ThemeManager.Colors.text)
-                                        .padding(.horizontal, ThemeManager.Spacing.md)
-                                        .padding(.top, ThemeManager.Spacing.sm)
-                                    
-                                    // Transazioni del giorno
-                                    ForEach(group.transactions) { transaction in
-                                        TransactionRow(transaction: transaction)
-                                            .padding(.horizontal, ThemeManager.Spacing.md)
-                                            .onTapGesture {
-                                                selectedTransaction = transaction
-                                            }
+                                VStack(alignment: .leading, spacing: 0) {
+                                    // Header del gruppo con data e totale
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(formatDate(group.date))
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(ThemeManager.Colors.text)
+                                            Text("\(group.transactionCount) transactions")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        VStack(alignment: .trailing, spacing: 2) {
+                                            Text(formatCurrency(group.dailyTotal))
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(group.dailyTotal >= 0 ? Color.green : Color.red)
+                                            Text("Daily total")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                                        }
                                     }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 12)
+                                    
+                                    // Transazioni del giorno in contenitore arrotondato
+                                    VStack(spacing: 0) {
+                                        ForEach(group.transactions) { transaction in
+                                            TransactionRow(transaction: transaction)
+                                                .padding(.horizontal, 16)
+                                                .onTapGesture {
+                                                    selectedTransaction = transaction
+                                                }
+                                        }
+                                    }
+                                    .background(Color.white)
+                                    .cornerRadius(12)
+                                    .padding(.horizontal, 16)
                                 }
                             }
                             
@@ -347,11 +239,12 @@ struct TransactionsView: View {
                                     .padding(.bottom, ThemeManager.Spacing.md)
                             }
                         }
-                        .padding(.vertical, ThemeManager.Spacing.sm)
+                        .padding(.vertical, 8)
                     }
                 }
             }
-            .navigationTitle("Transazioni")
+            .background(Color.gray.opacity(0.05))
+            .navigationTitle("Transactions")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -385,6 +278,19 @@ struct TransactionsView: View {
                             await loadTransactions()
                         }
                     }
+            }
+            .sheet(isPresented: $showingFilters) {
+                TransactionFiltersSheet(
+                    categories: categories,
+                    selectedCategory: $selectedCategory,
+                    dateFilterMode: $dateFilterMode,
+                    selectedMonth: $selectedMonth,
+                    startDate: $startDate,
+                    endDate: $endDate,
+                    hasActiveFilters: hasActiveFilters,
+                    clearFilters: clearFilters
+                )
+                .presentationDetents([.medium])
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -472,7 +378,15 @@ struct TransactionsView: View {
         }
         
         return grouped.map { date, transactions in
-            TransactionGroup(date: date, transactions: transactions)
+            let dailyTotal = transactions.reduce(0) { total, transaction in
+                return total + (transaction.type == .income ? transaction.amount : -transaction.amount)
+            }
+            return TransactionGroup(
+                date: date,
+                transactions: transactions,
+                dailyTotal: dailyTotal,
+                transactionCount: transactions.count
+            )
         }.sorted { $0.date > $1.date }
     }
     
@@ -639,6 +553,184 @@ struct TransactionsView: View {
             return "dal \(formatter.string(from: startOfMonth)) al \(formatter.string(from: lastDayOfMonth))"
         } else {
             return "dal \(formatter.string(from: startDate)) al \(formatter.string(from: endDate))"
+        }
+    }
+}
+
+struct TransactionFiltersSheet: View {
+    let categories: [Category]
+    @Binding var selectedCategory: Category?
+    @Binding var dateFilterMode: TransactionsView.DateFilterMode
+    @Binding var selectedMonth: Date
+    @Binding var startDate: Date
+    @Binding var endDate: Date
+    let hasActiveFilters: Bool
+    let clearFilters: () -> Void
+    
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading, spacing: 24) {
+                // Category Filter
+                if !categories.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Filter by Category")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                Button(action: {
+                                    selectedCategory = nil
+                                }) {
+                                    let isSelected = selectedCategory == nil
+                                    let textColor = isSelected ? Color.white : Color.secondary
+                                    let backgroundColor = isSelected ? Color.red : Color.gray.opacity(0.1)
+                                    
+                                    Text("All")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(textColor)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(backgroundColor)
+                                        .cornerRadius(20)
+                                }
+                                
+                                ForEach(categories) { category in
+                                    Button(action: {
+                                        selectedCategory = category
+                                    }) {
+                                        let isSelected = selectedCategory?.id == category.id
+                                        let textColor = isSelected ? Color.white : Color.secondary
+                                        let backgroundColor = isSelected ? Color.red : Color.gray.opacity(0.1)
+                                        
+                                        HStack(spacing: 6) {
+                                            Circle()
+                                                .fill(category.colorObject)
+                                                .frame(width: 8, height: 8)
+                                            
+                                            Text(category.name)
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundColor(textColor)
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(backgroundColor)
+                                        .cornerRadius(20)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 4)
+                        }
+                    }
+                }
+                
+                // Date Filter
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Filter by Date")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    // Date filter mode selector
+                    HStack(spacing: 8) {
+                        Button(action: {
+                            dateFilterMode = .month
+                        }) {
+                            let isSelected = dateFilterMode == .month
+                            let textColor = isSelected ? Color.white : Color.secondary
+                            let backgroundColor = isSelected ? Color.red : Color.gray.opacity(0.1)
+                            
+                            Text("Month")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(textColor)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(backgroundColor)
+                                .cornerRadius(20)
+                        }
+                        
+                        Button(action: {
+                            dateFilterMode = .range
+                        }) {
+                            let isSelected = dateFilterMode == .range
+                            let textColor = isSelected ? Color.white : Color.secondary
+                            let backgroundColor = isSelected ? Color.red : Color.gray.opacity(0.1)
+                            
+                            Text("Date Range")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(textColor)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(backgroundColor)
+                                .cornerRadius(20)
+                        }
+                        
+                        Spacer()
+                    }
+                    
+                    // Date picker based on mode
+                    if dateFilterMode == .month {
+                        DatePicker("Select Month", selection: $selectedMonth, displayedComponents: .date)
+                            .datePickerStyle(CompactDatePickerStyle())
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        VStack(spacing: 12) {
+                            HStack {
+                                Text("From:")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 60, alignment: .leading)
+                                
+                                DatePicker("", selection: $startDate, displayedComponents: .date)
+                                    .datePickerStyle(CompactDatePickerStyle())
+                            }
+                            
+                            HStack {
+                                Text("To:")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 60, alignment: .leading)
+                                
+                                DatePicker("", selection: $endDate, displayedComponents: .date)
+                                    .datePickerStyle(CompactDatePickerStyle())
+                            }
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                // Clear Filters Button
+                if hasActiveFilters {
+                    Button(action: {
+                        clearFilters()
+                        dismiss()
+                    }) {
+                        HStack {
+                            Spacer()
+                            Text("Clear All Filters")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                        .padding(.vertical, 12)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                }
+            }
+            .padding(20)
+            .navigationTitle("Filters")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.red)
+                }
+            }
         }
     }
 }
