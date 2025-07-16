@@ -312,12 +312,22 @@ extension Transaction {
     }
     
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        let inputFormatter = DateFormatter()
+        inputFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         
-        if let date = formatter.date(from: date) {
-            formatter.dateFormat = "dd/MM/yyyy"
-            return formatter.string(from: date)
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "dd-MM-yyyy"
+        
+        if let parsedDate = inputFormatter.date(from: date) {
+            return outputFormatter.string(from: parsedDate)
+        }
+        
+        // Fallback per date in formato yyyy-MM-dd
+        let simpleDateFormatter = DateFormatter()
+        simpleDateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        if let parsedDate = simpleDateFormatter.date(from: date) {
+            return outputFormatter.string(from: parsedDate)
         }
         
         return date
@@ -371,7 +381,7 @@ extension Color {
 
 // MARK: - Date Helper Functions
 
-func getDateRangeFromPeriod(_ period: DateFilterPeriod) -> DateRange {
+func getDateRangeFromPeriod(_ period: DateFilterPeriod, customStart: Date = Date(), customEnd: Date = Date()) -> DateRange {
     let today = Date()
     let calendar = Calendar.current
     let formatter = DateFormatter()
@@ -393,9 +403,9 @@ func getDateRangeFromPeriod(_ period: DateFilterPeriod) -> DateRange {
         endDate = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startDate)!
         
     case .custom:
-        // Usa le date personalizzate (default: mese corrente)
-        startDate = calendar.date(from: calendar.dateComponents([.year, .month], from: today))!
-        endDate = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startDate)!
+        // Usa le date personalizzate fornite
+        startDate = customStart
+        endDate = customEnd
     }
     
     return DateRange(

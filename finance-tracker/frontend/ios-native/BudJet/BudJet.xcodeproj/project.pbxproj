@@ -29,6 +29,9 @@
 		532FBBF92E254F9E00D099DD /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE72E254F9E00D099DD /* MainTabView.swift */; };
 		532FBBFA2E254F9E00D099DD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE82E254F9E00D099DD /* ContentView.swift */; };
 		532FBBFC2E26921E00D099DD /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBFB2E26921D00D099DD /* TransactionDetailView.swift */; };
+		532FBBFE2E278E6800D099DD /* ErrorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBFD2E278E6800D099DD /* ErrorManager.swift */; };
+		532FBC012E27A18500D099DD /* SlidingStatsCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBFF2E27A18500D099DD /* SlidingStatsCardsView.swift */; };
+		532FBC022E27A18500D099DD /* CustomDateRangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBC002E27A18500D099DD /* CustomDateRangeView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +59,9 @@
 		532FBBE72E254F9E00D099DD /* MainTabView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		532FBBE82E254F9E00D099DD /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		532FBBFB2E26921D00D099DD /* TransactionDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
+		532FBBFD2E278E6800D099DD /* ErrorManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ErrorManager.swift; sourceTree = "<group>"; };
+		532FBBFF2E27A18500D099DD /* SlidingStatsCardsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SlidingStatsCardsView.swift; sourceTree = "<group>"; };
+		532FBC002E27A18500D099DD /* CustomDateRangeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomDateRangeView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +116,7 @@
 		532FBBCC2E254F9D00D099DD /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				532FBBFD2E278E6800D099DD /* ErrorManager.swift */,
 				532FBBCD2E254F9D00D099DD /* KeychainManager.swift */,
 				532FBBCE2E254F9D00D099DD /* APIManager.swift */,
 				532FBBCF2E254F9D00D099DD /* ThemeManager.swift */,
@@ -174,6 +181,8 @@
 		532FBBDC2E254F9E00D099DD /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
+				532FBC002E27A18500D099DD /* CustomDateRangeView.swift */,
+				532FBBFF2E27A18500D099DD /* SlidingStatsCardsView.swift */,
 				532FBBDD2E254F9E00D099DD /* DashboardView.swift */,
 			);
 			path = Dashboard;
@@ -293,13 +302,16 @@
 				532FBBFC2E26921E00D099DD /* TransactionDetailView.swift in Sources */,
 				532FBBF72E254F9E00D099DD /* AddTransactionView.swift in Sources */,
 				532FBBF62E254F9E00D099DD /* TransactionsView.swift in Sources */,
+				532FBBFE2E278E6800D099DD /* ErrorManager.swift in Sources */,
 				532FBBF52E254F9E00D099DD /* StatsCard.swift in Sources */,
 				532FBBE92E254F9E00D099DD /* KeychainManager.swift in Sources */,
 				532FBBEE2E254F9E00D099DD /* StatisticsView.swift in Sources */,
 				532FBBF12E254F9E00D099DD /* AuthenticationView.swift in Sources */,
 				532FBBBE2E254F3C00D099DD /* BudJetApp.swift in Sources */,
+				532FBC022E27A18500D099DD /* CustomDateRangeView.swift in Sources */,
 				532FBBF22E254F9E00D099DD /* RegisterView.swift in Sources */,
 				532FBBF02E254F9E00D099DD /* LoginView.swift in Sources */,
+				532FBC012E27A18500D099DD /* SlidingStatsCardsView.swift in Sources */,
 				532FBBF42E254F9E00D099DD /* TransactionRow.swift in Sources */,
 				532FBBF32E254F9E00D099DD /* DashboardView.swift in Sources */,
 				532FBBED2E254F9E00D099DD /* Models.swift in Sources */,

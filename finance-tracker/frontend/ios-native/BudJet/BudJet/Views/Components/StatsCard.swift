@@ -109,6 +109,193 @@ struct BalanceCard: View {
     }
 }
 
+// MARK: - Budget Overview Card
+struct BudgetOverviewCard: View {
+    let totalBudget: Double
+    let totalExpenses: Double
+    let categories: [Category]
+    let period: String
+    
+    private var budgetUsagePercentage: Double {
+        guard totalBudget > 0 else { return 0 }
+        return min(totalExpenses / totalBudget, 1.0)
+    }
+    
+    private var remainingBudget: Double {
+        return max(totalBudget - totalExpenses, 0)
+    }
+    
+    private var budgetStatus: BudgetStatus {
+        if totalBudget == 0 {
+            return .noBudget
+        } else if totalExpenses >= totalBudget {
+            return .exceeded
+        } else if budgetUsagePercentage >= 0.8 {
+            return .warning
+        } else {
+            return .good
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.lg) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: ThemeManager.Spacing.xs) {
+                    Text("Budget")
+                        .font(ThemeManager.Typography.footnote)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                    
+                    Text(period)
+                        .font(ThemeManager.Typography.caption)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: budgetStatus.icon)
+                    .font(.title2)
+                    .foregroundColor(budgetStatus.color)
+            }
+            
+            // Budget Progress
+            if totalBudget > 0 {
+                VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+                    // Progress Bar
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            Rectangle()
+                                .fill(ThemeManager.Colors.border.opacity(0.2))
+                                .frame(height: 8)
+                                .cornerRadius(4)
+                            
+                            Rectangle()
+                                .fill(budgetStatus.color)
+                                .frame(
+                                    width: max(0, min(geometry.size.width, geometry.size.width * CGFloat(budgetUsagePercentage))),
+                                    height: 8
+                                )
+                                .cornerRadius(4)
+                        }
+                    }
+                    .frame(height: 8)
+                    
+                    // Budget Details
+                    HStack {
+                        VStack(alignment: .leading, spacing: ThemeManager.Spacing.xs) {
+                            Text("Speso")
+                                .font(ThemeManager.Typography.caption)
+                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                            
+                            Text(formatCurrency(totalExpenses))
+                                .font(ThemeManager.Typography.bodyMedium)
+                                .fontWeight(.semibold)
+                                .foregroundColor(ThemeManager.Colors.expense)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: ThemeManager.Spacing.xs) {
+                            Text("Rimanente")
+                                .font(ThemeManager.Typography.caption)
+                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                            
+                            Text(formatCurrency(remainingBudget))
+                                .font(ThemeManager.Typography.bodyMedium)
+                                .fontWeight(.semibold)
+                                .foregroundColor(budgetStatus == .exceeded ? ThemeManager.Colors.error : ThemeManager.Colors.success)
+                        }
+                    }
+                    
+                    // Budget Status Message
+                    HStack {
+                        Text(budgetStatus.message)
+                            .font(ThemeManager.Typography.caption)
+                            .foregroundColor(budgetStatus.color)
+                        
+                        Spacer()
+                        
+                        Text("\(Int(budgetUsagePercentage * 100))%")
+                            .font(ThemeManager.Typography.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(budgetStatus.color)
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+                    Text("Nessun budget impostato")
+                        .font(ThemeManager.Typography.body)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                    
+                    Text("Imposta un budget per le tue categorie per tenere traccia delle tue spese")
+                        .font(ThemeManager.Typography.caption)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                        .multilineTextAlignment(.leading)
+                }
+            }
+        }
+        .padding(ThemeManager.Spacing.lg)
+        .background(ThemeManager.Colors.surface)
+        .cornerRadius(ThemeManager.CornerRadius.lg)
+        .shadow(color: ThemeManager.Colors.border.opacity(0.1), radius: 4, x: 0, y: 2)
+    }
+    
+    private func formatCurrency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "EUR"
+        formatter.locale = Locale(identifier: "it_IT")
+        return formatter.string(from: NSNumber(value: amount)) ?? "€0,00"
+    }
+}
+
+// MARK: - Budget Status
+enum BudgetStatus {
+    case noBudget
+    case good
+    case warning
+    case exceeded
+    
+    var color: Color {
+        switch self {
+        case .noBudget:
+            return ThemeManager.Colors.textSecondary
+        case .good:
+            return ThemeManager.Colors.success
+        case .warning:
+            return Color.orange
+        case .exceeded:
+            return ThemeManager.Colors.error
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .noBudget:
+            return "questionmark.circle"
+        case .good:
+            return "checkmark.circle.fill"
+        case .warning:
+            return "exclamationmark.triangle.fill"
+        case .exceeded:
+            return "xmark.circle.fill"
+        }
+    }
+    
+    var message: String {
+        switch self {
+        case .noBudget:
+            return "Imposta un budget"
+        case .good:
+            return "Budget sotto controllo"
+        case .warning:
+            return "Attenzione al budget"
+        case .exceeded:
+            return "Budget superato"
+        }
+    }
+}
+
 struct StatsCard_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: ThemeManager.Spacing.md) {
@@ -116,6 +303,13 @@ struct StatsCard_Previews: PreviewProvider {
                 balance: 1287.63,
                 totalIncome: 2500.00,
                 totalExpenses: 1212.37,
+                period: "Marzo 2024"
+            )
+            
+            BudgetOverviewCard(
+                totalBudget: 1500.00,
+                totalExpenses: 1212.37,
+                categories: [],
                 period: "Marzo 2024"
             )
             

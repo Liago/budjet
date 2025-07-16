@@ -1,5 +1,7 @@
 import SwiftUI
+#if canImport(Charts)
 import Charts
+#endif
 
 struct CategoryStats: Identifiable {
     let id = UUID()
@@ -33,6 +35,9 @@ struct StatisticsView: View {
     @State private var isLoading = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var showingCustomDatePicker = false
+    @State private var customStartDate: Date = Date()
+    @State private var customEndDate: Date = Date()
     
     // DateFormatter per convertire le stringhe di data in Date objects
     private let dateFormatter: DateFormatter = {
@@ -77,15 +82,30 @@ struct StatisticsView: View {
         } message: {
             Text(errorMessage)
         }
+        .sheet(isPresented: $showingCustomDatePicker) {
+            CustomDateRangeView(
+                startDate: $customStartDate,
+                endDate: $customEndDate
+            ) {
+                selectedPeriod = .custom
+                Task {
+                    await loadData()
+                }
+            }
+        }
     }
     
     private var periodFilterView: some View {
         HStack {
             ForEach(DateFilterPeriod.allCases, id: \.self) { period in
                 Button(action: {
-                    selectedPeriod = period
-                    Task {
-                        await loadData()
+                    if period == .custom {
+                        showingCustomDatePicker = true
+                    } else {
+                        selectedPeriod = period
+                        Task {
+                            await loadData()
+                        }
                     }
                 }) {
                     Text(period.displayName)
@@ -174,60 +194,182 @@ struct StatisticsView: View {
                 }
                 .frame(height: 200)
             } else {
-                // Pie Chart with Swift Charts
-                if #available(iOS 16.0, *) {
-                    Chart(categoryStats.prefix(6)) { stat in
-                        SectorMark(
-                            angle: .value("Amount", stat.amount),
-                            innerRadius: .ratio(0.4),
-                            outerRadius: .ratio(0.8),
-                            angularInset: 1
-                        )
-                        .foregroundStyle(stat.colorObject)
-                        .opacity(0.9)
-                    }
-                    .frame(height: 200)
-                    .chartLegend(position: .bottom, alignment: .center) {
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: ThemeManager.Spacing.xs) {
-                            ForEach(categoryStats.prefix(6)) { stat in
-                                HStack(spacing: ThemeManager.Spacing.xs) {
-                                    Circle()
-                                        .fill(stat.colorObject)
-                                        .frame(width: 8, height: 8)
-                                    
-                                    Text(stat.categoryName)
-                                        .font(ThemeManager.Typography.caption)
-                                        .foregroundColor(ThemeManager.Colors.text)
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        .padding(.top, ThemeManager.Spacing.sm)
-                    }
-                } else {
-                    // Fallback for iOS < 16.0
-                    VStack {
-                        Text("Grafico Categorie")
-                            .font(ThemeManager.Typography.headline)
-                            .foregroundColor(ThemeManager.Colors.textSecondary)
-                        Text("(Richiede iOS 16.0+)")
-                            .font(ThemeManager.Typography.caption)
-                            .foregroundColor(ThemeManager.Colors.textSecondary)
-                    }
-                    .frame(height: 200)
-                    .background(ThemeManager.Colors.surface)
-                    .cornerRadius(8)
-                }
+                // Custom Bar Chart (compatibile con tutte le versioni)
+                customBarChart
             }
         }
         .padding(ThemeManager.Spacing.md)
         .background(ThemeManager.Colors.surface)
         .cornerRadius(ThemeManager.CornerRadius.lg)
+    }
+    
+    private var customBarChart: some View {
+        let maxAmount = categoryStats.map { $0.amount }.max() ?? 1
+        
+        return VStack(spacing: ThemeManager.Spacing.sm) {
+            // Chart bars
+            HStack(alignment: .bottom, spacing: ThemeManager.Spacing.xs) {
+                ForEach(categoryStats.prefix(6)) { stat in
+                    VStack(spacing: ThemeManager.Spacing.xs) {
+                        // Bar
+                        VStack {
+                            Spacer()
+                            
+                            Rectangle()
+                                .fill(stat.colorObject)
+                                .frame(
+                                    width: 30,
+                                    height: max(10, (stat.amount / maxAmount) * 120)
+                                )
+                                .cornerRadius(4)
+                        }
+                        .frame(height: 120)
+                        
+                        // Category name
+                        Text(stat.categoryName)
+                            .font(ThemeManager.Typography.caption)
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(width: 40)
+                            .rotationEffect(.degrees(-45))
+                    }
+                }
+            }
+            .frame(height: 160)
+            
+            // Legend
+            if !categoryStats.isEmpty {
+                Text("Importo massimo: \(formatCurrency(maxAmount))")
+                    .font(ThemeManager.Typography.caption)
+                    .foregroundColor(ThemeManager.Colors.textSecondary)
+            }
+        }
+        .frame(height: 200)
+    }
+    
+    private var customLineChart: some View {
+        let maxAmount = max(
+            trendData.map { $0.income }.max() ?? 0,
+            trendData.map { $0.expenses }.max() ?? 0
+        )
+        let chartHeight: CGFloat = 120
+        
+        return VStack(spacing: ThemeManager.Spacing.sm) {
+            if trendData.isEmpty {
+                VStack {
+                    Text("Nessun dato disponibile")
+                        .font(ThemeManager.Typography.body)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                }
+                .frame(height: chartHeight)
+            } else {
+                // Chart area
+                ZStack {
+                    // Grid lines
+                    VStack {
+                        ForEach(0..<5) { _ in
+                            Rectangle()
+                                .fill(ThemeManager.Colors.border.opacity(0.2))
+                                .frame(height: 1)
+                            Spacer()
+                        }
+                    }
+                    
+                    // Data points and lines
+                    GeometryReader { geometry in
+                        let width = geometry.size.width
+                        let height = geometry.size.height
+                        let stepX = width / max(1, CGFloat(trendData.count - 1))
+                        
+                        ZStack {
+                            // Income line
+                            Path { path in
+                                for (index, data) in trendData.enumerated() {
+                                    let x = CGFloat(index) * stepX
+                                    let y = height - (CGFloat(data.income) / CGFloat(maxAmount)) * height
+                                    
+                                    if index == 0 {
+                                        path.move(to: CGPoint(x: x, y: y))
+                                    } else {
+                                        path.addLine(to: CGPoint(x: x, y: y))
+                                    }
+                                }
+                            }
+                            .stroke(ThemeManager.Colors.income, lineWidth: 2)
+                            
+                            // Expense line
+                            Path { path in
+                                for (index, data) in trendData.enumerated() {
+                                    let x = CGFloat(index) * stepX
+                                    let y = height - (CGFloat(data.expenses) / CGFloat(maxAmount)) * height
+                                    
+                                    if index == 0 {
+                                        path.move(to: CGPoint(x: x, y: y))
+                                    } else {
+                                        path.addLine(to: CGPoint(x: x, y: y))
+                                    }
+                                }
+                            }
+                            .stroke(ThemeManager.Colors.expense, lineWidth: 2)
+                            
+                            // Income points
+                            ForEach(Array(trendData.enumerated()), id: \.offset) { index, data in
+                                let x = CGFloat(index) * stepX
+                                let y = height - (CGFloat(data.income) / CGFloat(maxAmount)) * height
+                                
+                                Circle()
+                                    .fill(ThemeManager.Colors.income)
+                                    .frame(width: 6, height: 6)
+                                    .position(x: x, y: y)
+                            }
+                            
+                            // Expense points
+                            ForEach(Array(trendData.enumerated()), id: \.offset) { index, data in
+                                let x = CGFloat(index) * stepX
+                                let y = height - (CGFloat(data.expenses) / CGFloat(maxAmount)) * height
+                                
+                                Circle()
+                                    .fill(ThemeManager.Colors.expense)
+                                    .frame(width: 6, height: 6)
+                                    .position(x: x, y: y)
+                            }
+                        }
+                    }
+                }
+                .frame(height: chartHeight)
+                
+                // Legend
+                HStack(spacing: ThemeManager.Spacing.md) {
+                    HStack(spacing: ThemeManager.Spacing.xs) {
+                        Circle()
+                            .fill(ThemeManager.Colors.income)
+                            .frame(width: 8, height: 8)
+                        Text("Entrate")
+                            .font(ThemeManager.Typography.caption)
+                            .foregroundColor(ThemeManager.Colors.text)
+                    }
+                    
+                    HStack(spacing: ThemeManager.Spacing.xs) {
+                        Circle()
+                            .fill(ThemeManager.Colors.expense)
+                            .frame(width: 8, height: 8)
+                        Text("Uscite")
+                            .font(ThemeManager.Typography.caption)
+                            .foregroundColor(ThemeManager.Colors.text)
+                    }
+                    
+                    Spacer()
+                    
+                    if maxAmount > 0 {
+                        Text("Max: \(formatCurrency(maxAmount))")
+                            .font(ThemeManager.Typography.caption)
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                    }
+                }
+            }
+        }
+        .frame(height: 150)
     }
     
     private var trendChartView: some View {
@@ -236,86 +378,8 @@ struct StatisticsView: View {
                 .font(ThemeManager.Typography.headline)
                 .foregroundColor(ThemeManager.Colors.text)
             
-            // Line Chart with Swift Charts
-            if #available(iOS 16.0, *) {
-                Chart(trendData) { data in
-                    LineMark(
-                        x: .value("Date", data.date),
-                        y: .value("Income", data.income)
-                    )
-                    .foregroundStyle(ThemeManager.Colors.income)
-                    .lineStyle(StrokeStyle(lineWidth: 3))
-                    .symbol(.circle)
-                    .symbolSize(6)
-                    
-                    LineMark(
-                        x: .value("Date", data.date),
-                        y: .value("Expenses", data.expenses)
-                    )
-                    .foregroundStyle(ThemeManager.Colors.expense)
-                    .lineStyle(StrokeStyle(lineWidth: 3))
-                    .symbol(.circle)
-                    .symbolSize(6)
-                }
-                .frame(height: 150)
-                .chartXAxis {
-                    AxisMarks(values: .stride(by: .day, count: 7)) { value in
-                        if let date = value.as(Date.self) {
-                            AxisValueLabel {
-                                Text(date, format: .dateTime.month(.abbreviated).day())
-                                    .font(ThemeManager.Typography.caption)
-                                    .foregroundColor(ThemeManager.Colors.textSecondary)
-                            }
-                        }
-                    }
-                }
-                .chartYAxis {
-                    AxisMarks { value in
-                        if let amount = value.as(Double.self) {
-                            AxisValueLabel {
-                                Text(formatCurrency(amount))
-                                    .font(ThemeManager.Typography.caption)
-                                    .foregroundColor(ThemeManager.Colors.textSecondary)
-                            }
-                        }
-                    }
-                }
-                .chartLegend(position: .bottom, alignment: .center) {
-                    HStack(spacing: ThemeManager.Spacing.md) {
-                        HStack(spacing: ThemeManager.Spacing.xs) {
-                            Circle()
-                                .fill(ThemeManager.Colors.income)
-                                .frame(width: 8, height: 8)
-                            Text("Entrate")
-                                .font(ThemeManager.Typography.caption)
-                                .foregroundColor(ThemeManager.Colors.text)
-                        }
-                        
-                        HStack(spacing: ThemeManager.Spacing.xs) {
-                            Circle()
-                                .fill(ThemeManager.Colors.expense)
-                                .frame(width: 8, height: 8)
-                            Text("Uscite")
-                                .font(ThemeManager.Typography.caption)
-                                .foregroundColor(ThemeManager.Colors.text)
-                        }
-                    }
-                    .padding(.top, ThemeManager.Spacing.sm)
-                }
-            } else {
-                // Fallback for iOS < 16.0
-                VStack {
-                    Text("Grafico Andamento")
-                        .font(ThemeManager.Typography.headline)
-                        .foregroundColor(ThemeManager.Colors.textSecondary)
-                    Text("(Richiede iOS 16.0+)")
-                        .font(ThemeManager.Typography.caption)
-                        .foregroundColor(ThemeManager.Colors.textSecondary)
-                }
-                .frame(height: 150)
-                .background(ThemeManager.Colors.surface)
-                .cornerRadius(8)
-            }
+            // Custom Line Chart (compatibile con tutte le versioni)
+            customLineChart
         }
         .padding(ThemeManager.Spacing.md)
         .background(ThemeManager.Colors.surface)
@@ -465,6 +529,12 @@ struct StatisticsView: View {
     
     private func processCategoryStats() {
         let filteredTransactions = transactions.filter { transaction in
+            // First filter by period
+            if !isTransactionInSelectedPeriod(transaction) {
+                return false
+            }
+            
+            // Then filter by type
             return showingExpenses ? transaction.type == .expense : transaction.type == .income
         }
         
@@ -489,7 +559,11 @@ struct StatisticsView: View {
     }
     
     private func processTrendData() {
-        let groupedByDate = Dictionary(grouping: transactions) { transaction in
+        let filteredTransactions = transactions.filter { transaction in
+            return isTransactionInSelectedPeriod(transaction)
+        }
+        
+        let groupedByDate = Dictionary(grouping: filteredTransactions) { transaction in
             // Converti la stringa date in Date object
             guard let date = dateFormatter.date(from: transaction.date) else {
                 return Date() // Fallback per date invalide
@@ -526,10 +600,20 @@ struct StatisticsView: View {
             let endOfPreviousMonth = calendar.dateInterval(of: .month, for: previousMonth)?.end ?? now
             return (startOfPreviousMonth, endOfPreviousMonth)
         case .custom:
-            // For now, return last 3 months
-            let threeMonthsAgo = calendar.date(byAdding: .month, value: -3, to: now) ?? now
-            return (threeMonthsAgo, now)
+            return (customStartDate, customEndDate)
         }
+    }
+    
+    private func isTransactionInSelectedPeriod(_ transaction: Transaction) -> Bool {
+        guard let transactionDate = dateFormatter.date(from: transaction.date) else { return false }
+        
+        let dateRange = getDateRangeFromPeriod(selectedPeriod)
+        let calendar = Calendar.current
+        
+        let startOfDay = calendar.startOfDay(for: dateRange.startDate)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: dateRange.endDate)) ?? dateRange.endDate
+        
+        return transactionDate >= startOfDay && transactionDate < endOfDay
     }
       
       private func formatCurrency(_ amount: Double) -> String {

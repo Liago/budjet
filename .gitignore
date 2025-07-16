@@ -97,3 +97,9 @@ ios-native/IOS_IMPLEMENTATIONS.md
 .env
 .env.local
 .env.production
+
+IOS_ISSUES_JULY.md
+
+CLAUDE.md
+
+database/finance-tracker-db.sqlite

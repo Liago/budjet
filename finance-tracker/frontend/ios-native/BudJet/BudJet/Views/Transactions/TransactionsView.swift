@@ -21,6 +21,14 @@ struct TransactionsView: View {
     @State private var selectedCategory: Category? = nil
     @State private var selectedMonth: Date = Date()
     @State private var showingFilters = false
+    @State private var dateFilterMode: DateFilterMode = .month
+    @State private var startDate: Date = Date()
+    @State private var endDate: Date = Date()
+    
+    enum DateFilterMode {
+        case month
+        case range
+    }
     
     // DateFormatter per convertire le stringhe di data in Date objects
     private let dateFormatter: DateFormatter = {
@@ -35,6 +43,20 @@ struct TransactionsView: View {
             VStack(spacing: 0) {
                 // Search and Filter
                 VStack(spacing: ThemeManager.Spacing.sm) {
+                    // Selected Period Display
+                    if hasActiveFilters {
+                        HStack {
+                            Text("Periodo: \(getSelectedPeriodText())")
+                                .font(ThemeManager.Typography.footnote)
+                                .foregroundColor(ThemeManager.Colors.primary)
+                                .padding(.horizontal, ThemeManager.Spacing.sm)
+                                .padding(.vertical, ThemeManager.Spacing.xs)
+                                .background(ThemeManager.Colors.primary.opacity(0.1))
+                                .cornerRadius(ThemeManager.CornerRadius.sm)
+                            
+                            Spacer()
+                        }
+                    }
                     // Search Bar
                     HStack {
                         Image(systemName: "magnifyingglass")
@@ -156,15 +178,71 @@ struct TransactionsView: View {
                                 }
                             }
                             
-                            // Month Filter
-                            VStack(alignment: .leading, spacing: ThemeManager.Spacing.xs) {
-                                Text("Filtra per Mese")
+                            // Date Filter
+                            VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+                                Text("Filtra per Data")
                                     .font(ThemeManager.Typography.footnote)
                                     .foregroundColor(ThemeManager.Colors.text)
                                 
-                                DatePicker("", selection: $selectedMonth, displayedComponents: .date)
-                                    .datePickerStyle(CompactDatePickerStyle())
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                // Date filter mode selector
+                                HStack {
+                                    Button(action: {
+                                        dateFilterMode = .month
+                                    }) {
+                                        Text("Mese")
+                                            .font(ThemeManager.Typography.caption)
+                                            .foregroundColor(dateFilterMode == .month ? .white : ThemeManager.Colors.textSecondary)
+                                            .padding(.horizontal, ThemeManager.Spacing.sm)
+                                            .padding(.vertical, ThemeManager.Spacing.xs)
+                                            .background(
+                                                dateFilterMode == .month ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
+                                            )
+                                            .cornerRadius(ThemeManager.CornerRadius.sm)
+                                    }
+                                    
+                                    Button(action: {
+                                        dateFilterMode = .range
+                                    }) {
+                                        Text("Periodo")
+                                            .font(ThemeManager.Typography.caption)
+                                            .foregroundColor(dateFilterMode == .range ? .white : ThemeManager.Colors.textSecondary)
+                                            .padding(.horizontal, ThemeManager.Spacing.sm)
+                                            .padding(.vertical, ThemeManager.Spacing.xs)
+                                            .background(
+                                                dateFilterMode == .range ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
+                                            )
+                                            .cornerRadius(ThemeManager.CornerRadius.sm)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                
+                                // Date picker based on mode
+                                if dateFilterMode == .month {
+                                    DatePicker("", selection: $selectedMonth, displayedComponents: .date)
+                                        .datePickerStyle(CompactDatePickerStyle())
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                } else {
+                                    VStack(spacing: ThemeManager.Spacing.xs) {
+                                        HStack {
+                                            Text("Dal:")
+                                                .font(ThemeManager.Typography.caption)
+                                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                                            
+                                            DatePicker("", selection: $startDate, displayedComponents: .date)
+                                                .datePickerStyle(CompactDatePickerStyle())
+                                        }
+                                        
+                                        HStack {
+                                            Text("Al:")
+                                                .font(ThemeManager.Typography.caption)
+                                                .foregroundColor(ThemeManager.Colors.textSecondary)
+                                            
+                                            DatePicker("", selection: $endDate, displayedComponents: .date)
+                                                .datePickerStyle(CompactDatePickerStyle())
+                                        }
+                                    }
+                                }
                             }
                             
                             // Clear Filters Button
@@ -238,30 +316,27 @@ struct TransactionsView: View {
                                 }
                             }
                             
-                            // Load More Button
+                            // Infinite Scrolling Trigger
                             if hasMoreData && !isLoading {
-                                Button(action: {
+                                HStack {
+                                    Spacer()
+                                    if isLoadingMore {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                            .progressViewStyle(CircularProgressViewStyle())
+                                    } else {
+                                        Rectangle()
+                                            .fill(Color.clear)
+                                            .frame(height: 1)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.vertical, ThemeManager.Spacing.md)
+                                .onAppear {
                                     Task {
                                         await loadMoreTransactions()
                                     }
-                                }) {
-                                    HStack {
-                                        if isLoadingMore {
-                                            ProgressView()
-                                                .scaleEffect(0.8)
-                                                .progressViewStyle(CircularProgressViewStyle())
-                                        } else {
-                                            Image(systemName: "arrow.down.circle")
-                                                .font(.system(size: 18))
-                                        }
-                                        
-                                        Text(isLoadingMore ? "Caricamento..." : "Carica altre transazioni")
-                                            .font(ThemeManager.Typography.bodyMedium)
-                                    }
-                                    .foregroundColor(ThemeManager.Colors.primary)
-                                    .padding(.vertical, ThemeManager.Spacing.md)
                                 }
-                                .disabled(isLoadingMore)
                             }
                             
                             // Pagination info
@@ -316,25 +391,28 @@ struct TransactionsView: View {
         .onAppear {
             Task {
                 await loadTransactions()
+                await loadCategories()
             }
         }
         .refreshable {
             await loadTransactions()
         }
-        .onAppear {
-            Task {
-                await loadCategories()
-            }
-        }
     }
     
     private var hasActiveFilters: Bool {
-        selectedCategory != nil || !Calendar.current.isDate(selectedMonth, equalTo: Date(), toGranularity: .month)
+        if dateFilterMode == .month {
+            return selectedCategory != nil || !Calendar.current.isDate(selectedMonth, equalTo: Date(), toGranularity: .month)
+        } else {
+            return selectedCategory != nil || !Calendar.current.isDate(startDate, equalTo: Date(), toGranularity: .day) || !Calendar.current.isDate(endDate, equalTo: Date(), toGranularity: .day)
+        }
     }
     
     private func clearFilters() {
         selectedCategory = nil
         selectedMonth = Date()
+        startDate = Date()
+        endDate = Date()
+        dateFilterMode = .month
     }
     
     private var filteredTransactions: [Transaction] {
@@ -348,15 +426,28 @@ struct TransactionsView: View {
             filtered = filtered.filter { $0.category.id == category.id }
         }
         
-        // Month filter
+        // Date filter
         let calendar = Calendar.current
-        let selectedMonthComponents = calendar.dateComponents([.year, .month], from: selectedMonth)
         
-        filtered = filtered.filter { transaction in
-            guard let transactionDate = dateFormatter.date(from: transaction.date) else { return false }
-            let transactionComponents = calendar.dateComponents([.year, .month], from: transactionDate)
-            return transactionComponents.year == selectedMonthComponents.year &&
-                   transactionComponents.month == selectedMonthComponents.month
+        if dateFilterMode == .month {
+            let selectedMonthComponents = calendar.dateComponents([.year, .month], from: selectedMonth)
+            
+            filtered = filtered.filter { transaction in
+                guard let transactionDate = dateFormatter.date(from: transaction.date) else { return false }
+                let transactionComponents = calendar.dateComponents([.year, .month], from: transactionDate)
+                return transactionComponents.year == selectedMonthComponents.year &&
+                       transactionComponents.month == selectedMonthComponents.month
+            }
+        } else {
+            // Range filter
+            let startOfStartDate = calendar.startOfDay(for: startDate)
+            let endOfEndDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate))!
+            
+            filtered = filtered.filter { transaction in
+                guard let transactionDate = dateFormatter.date(from: transaction.date) else { return false }
+                let transactionDateStart = calendar.startOfDay(for: transactionDate)
+                return transactionDateStart >= startOfStartDate && transactionDateStart < endOfEndDate
+            }
         }
         
         if !searchText.isEmpty {
@@ -458,15 +549,9 @@ struct TransactionsView: View {
                 isLoading = false
             }
         } catch {
-            print("❌ [ERROR] Errore nel caricamento delle transazioni: \(error)")
-            
-            // Gestione errori più dettagliata
-            if let apiError = error as? APIError {
-                print("❌ [ERROR] API Error: \(apiError)")
-            }
-            
             await MainActor.run {
                 isLoading = false
+                ErrorManager.shared.handleError(error, context: "Transazioni - Caricamento")
             }
         }
     }
@@ -489,12 +574,11 @@ struct TransactionsView: View {
                 isLoadingMore = false
             }
         } catch {
-            print("❌ [ERROR] Errore nel caricamento delle transazioni aggiuntive: \(error)")
-            
             await MainActor.run {
                 // Rollback the page increment on error
                 currentPage -= 1
                 isLoadingMore = false
+                ErrorManager.shared.handleError(error, context: "Transazioni - Caricamento pagina aggiuntiva")
             }
         }
     }
@@ -509,7 +593,9 @@ struct TransactionsView: View {
                 categories = categoriesResponse
             }
         } catch {
-            print("❌ [ERROR] Errore nel caricamento delle categorie: \(error)")
+            await MainActor.run {
+                ErrorManager.shared.handleError(error, context: "Transazioni - Caricamento categorie")
+            }
         }
     }
     
@@ -538,6 +624,22 @@ struct TransactionsView: View {
         formatter.currencyCode = "EUR"
         formatter.locale = Locale(identifier: "it_IT")
         return formatter.string(from: NSNumber(value: amount)) ?? "€0,00"
+    }
+    
+    private func getSelectedPeriodText() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd-MM-yyyy"
+        
+        if dateFilterMode == .month {
+            let calendar = Calendar.current
+            let startOfMonth = calendar.dateInterval(of: .month, for: selectedMonth)?.start ?? selectedMonth
+            let endOfMonth = calendar.dateInterval(of: .month, for: selectedMonth)?.end ?? selectedMonth
+            let lastDayOfMonth = calendar.date(byAdding: .day, value: -1, to: endOfMonth) ?? selectedMonth
+            
+            return "dal \(formatter.string(from: startOfMonth)) al \(formatter.string(from: lastDayOfMonth))"
+        } else {
+            return "dal \(formatter.string(from: startDate)) al \(formatter.string(from: endDate))"
+        }
     }
 }
 

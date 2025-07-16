@@ -11,6 +11,9 @@ struct DashboardView: View {
     @State private var showingAddTransaction = false
     @State private var refreshing = false
     @State private var loadDataTask: Task<Void, Never>?
+    @State private var showingCustomDatePicker = false
+    @State private var customStartDate: Date = Date()
+    @State private var customEndDate: Date = Date()
     
     var body: some View {
         NavigationView {
@@ -26,9 +29,6 @@ struct DashboardView: View {
                     if let stats = dashboardStats {
                         statsCardsView(stats: stats)
                     }
-                    
-                    // Quick Actions
-                    quickActionsView
                     
                     // Recent Transactions
                     recentTransactionsView
@@ -54,16 +54,27 @@ struct DashboardView: View {
             .sheet(isPresented: $showingAddTransaction) {
                 AddTransactionView()
             }
-        }
-        .navigationViewStyle(StackNavigationViewStyle())
-                    .onAppear {
-                Task {
-                    await loadData()
+            .sheet(isPresented: $showingCustomDatePicker) {
+                CustomDateRangeView(
+                    startDate: $customStartDate,
+                    endDate: $customEndDate
+                ) {
+                    selectedPeriod = .custom
+                    Task {
+                        await loadData()
+                    }
                 }
             }
-            .onDisappear {
-                loadDataTask?.cancel()
+        }
+        .navigationViewStyle(StackNavigationViewStyle())
+        .onAppear {
+            Task {
+                await loadData()
             }
+        }
+        .onDisappear {
+            loadDataTask?.cancel()
+        }
     }
     
     // MARK: - Header
@@ -86,9 +97,13 @@ struct DashboardView: View {
         HStack {
             ForEach(DateFilterPeriod.allCases, id: \.self) { period in
                 Button(action: {
-                    selectedPeriod = period
-                    Task {
-                        await loadData()
+                    if period == .custom {
+                        showingCustomDatePicker = true
+                    } else {
+                        selectedPeriod = period
+                        Task {
+                            await loadData()
+                        }
                     }
                 }) {
                     Text(period.displayName)
@@ -109,15 +124,14 @@ struct DashboardView: View {
     
     // MARK: - Stats Cards
     private func statsCardsView(stats: DashboardStats) -> some View {
-        VStack(spacing: ThemeManager.Spacing.md) {
-            // Enhanced Balance Card
-            BalanceCard(
-                balance: stats.balance,
-                totalIncome: stats.totalIncome,
-                totalExpenses: stats.totalExpenses,
-                period: getPeriodDisplayName(selectedPeriod)
-            )
-        }
+        SlidingStatsCardsView(
+            balance: stats.balance,
+            totalIncome: stats.totalIncome,
+            totalExpenses: stats.totalExpenses,
+            totalBudget: calculateTotalBudget(),
+            categories: categories,
+            period: getPeriodDisplayName(selectedPeriod)
+        )
     }
     
     // MARK: - Period Display Name
@@ -132,37 +146,6 @@ struct DashboardView: View {
         }
     }
     
-    // MARK: - Quick Actions
-    private var quickActionsView: some View {
-        VStack(alignment: .leading, spacing: ThemeManager.Spacing.md) {
-            Text("Azioni Rapide")
-                .font(ThemeManager.Typography.headline)
-                .foregroundColor(ThemeManager.Colors.text)
-            
-            Button(action: {
-                showingAddTransaction = true
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundColor(ThemeManager.Colors.primary)
-                        .font(.title2)
-                    
-                    Text("Aggiungi Transazione")
-                        .font(ThemeManager.Typography.bodyMedium)
-                        .foregroundColor(ThemeManager.Colors.text)
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(ThemeManager.Colors.textSecondary)
-                        .font(.footnote)
-                }
-                .padding(ThemeManager.Spacing.md)
-                .background(ThemeManager.Colors.surface)
-                .cornerRadius(ThemeManager.CornerRadius.md)
-            }
-        }
-    }
     
     // MARK: - Recent Transactions
     private var recentTransactionsView: some View {
@@ -209,7 +192,7 @@ struct DashboardView: View {
             }
             
             do {
-                let dateRange = getDateRangeFromPeriod(selectedPeriod)
+                let dateRange = getDateRangeFromPeriod(selectedPeriod, customStart: customStartDate, customEnd: customEndDate)
                 
                 // Controlla se il task è stato cancellato
                 guard !Task.isCancelled else {
@@ -243,9 +226,9 @@ struct DashboardView: View {
                     return
                 }
                 
-                print("❌ [ERROR] Errore nel caricamento dei dati: \(error)")
                 await MainActor.run {
                     isLoading = false
+                    ErrorManager.shared.handleError(error, context: "Dashboard - Caricamento dati")
                 }
             }
         }
@@ -258,6 +241,10 @@ struct DashboardView: View {
         formatter.numberStyle = .currency
         formatter.currencyCode = "EUR"
         return formatter.string(from: NSNumber(value: amount)) ?? "€0,00"
+    }
+    
+    private func calculateTotalBudget() -> Double {
+        return categories.reduce(0) { $0 + $1.budgetAmount }
     }
 }
 

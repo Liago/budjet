@@ -7,6 +7,11 @@ class APIManager: ObservableObject {
     private let session = URLSession.shared
     private let keychain = KeychainManager()
     
+    // MARK: - Cache
+    private var categoriesCache: [Category] = []
+    private var categoriesCacheTimestamp: Date?
+    private let categoriesCacheTimeout: TimeInterval = 300 // 5 minutes
+    
     init() {}
     
     // MARK: - Health Check
@@ -188,7 +193,16 @@ class APIManager: ObservableObject {
     
     // MARK: - Categories
     
-    func getCategories() async throws -> [Category] {
+    func getCategories(forceRefresh: Bool = false) async throws -> [Category] {
+        // Check cache first
+        if !forceRefresh,
+           let cacheTimestamp = categoriesCacheTimestamp,
+           Date().timeIntervalSince(cacheTimestamp) < categoriesCacheTimeout,
+           !categoriesCache.isEmpty {
+            print("🗂️ [CACHE] Categories loaded from cache")
+            return categoriesCache
+        }
+        
         let url = URL(string: "\(baseURL)/direct/categories")!
         var request = URLRequest(url: url)
         
@@ -196,10 +210,31 @@ class APIManager: ObservableObject {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
+        print("🗂️ [API] Loading categories from server...")
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
         
-        return try JSONDecoder().decode([Category].self, from: data)
+        let categories = try JSONDecoder().decode([Category].self, from: data)
+        
+        // Update cache
+        categoriesCache = categories
+        categoriesCacheTimestamp = Date()
+        print("🗂️ [CACHE] Categories cached (\(categories.count) items)")
+        
+        return categories
+    }
+    
+    // MARK: - Cache Management
+    
+    func clearCategoriesCache() {
+        categoriesCache = []
+        categoriesCacheTimestamp = nil
+        print("🗂️ [CACHE] Categories cache cleared")
+    }
+    
+    func clearAllCaches() {
+        clearCategoriesCache()
+        print("🗂️ [CACHE] All caches cleared")
     }
     
     // MARK: - Helper Methods
