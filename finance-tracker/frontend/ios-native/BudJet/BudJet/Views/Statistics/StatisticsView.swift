@@ -1,5 +1,5 @@
 import SwiftUI
-// import Charts // Temporaneamente commentato - richiede iOS 16.0+
+import Charts
 
 struct CategoryStats: Identifiable {
     let id = UUID()
@@ -174,18 +174,55 @@ struct StatisticsView: View {
                 }
                 .frame(height: 200)
             } else {
-                // Chart temporaneamente sostituito con placeholder
-                VStack {
-                    Text("Grafico Categorie")
-                        .font(ThemeManager.Typography.headline)
-                        .foregroundColor(ThemeManager.Colors.textSecondary)
-                    Text("(Grafico disponibile con iOS 16.0+)")
-                        .font(ThemeManager.Typography.caption)
-                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                // Pie Chart with Swift Charts
+                if #available(iOS 16.0, *) {
+                    Chart(categoryStats.prefix(6)) { stat in
+                        SectorMark(
+                            angle: .value("Amount", stat.amount),
+                            innerRadius: .ratio(0.4),
+                            outerRadius: .ratio(0.8),
+                            angularInset: 1
+                        )
+                        .foregroundStyle(stat.colorObject)
+                        .opacity(0.9)
+                    }
+                    .frame(height: 200)
+                    .chartLegend(position: .bottom, alignment: .center) {
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: ThemeManager.Spacing.xs) {
+                            ForEach(categoryStats.prefix(6)) { stat in
+                                HStack(spacing: ThemeManager.Spacing.xs) {
+                                    Circle()
+                                        .fill(stat.colorObject)
+                                        .frame(width: 8, height: 8)
+                                    
+                                    Text(stat.categoryName)
+                                        .font(ThemeManager.Typography.caption)
+                                        .foregroundColor(ThemeManager.Colors.text)
+                                        .lineLimit(1)
+                                        .truncationMode(.tail)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        .padding(.top, ThemeManager.Spacing.sm)
+                    }
+                } else {
+                    // Fallback for iOS < 16.0
+                    VStack {
+                        Text("Grafico Categorie")
+                            .font(ThemeManager.Typography.headline)
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                        Text("(Richiede iOS 16.0+)")
+                            .font(ThemeManager.Typography.caption)
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                    }
+                    .frame(height: 200)
+                    .background(ThemeManager.Colors.surface)
+                    .cornerRadius(8)
                 }
-                .frame(height: 200)
-                .background(ThemeManager.Colors.surface)
-                .cornerRadius(8)
             }
         }
         .padding(ThemeManager.Spacing.md)
@@ -199,18 +236,86 @@ struct StatisticsView: View {
                 .font(ThemeManager.Typography.headline)
                 .foregroundColor(ThemeManager.Colors.text)
             
-            // Chart temporaneamente sostituito con placeholder
-            VStack {
-                Text("Grafico Andamento")
-                    .font(ThemeManager.Typography.headline)
-                    .foregroundColor(ThemeManager.Colors.textSecondary)
-                Text("(Grafico disponibile con iOS 16.0+)")
-                    .font(ThemeManager.Typography.caption)
-                    .foregroundColor(ThemeManager.Colors.textSecondary)
+            // Line Chart with Swift Charts
+            if #available(iOS 16.0, *) {
+                Chart(trendData) { data in
+                    LineMark(
+                        x: .value("Date", data.date),
+                        y: .value("Income", data.income)
+                    )
+                    .foregroundStyle(ThemeManager.Colors.income)
+                    .lineStyle(StrokeStyle(lineWidth: 3))
+                    .symbol(.circle)
+                    .symbolSize(6)
+                    
+                    LineMark(
+                        x: .value("Date", data.date),
+                        y: .value("Expenses", data.expenses)
+                    )
+                    .foregroundStyle(ThemeManager.Colors.expense)
+                    .lineStyle(StrokeStyle(lineWidth: 3))
+                    .symbol(.circle)
+                    .symbolSize(6)
+                }
+                .frame(height: 150)
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 7)) { value in
+                        if let date = value.as(Date.self) {
+                            AxisValueLabel {
+                                Text(date, format: .dateTime.month(.abbreviated).day())
+                                    .font(ThemeManager.Typography.caption)
+                                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                            }
+                        }
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks { value in
+                        if let amount = value.as(Double.self) {
+                            AxisValueLabel {
+                                Text(formatCurrency(amount))
+                                    .font(ThemeManager.Typography.caption)
+                                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                            }
+                        }
+                    }
+                }
+                .chartLegend(position: .bottom, alignment: .center) {
+                    HStack(spacing: ThemeManager.Spacing.md) {
+                        HStack(spacing: ThemeManager.Spacing.xs) {
+                            Circle()
+                                .fill(ThemeManager.Colors.income)
+                                .frame(width: 8, height: 8)
+                            Text("Entrate")
+                                .font(ThemeManager.Typography.caption)
+                                .foregroundColor(ThemeManager.Colors.text)
+                        }
+                        
+                        HStack(spacing: ThemeManager.Spacing.xs) {
+                            Circle()
+                                .fill(ThemeManager.Colors.expense)
+                                .frame(width: 8, height: 8)
+                            Text("Uscite")
+                                .font(ThemeManager.Typography.caption)
+                                .foregroundColor(ThemeManager.Colors.text)
+                        }
+                    }
+                    .padding(.top, ThemeManager.Spacing.sm)
+                }
+            } else {
+                // Fallback for iOS < 16.0
+                VStack {
+                    Text("Grafico Andamento")
+                        .font(ThemeManager.Typography.headline)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                    Text("(Richiede iOS 16.0+)")
+                        .font(ThemeManager.Typography.caption)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                }
+                .frame(height: 150)
+                .background(ThemeManager.Colors.surface)
+                .cornerRadius(8)
             }
-            .frame(height: 150)
-            .background(ThemeManager.Colors.surface)
-            .cornerRadius(8)
         }
         .padding(ThemeManager.Spacing.md)
         .background(ThemeManager.Colors.surface)

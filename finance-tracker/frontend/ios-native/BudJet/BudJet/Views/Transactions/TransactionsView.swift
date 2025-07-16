@@ -9,10 +9,18 @@ struct TransactionsView: View {
     @EnvironmentObject var apiManager: APIManager
     @State private var transactions: [Transaction] = []
     @State private var isLoading = false
+    @State private var isLoadingMore = false
     @State private var showingAddTransaction = false
+    @State private var currentPage = 1
+    @State private var hasMoreData = true
+    @State private var pagination: Pagination?
     @State private var searchText = ""
     @State private var selectedType: TransactionType? = nil
     @State private var selectedTransaction: Transaction? = nil
+    @State private var categories: [Category] = []
+    @State private var selectedCategory: Category? = nil
+    @State private var selectedMonth: Date = Date()
+    @State private var showingFilters = false
     
     // DateFormatter per convertire le stringhe di data in Date objects
     private let dateFormatter: DateFormatter = {
@@ -85,6 +93,90 @@ struct TransactionsView: View {
                         }
                         
                         Spacer()
+                        
+                        Button(action: {
+                            showingFilters.toggle()
+                        }) {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                                .font(.title3)
+                                .foregroundColor(hasActiveFilters ? ThemeManager.Colors.primary : ThemeManager.Colors.textSecondary)
+                        }
+                    }
+                    
+                    // Advanced Filters (collapsible)
+                    if showingFilters {
+                        VStack(spacing: ThemeManager.Spacing.sm) {
+                            // Category Filter
+                            if !categories.isEmpty {
+                                VStack(alignment: .leading, spacing: ThemeManager.Spacing.xs) {
+                                    Text("Filtra per Categoria")
+                                        .font(ThemeManager.Typography.footnote)
+                                        .foregroundColor(ThemeManager.Colors.text)
+                                    
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: ThemeManager.Spacing.xs) {
+                                            Button(action: {
+                                                selectedCategory = nil
+                                            }) {
+                                                Text("Tutte")
+                                                    .font(ThemeManager.Typography.caption)
+                                                    .foregroundColor(selectedCategory == nil ? .white : ThemeManager.Colors.textSecondary)
+                                                    .padding(.horizontal, ThemeManager.Spacing.sm)
+                                                    .padding(.vertical, ThemeManager.Spacing.xs)
+                                                    .background(
+                                                        selectedCategory == nil ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
+                                                    )
+                                                    .cornerRadius(ThemeManager.CornerRadius.sm)
+                                            }
+                                            
+                                            ForEach(categories) { category in
+                                                Button(action: {
+                                                    selectedCategory = category
+                                                }) {
+                                                    HStack(spacing: ThemeManager.Spacing.xs) {
+                                                        Circle()
+                                                            .fill(category.colorObject)
+                                                            .frame(width: 8, height: 8)
+                                                        
+                                                        Text(category.name)
+                                                            .font(ThemeManager.Typography.caption)
+                                                            .foregroundColor(selectedCategory?.id == category.id ? .white : ThemeManager.Colors.textSecondary)
+                                                    }
+                                                    .padding(.horizontal, ThemeManager.Spacing.sm)
+                                                    .padding(.vertical, ThemeManager.Spacing.xs)
+                                                    .background(
+                                                        selectedCategory?.id == category.id ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
+                                                    )
+                                                    .cornerRadius(ThemeManager.CornerRadius.sm)
+                                                }
+                                            }
+                                        }
+                                        .padding(.horizontal, ThemeManager.Spacing.xs)
+                                    }
+                                }
+                            }
+                            
+                            // Month Filter
+                            VStack(alignment: .leading, spacing: ThemeManager.Spacing.xs) {
+                                Text("Filtra per Mese")
+                                    .font(ThemeManager.Typography.footnote)
+                                    .foregroundColor(ThemeManager.Colors.text)
+                                
+                                DatePicker("", selection: $selectedMonth, displayedComponents: .date)
+                                    .datePickerStyle(CompactDatePickerStyle())
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            
+                            // Clear Filters Button
+                            if hasActiveFilters {
+                                Button(action: clearFilters) {
+                                    Text("Rimuovi Filtri")
+                                        .font(ThemeManager.Typography.footnote)
+                                        .foregroundColor(ThemeManager.Colors.primary)
+                                }
+                            }
+                        }
+                        .padding(.top, ThemeManager.Spacing.sm)
                     }
                 }
                 .padding(.horizontal, ThemeManager.Spacing.md)
@@ -145,6 +237,40 @@ struct TransactionsView: View {
                                     }
                                 }
                             }
+                            
+                            // Load More Button
+                            if hasMoreData && !isLoading {
+                                Button(action: {
+                                    Task {
+                                        await loadMoreTransactions()
+                                    }
+                                }) {
+                                    HStack {
+                                        if isLoadingMore {
+                                            ProgressView()
+                                                .scaleEffect(0.8)
+                                                .progressViewStyle(CircularProgressViewStyle())
+                                        } else {
+                                            Image(systemName: "arrow.down.circle")
+                                                .font(.system(size: 18))
+                                        }
+                                        
+                                        Text(isLoadingMore ? "Caricamento..." : "Carica altre transazioni")
+                                            .font(ThemeManager.Typography.bodyMedium)
+                                    }
+                                    .foregroundColor(ThemeManager.Colors.primary)
+                                    .padding(.vertical, ThemeManager.Spacing.md)
+                                }
+                                .disabled(isLoadingMore)
+                            }
+                            
+                            // Pagination info
+                            if let pagination = pagination {
+                                Text("Pagina \(pagination.page) di \(pagination.totalPages)")
+                                    .font(ThemeManager.Typography.caption)
+                                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                                    .padding(.bottom, ThemeManager.Spacing.md)
+                            }
                         }
                         .padding(.vertical, ThemeManager.Spacing.sm)
                     }
@@ -195,6 +321,20 @@ struct TransactionsView: View {
         .refreshable {
             await loadTransactions()
         }
+        .onAppear {
+            Task {
+                await loadCategories()
+            }
+        }
+    }
+    
+    private var hasActiveFilters: Bool {
+        selectedCategory != nil || !Calendar.current.isDate(selectedMonth, equalTo: Date(), toGranularity: .month)
+    }
+    
+    private func clearFilters() {
+        selectedCategory = nil
+        selectedMonth = Date()
     }
     
     private var filteredTransactions: [Transaction] {
@@ -202,6 +342,21 @@ struct TransactionsView: View {
         
         if let type = selectedType {
             filtered = filtered.filter { $0.type == type }
+        }
+        
+        if let category = selectedCategory {
+            filtered = filtered.filter { $0.category.id == category.id }
+        }
+        
+        // Month filter
+        let calendar = Calendar.current
+        let selectedMonthComponents = calendar.dateComponents([.year, .month], from: selectedMonth)
+        
+        filtered = filtered.filter { transaction in
+            guard let transactionDate = dateFormatter.date(from: transaction.date) else { return false }
+            let transactionComponents = calendar.dateComponents([.year, .month], from: transactionDate)
+            return transactionComponents.year == selectedMonthComponents.year &&
+                   transactionComponents.month == selectedMonthComponents.month
         }
         
         if !searchText.isEmpty {
@@ -289,14 +444,17 @@ struct TransactionsView: View {
     
     private func loadTransactions() async {
         isLoading = true
+        currentPage = 1
         
         do {
-            print("📱 [DEBUG] Caricamento transazioni...")
-            let response = try await apiManager.getTransactions(limit: 100)
+            print("📱 [DEBUG] Caricamento transazioni (pagina \(currentPage))...")
+            let response = try await apiManager.getTransactions(limit: 20, page: currentPage)
             print("📱 [DEBUG] Transazioni caricate: \(response.data.count)")
             
             await MainActor.run {
                 transactions = response.data
+                pagination = response.pagination
+                hasMoreData = response.pagination?.page ?? 1 < response.pagination?.totalPages ?? 1
                 isLoading = false
             }
         } catch {
@@ -310,6 +468,48 @@ struct TransactionsView: View {
             await MainActor.run {
                 isLoading = false
             }
+        }
+    }
+    
+    private func loadMoreTransactions() async {
+        guard hasMoreData, !isLoadingMore else { return }
+        
+        isLoadingMore = true
+        currentPage += 1
+        
+        do {
+            print("📱 [DEBUG] Caricamento transazioni aggiuntive (pagina \(currentPage))...")
+            let response = try await apiManager.getTransactions(limit: 20, page: currentPage)
+            print("📱 [DEBUG] Transazioni aggiuntive caricate: \(response.data.count)")
+            
+            await MainActor.run {
+                transactions.append(contentsOf: response.data)
+                pagination = response.pagination
+                hasMoreData = response.pagination?.page ?? 1 < response.pagination?.totalPages ?? 1
+                isLoadingMore = false
+            }
+        } catch {
+            print("❌ [ERROR] Errore nel caricamento delle transazioni aggiuntive: \(error)")
+            
+            await MainActor.run {
+                // Rollback the page increment on error
+                currentPage -= 1
+                isLoadingMore = false
+            }
+        }
+    }
+    
+    private func loadCategories() async {
+        do {
+            print("📱 [DEBUG] Caricamento categorie...")
+            let categoriesResponse = try await apiManager.getCategories()
+            print("📱 [DEBUG] Categorie caricate: \(categoriesResponse.count)")
+            
+            await MainActor.run {
+                categories = categoriesResponse
+            }
+        } catch {
+            print("❌ [ERROR] Errore nel caricamento delle categorie: \(error)")
         }
     }
     
