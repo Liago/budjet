@@ -27,11 +27,13 @@
 		532FBBF72E254F9E00D099DD /* AddTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE32E254F9E00D099DD /* AddTransactionView.swift */; };
 		532FBBF82E254F9E00D099DD /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE52E254F9E00D099DD /* LoadingView.swift */; };
 		532FBBF92E254F9E00D099DD /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE72E254F9E00D099DD /* MainTabView.swift */; };
-		532FBBFA2E254F9E00D099DD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBE82E254F9E00D099DD /* ContentView.swift */; };
 		532FBBFC2E26921E00D099DD /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBFB2E26921D00D099DD /* TransactionDetailView.swift */; };
 		532FBBFE2E278E6800D099DD /* ErrorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBFD2E278E6800D099DD /* ErrorManager.swift */; };
 		532FBC012E27A18500D099DD /* SlidingStatsCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBBFF2E27A18500D099DD /* SlidingStatsCardsView.swift */; };
 		532FBC022E27A18500D099DD /* CustomDateRangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBC002E27A18500D099DD /* CustomDateRangeView.swift */; };
+		532FBC042E27AD7000D099DD /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBC032E27AD7000D099DD /* SplashScreenView.swift */; };
+		532FBC062E27ADDA00D099DD /* DashboardSkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBC052E27ADDA00D099DD /* DashboardSkeletonView.swift */; };
+		532FBC082E27AFA600D099DD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FBC072E27AFA600D099DD /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -57,11 +59,13 @@
 		532FBBE32E254F9E00D099DD /* AddTransactionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddTransactionView.swift; sourceTree = "<group>"; };
 		532FBBE52E254F9E00D099DD /* LoadingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		532FBBE72E254F9E00D099DD /* MainTabView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		532FBBE82E254F9E00D099DD /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		532FBBFB2E26921D00D099DD /* TransactionDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransactionDetailView.swift; sourceTree = "<group>"; };
 		532FBBFD2E278E6800D099DD /* ErrorManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ErrorManager.swift; sourceTree = "<group>"; };
 		532FBBFF2E27A18500D099DD /* SlidingStatsCardsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SlidingStatsCardsView.swift; sourceTree = "<group>"; };
 		532FBC002E27A18500D099DD /* CustomDateRangeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomDateRangeView.swift; sourceTree = "<group>"; };
+		532FBC032E27AD7000D099DD /* SplashScreenView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
+		532FBC052E27ADDA00D099DD /* DashboardSkeletonView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DashboardSkeletonView.swift; sourceTree = "<group>"; };
+		532FBC072E27AFA600D099DD /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = BudJet/ContentView.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,7 +150,7 @@
 				532FBBE12E254F9E00D099DD /* Transactions */,
 				532FBBE42E254F9E00D099DD /* Common */,
 				532FBBE62E254F9E00D099DD /* Main */,
-				532FBBE82E254F9E00D099DD /* ContentView.swift */,
+				532FBC072E27AFA600D099DD /* ContentView.swift */,
 			);
 			name = Views;
 			path = BudJet/Views;
@@ -181,6 +185,7 @@
 		532FBBDC2E254F9E00D099DD /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
+				532FBC052E27ADDA00D099DD /* DashboardSkeletonView.swift */,
 				532FBC002E27A18500D099DD /* CustomDateRangeView.swift */,
 				532FBBFF2E27A18500D099DD /* SlidingStatsCardsView.swift */,
 				532FBBDD2E254F9E00D099DD /* DashboardView.swift */,
@@ -210,6 +215,7 @@
 		532FBBE42E254F9E00D099DD /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				532FBC032E27AD7000D099DD /* SplashScreenView.swift */,
 				532FBBE52E254F9E00D099DD /* LoadingView.swift */,
 			);
 			path = Common;
@@ -298,15 +304,16 @@
 				532FBBEF2E254F9E00D099DD /* SettingsView.swift in Sources */,
 				532FBBEB2E254F9E00D099DD /* ThemeManager.swift in Sources */,
 				532FBBF92E254F9E00D099DD /* MainTabView.swift in Sources */,
-				532FBBFA2E254F9E00D099DD /* ContentView.swift in Sources */,
 				532FBBFC2E26921E00D099DD /* TransactionDetailView.swift in Sources */,
 				532FBBF72E254F9E00D099DD /* AddTransactionView.swift in Sources */,
 				532FBBF62E254F9E00D099DD /* TransactionsView.swift in Sources */,
 				532FBBFE2E278E6800D099DD /* ErrorManager.swift in Sources */,
+				532FBC082E27AFA600D099DD /* ContentView.swift in Sources */,
 				532FBBF52E254F9E00D099DD /* StatsCard.swift in Sources */,
 				532FBBE92E254F9E00D099DD /* KeychainManager.swift in Sources */,
 				532FBBEE2E254F9E00D099DD /* StatisticsView.swift in Sources */,
 				532FBBF12E254F9E00D099DD /* AuthenticationView.swift in Sources */,
+				532FBC062E27ADDA00D099DD /* DashboardSkeletonView.swift in Sources */,
 				532FBBBE2E254F3C00D099DD /* BudJetApp.swift in Sources */,
 				532FBC022E27A18500D099DD /* CustomDateRangeView.swift in Sources */,
 				532FBBF22E254F9E00D099DD /* RegisterView.swift in Sources */,
@@ -316,6 +323,7 @@
 				532FBBF32E254F9E00D099DD /* DashboardView.swift in Sources */,
 				532FBBED2E254F9E00D099DD /* Models.swift in Sources */,
 				532FBBF82E254F9E00D099DD /* LoadingView.swift in Sources */,
+				532FBC042E27AD7000D099DD /* SplashScreenView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

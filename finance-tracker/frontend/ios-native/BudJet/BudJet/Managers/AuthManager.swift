@@ -12,14 +12,14 @@ class AuthManager: ObservableObject {
     private let keychain = KeychainManager()
     
     init() {
-        checkAuthenticationStatus()
+        Task {
+            await checkAuthenticationStatus()
+        }
     }
     
-    func checkAuthenticationStatus() {
-        Task {
-            if let token = keychain.getAccessToken() {
-                await validateToken(token)
-            }
+    func checkAuthenticationStatus() async {
+        if let token = keychain.getAccessToken() {
+            await validateToken(token)
         }
     }
     

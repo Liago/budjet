@@ -17,27 +17,33 @@ struct DashboardView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                LazyVStack(spacing: ThemeManager.Spacing.lg) {
-                    // Header
-                    headerView
-                    
-                    // Date Filter
-                    dateFilterView
-                    
-                    // Stats Cards
-                    if let stats = dashboardStats {
-                        statsCardsView(stats: stats)
+            Group {
+                if isLoading {
+                    DashboardSkeletonView()
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: ThemeManager.Spacing.lg) {
+                            // Header
+                            headerView
+                            
+                            // Date Filter
+                            dateFilterView
+                            
+                            // Stats Cards
+                            if let stats = dashboardStats {
+                                statsCardsView(stats: stats)
+                            }
+                            
+                            // Recent Transactions
+                            recentTransactionsView
+                        }
+                        .padding(.horizontal, ThemeManager.Spacing.md)
+                        .padding(.bottom, ThemeManager.Spacing.lg)
                     }
-                    
-                    // Recent Transactions
-                    recentTransactionsView
+                    .refreshable {
+                        await loadData()
+                    }
                 }
-                .padding(.horizontal, ThemeManager.Spacing.md)
-                .padding(.bottom, ThemeManager.Spacing.lg)
-            }
-            .refreshable {
-                await loadData()
             }
             .navigationTitle("BudJet")
             .navigationBarTitleDisplayMode(.large)

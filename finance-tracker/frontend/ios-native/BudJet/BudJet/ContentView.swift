@@ -8,7 +8,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if isLoading {
-                LoadingView()
+                SplashScreenView()
             } else if authManager.isAuthenticated {
                 MainTabView()
             } else {
@@ -23,8 +23,15 @@ struct ContentView: View {
     
     private func checkAuthenticationStatus() {
         Task {
+            // Esegui la verifica dell'autenticazione
             await authManager.checkAuthenticationStatus()
-            isLoading = false
+            
+            // Aggiungi un piccolo delay per la UX
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    isLoading = false
+                }
+            }
         }
     }
 }
