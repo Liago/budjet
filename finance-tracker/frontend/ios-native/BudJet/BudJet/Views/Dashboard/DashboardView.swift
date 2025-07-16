@@ -22,20 +22,38 @@ struct DashboardView: View {
                     DashboardSkeletonView()
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: ThemeManager.Spacing.lg) {
+                        LazyVStack(spacing: 0) {
                             // Header
                             headerView
+                                .padding(.bottom, ThemeManager.Spacing.lg)
                             
-                            // Date Filter
-                            dateFilterView
-                            
-                            // Stats Cards
+                            // New Dashboard Layout
                             if let stats = dashboardStats {
-                                statsCardsView(stats: stats)
+                                VStack(spacing: ThemeManager.Spacing.lg) {
+                                    // Balance Card
+                                    NewBalanceCard(
+                                        balance: stats.balance,
+                                        period: getCurrentMonthYear(),
+                                        changePercentage: 12.5 // This should be calculated
+                                    )
+                                    
+                                    // Income/Expense Cards
+                                    IncomeExpenseCards(
+                                        income: stats.totalIncome,
+                                        expenses: stats.totalExpenses
+                                    )
+                                    
+                                    // Spending by Category
+                                    SpendingByCategoryCard(
+                                        categories: getCategorySpendingData()
+                                    )
+                                    
+                                    // Recent Transactions
+                                    NewRecentTransactions(
+                                        transactions: Array(recentTransactions.prefix(5))
+                                    )
+                                }
                             }
-                            
-                            // Recent Transactions
-                            recentTransactionsView
                         }
                         .padding(.horizontal, ThemeManager.Spacing.md)
                         .padding(.bottom, ThemeManager.Spacing.lg)
@@ -85,107 +103,25 @@ struct DashboardView: View {
     
     // MARK: - Header
     private var headerView: some View {
-        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
-            Text("Benvenuto")
+        VStack(spacing: ThemeManager.Spacing.sm) {
+            Text("Dashboard")
                 .font(ThemeManager.Typography.title2)
+                .fontWeight(.bold)
                 .foregroundColor(ThemeManager.Colors.text)
             
-            Text("Ecco il riepilogo del tuo mese")
-                .font(ThemeManager.Typography.body)
-                .foregroundColor(ThemeManager.Colors.textSecondary)
+            HStack {
+                Image(systemName: "calendar")
+                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                Text(getCurrentMonthYear())
+                    .font(ThemeManager.Typography.body)
+                    .foregroundColor(ThemeManager.Colors.textSecondary)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
         .padding(.top, ThemeManager.Spacing.md)
     }
     
-    // MARK: - Date Filter
-    private var dateFilterView: some View {
-        HStack {
-            ForEach(DateFilterPeriod.allCases, id: \.self) { period in
-                Button(action: {
-                    if period == .custom {
-                        showingCustomDatePicker = true
-                    } else {
-                        selectedPeriod = period
-                        Task {
-                            await loadData()
-                        }
-                    }
-                }) {
-                    Text(period.displayName)
-                        .font(ThemeManager.Typography.footnote)
-                        .foregroundColor(selectedPeriod == period ? .white : ThemeManager.Colors.textSecondary)
-                        .padding(.horizontal, ThemeManager.Spacing.sm)
-                        .padding(.vertical, ThemeManager.Spacing.xs)
-                        .background(
-                            selectedPeriod == period ? ThemeManager.Colors.primary : ThemeManager.Colors.surface
-                        )
-                        .cornerRadius(ThemeManager.CornerRadius.sm)
-                }
-            }
-            
-            Spacer()
-        }
-    }
     
-    // MARK: - Stats Cards
-    private func statsCardsView(stats: DashboardStats) -> some View {
-        SlidingStatsCardsView(
-            balance: stats.balance,
-            totalIncome: stats.totalIncome,
-            totalExpenses: stats.totalExpenses,
-            totalBudget: calculateTotalBudget(),
-            categories: categories,
-            period: getPeriodDisplayName(selectedPeriod)
-        )
-    }
-    
-    // MARK: - Period Display Name
-    private func getPeriodDisplayName(_ period: DateFilterPeriod) -> String {
-        switch period {
-        case .current:
-            return "Mese Corrente"
-        case .previous:
-            return "Mese Precedente"
-        case .custom:
-            return "Periodo Personalizzato"
-        }
-    }
-    
-    
-    // MARK: - Recent Transactions
-    private var recentTransactionsView: some View {
-        VStack(alignment: .leading, spacing: ThemeManager.Spacing.md) {
-            HStack {
-                Text("Transazioni Recenti")
-                    .font(ThemeManager.Typography.headline)
-                    .foregroundColor(ThemeManager.Colors.text)
-                
-                Spacer()
-                
-                NavigationLink(destination: TransactionsView()) {
-                    Text("Vedi tutte")
-                        .font(ThemeManager.Typography.footnote)
-                        .foregroundColor(ThemeManager.Colors.primary)
-                }
-                .foregroundColor(ThemeManager.Colors.primary)
-            }
-            
-            if recentTransactions.isEmpty {
-                Text("Nessuna transazione recente")
-                    .font(ThemeManager.Typography.body)
-                    .foregroundColor(ThemeManager.Colors.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, ThemeManager.Spacing.xl)
-            } else {
-                LazyVStack(spacing: ThemeManager.Spacing.sm) {
-                    ForEach(recentTransactions) { transaction in
-                        TransactionRow(transaction: transaction)
-                    }
-                }
-            }
-        }
-    }
     
     // MARK: - Helper Methods
     private func loadData() async {
@@ -251,6 +187,24 @@ struct DashboardView: View {
     
     private func calculateTotalBudget() -> Double {
         return categories.reduce(0) { $0 + $1.budgetAmount }
+    }
+    
+    private func getCurrentMonthYear() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = Locale(identifier: "it_IT")
+        return formatter.string(from: Date())
+    }
+    
+    private func getCategorySpendingData() -> [CategorySpending] {
+        // Sample data for now - this should be calculated from actual transactions
+        return [
+            CategorySpending(name: "Food", amount: 450.00, color: Color(red: 0.95, green: 0.45, blue: 0.45)),
+            CategorySpending(name: "Transport", amount: 280.00, color: Color(red: 0.4, green: 0.6, blue: 0.95)),
+            CategorySpending(name: "Shopping", amount: 320.00, color: Color(red: 0.95, green: 0.75, blue: 0.35)),
+            CategorySpending(name: "Bills", amount: 180.00, color: Color(red: 0.4, green: 0.8, blue: 0.4)),
+            CategorySpending(name: "Entertainment", amount: 122.50, color: Color(red: 0.95, green: 0.65, blue: 0.35))
+        ]
     }
 }
 
