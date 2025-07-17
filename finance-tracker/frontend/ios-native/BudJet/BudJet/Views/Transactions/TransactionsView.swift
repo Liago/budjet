@@ -431,7 +431,10 @@ struct TransactionsView: View {
         currentPage = 1
         
         do {
+            let startDateParam = getStartDateString()
+            let endDateParam = getEndDateString()
             print("📱 [DEBUG] Caricamento transazioni (pagina \(currentPage))...")
+            print("📱 [DEBUG] Parametri: type=\(selectedType?.rawValue ?? "nil"), categoryId=\(selectedCategory?.id ?? "nil"), startDate=\(startDateParam ?? "nil"), endDate=\(endDateParam ?? "nil"), search=\(searchText.isEmpty ? "nil" : searchText)")
             let response = try await apiManager.getTransactions(
                 limit: 20, 
                 page: currentPage,

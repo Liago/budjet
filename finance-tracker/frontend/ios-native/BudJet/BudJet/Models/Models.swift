@@ -197,7 +197,14 @@ struct TransactionResponse: Codable {
         // Prova prima a decodificare come oggetto con data e pagination
         if let transactionsData = try? container.decode([Transaction].self, forKey: .data) {
             data = transactionsData
-            pagination = try? container.decode(Pagination.self, forKey: .pagination)
+            // Prova prima "pagination", poi "meta"
+            if let paginationData = try? container.decode(Pagination.self, forKey: .pagination) {
+                pagination = paginationData
+            } else if let metaData = try? container.decode(Pagination.self, forKey: .meta) {
+                pagination = metaData
+            } else {
+                pagination = nil
+            }
         } else {
             // Se fallisce, prova a decodificare direttamente come array di transazioni
             let singleContainer = try decoder.singleValueContainer()
@@ -212,8 +219,15 @@ struct TransactionResponse: Codable {
         self.pagination = pagination
     }
     
+    // Custom encoder per mantenere compatibilità
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(data, forKey: .data)
+        try container.encodeIfPresent(pagination, forKey: .pagination)
+    }
+    
     private enum CodingKeys: String, CodingKey {
-        case data, pagination
+        case data, pagination, meta
     }
 }
 
