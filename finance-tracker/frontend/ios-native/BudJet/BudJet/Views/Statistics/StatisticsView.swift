@@ -9,11 +9,28 @@ struct CategoryStats: Identifiable {
     let categoryName: String
     let categoryColor: String
     let amount: Double
-    let percentage: Double
+    let percentage: Double // Percentuale sul totale spese
     let transactionCount: Int
+    let budgetAmount: Double // Budget della categoria
     
     var colorObject: Color {
         Color(hex: categoryColor) ?? Color.gray
+    }
+    
+    // Percentuale del budget utilizzato
+    var budgetPercentage: Double {
+        guard budgetAmount > 0 else { return 0 }
+        return min((amount / budgetAmount) * 100, 100)
+    }
+    
+    // Colore della progress bar basato sul budget
+    var budgetProgressColor: Color {
+        if budgetAmount <= 0 { return colorObject }
+        let percentage = budgetPercentage
+        if percentage > 100 { return Color.red }
+        if percentage > 90 { return Color.orange }
+        if percentage > 75 { return Color.yellow }
+        return Color.green
     }
 }
 
@@ -32,6 +49,7 @@ struct StatisticsView: View {
     @State private var categoryStats: [CategoryStats] = []
     @State private var trendData: [TrendData] = []
     @State private var transactions: [Transaction] = []
+    @State private var categories: [Category] = []
     @State private var isLoading = false
     @State private var showError = false
     @State private var errorMessage = ""
@@ -473,9 +491,15 @@ struct StatisticsView: View {
                                     .font(ThemeManager.Typography.caption)
                                     .foregroundColor(ThemeManager.Colors.textSecondary)
                                 
-                                Text("\(String(format: "%.1f", stat.percentage))%")
-                                    .font(ThemeManager.Typography.caption)
-                                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                                if stat.budgetAmount > 0 {
+                                    Text("\(String(format: "%.1f", stat.budgetPercentage))% budget")
+                                        .font(ThemeManager.Typography.caption)
+                                        .foregroundColor(stat.budgetProgressColor)
+                                } else {
+                                    Text("\(String(format: "%.1f", stat.percentage))%")
+                                        .font(ThemeManager.Typography.caption)
+                                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                                }
                             }
                         }
                         
@@ -487,7 +511,7 @@ struct StatisticsView: View {
                                 .fontWeight(.semibold)
                                 .foregroundColor(showingExpenses ? ThemeManager.Colors.error : ThemeManager.Colors.success)
                             
-                            // Progress bar
+                            // Progress bar basata sul budget
                             GeometryReader { geometry in
                                 RoundedRectangle(cornerRadius: 2)
                                     .fill(Color.gray.opacity(0.2))
@@ -495,9 +519,9 @@ struct StatisticsView: View {
                                     .overlay(
                                         HStack {
                                             RoundedRectangle(cornerRadius: 2)
-                                                .fill(stat.colorObject)
+                                                .fill(stat.budgetAmount > 0 ? stat.budgetProgressColor : stat.colorObject)
                                                 .frame(
-                                                    width: max(1, geometry.size.width * CGFloat(stat.percentage / 100)),
+                                                    width: max(1, geometry.size.width * CGFloat(stat.budgetAmount > 0 ? stat.budgetPercentage / 100 : stat.percentage / 100)),
                                                     height: 4
                                                 )
                                             
@@ -526,6 +550,9 @@ struct StatisticsView: View {
         }
         
         do {
+            // Carica categorie e transazioni in parallelo
+            let categoriesResponse = try await apiManager.getCategories()
+            
             let dateRange = getDateRangeFromPeriod(selectedPeriod)
             let startDateString = formatDateForAPI(dateRange.startDate)
             let endDateString = formatDateForAPI(dateRange.endDate)
@@ -541,6 +568,7 @@ struct StatisticsView: View {
             )
             
             await MainActor.run {
+                categories = categoriesResponse
                 transactions = transactionsResponse.data
                 processCategoryStats()
                 processTrendData()
@@ -575,13 +603,18 @@ struct StatisticsView: View {
             let categoryAmount = transactions.reduce(0) { $0 + $1.amount }
             let percentage = totalAmount > 0 ? (categoryAmount / totalAmount) * 100 : 0
             
+            // Trova la categoria corrispondente per ottenere il budget
+            let category = categories.first { $0.id == categoryId }
+            let budgetAmount = category?.budgetAmount ?? 0
+            
             return CategoryStats(
                 categoryId: categoryId,
                 categoryName: firstTransaction.category.name,
                 categoryColor: firstTransaction.category.color,
                 amount: categoryAmount,
                 percentage: percentage,
-                transactionCount: transactions.count
+                transactionCount: transactions.count,
+                budgetAmount: budgetAmount
             )
         }.sorted { $0.amount > $1.amount }
     }
