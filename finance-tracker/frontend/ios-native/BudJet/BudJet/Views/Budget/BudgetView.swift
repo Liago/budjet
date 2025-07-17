@@ -11,7 +11,7 @@ struct BudgetView: View {
     @State private var showingCustomDatePicker = false
     @State private var customStartDate: Date = Date()
     @State private var customEndDate: Date = Date()
-    @State private var showingEditCategory = false
+    @State private var showingCategoryTransactions = false
     @State private var selectedCategory: Category?
     
     // DateFormatter per API
@@ -23,29 +23,26 @@ struct BudgetView: View {
     }()
     
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: ThemeManager.Spacing.lg) {
-                    // Header con descrizione
-                    headerView
-                    
-                    // Filtro periodo
-                    periodFilterView
-                    
-                    // Total Budget Card
-                    totalBudgetCard
-                    
-                    // Budget Cards Grid
-                    budgetCardsGrid
-                }
-                .padding(.horizontal, ThemeManager.Spacing.md)
-                .padding(.bottom, ThemeManager.Spacing.lg)
+        ScrollView {
+            VStack(spacing: ThemeManager.Spacing.lg) {
+                // Header con descrizione
+                headerView
+                
+                // Filtro periodo
+                periodFilterView
+                
+                // Total Budget Card
+                totalBudgetCard
+                
+                // Budget Cards Grid
+                budgetCardsGrid
             }
-            .navigationTitle("Budget")
-            .navigationBarTitleDisplayMode(.large)
-            .navigationBarBackButtonHidden(false)
+            .padding(.horizontal, ThemeManager.Spacing.md)
+            .padding(.bottom, ThemeManager.Spacing.lg)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+        .navigationTitle("Budget")
+        .navigationBarTitleDisplayMode(.large)
+        .navigationBarBackButtonHidden(false)
         .onAppear {
             Task {
                 await loadData()
@@ -68,6 +65,17 @@ struct BudgetView: View {
                 Task {
                     await loadData()
                 }
+            }
+        }
+        .sheet(isPresented: $showingCategoryTransactions) {
+            if let category = selectedCategory {
+                CategoryTransactionsModal(
+                    category: category,
+                    period: getCurrentPeriodDisplay(),
+                    selectedTimeFilter: selectedTimeFilter,
+                    customStartDate: customStartDate,
+                    customEndDate: customEndDate
+                )
             }
         }
     }
@@ -266,16 +274,20 @@ struct BudgetView: View {
             } else if categoriesWithBudget.isEmpty {
                 noBudgetView
             } else {
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: ThemeManager.Spacing.md) {
+                LazyVStack(spacing: ThemeManager.Spacing.md) {
                     ForEach(categoriesWithBudget, id: \.id) { category in
                         CategoryBudgetCard(
                             category: category,
                             spent: categorySpending[category.id] ?? 0,
                             period: getCurrentPeriodDisplay()
                         )
+                        .onTapGesture {
+                            // Mostra transazioni solo se ci sono spese per questa categoria
+                            if (categorySpending[category.id] ?? 0) > 0 {
+                                selectedCategory = category
+                                showingCategoryTransactions = true
+                            }
+                        }
                     }
                 }
             }
