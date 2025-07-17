@@ -111,3 +111,5 @@ finance-tracker/frontend/ios-native/BudJet/BudJet.xcodeproj/
 .claude/
 
 finance-tracker/frontend/mobileDocs/BUILDS/BudJet 2025-07-17 12-33-23/
+
+finance-tracker/backend/README-CRON-DEPLOYMENT.md

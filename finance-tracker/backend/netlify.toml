@@ -10,6 +10,11 @@
 [functions]
   node_bundler = "nft"
 
+# Scheduled function for recurrent payments
+[[functions]]
+  name = "scheduled-cron"
+  schedule = "0 0 * * *"  # Daily at midnight UTC
+
 # Redirect per API
 [[redirects]]
   from = "/api/*"
