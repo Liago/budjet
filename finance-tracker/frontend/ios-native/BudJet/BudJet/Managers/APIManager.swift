@@ -147,7 +147,9 @@ class APIManager: ObservableObject {
         
         urlComponents.queryItems = queryItems
         
-        var request = URLRequest(url: urlComponents.url!)
+        let finalURL = urlComponents.url!
+        print("🌐 [DEBUG] API URL: \(finalURL.absoluteString)")
+        var request = URLRequest(url: finalURL)
         if let token = keychain.getAccessToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }

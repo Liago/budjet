@@ -24,7 +24,7 @@ struct TransactionsView: View {
     @State private var selectedMonth: Date = Date()
     @State private var showingFilters = false
     @State private var dateFilterMode: DateFilterMode = .month
-    @State private var startDate: Date = Date()
+    @State private var startDate: Date = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
     @State private var endDate: Date = Date()
     @State private var searchTask: Task<Void, Never>? = nil
     @State private var filterHash: String = ""
@@ -336,7 +336,7 @@ struct TransactionsView: View {
     private func clearFilters() {
         selectedCategory = nil
         selectedMonth = Date()
-        startDate = Date()
+        startDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
         endDate = Date()
         dateFilterMode = .month
     }
@@ -435,6 +435,7 @@ struct TransactionsView: View {
             let endDateParam = getEndDateString()
             print("📱 [DEBUG] Caricamento transazioni (pagina \(currentPage))...")
             print("📱 [DEBUG] Parametri: type=\(selectedType?.rawValue ?? "nil"), categoryId=\(selectedCategory?.id ?? "nil"), startDate=\(startDateParam ?? "nil"), endDate=\(endDateParam ?? "nil"), search=\(searchText.isEmpty ? "nil" : searchText)")
+            print("📱 [DEBUG] Mode: \(dateFilterMode), selectedMonth: \(selectedMonth), startDate: \(startDate), endDate: \(endDate)")
             let response = try await apiManager.getTransactions(
                 limit: 20, 
                 page: currentPage,
@@ -687,6 +688,14 @@ struct TransactionFiltersSheet: View {
                         }
                         
                         Button(action: {
+                            if dateFilterMode == .month {
+                                // Quando si passa da mese a range, inizializza le date basandosi sul mese selezionato
+                                let calendar = Calendar.current
+                                if let monthInterval = calendar.dateInterval(of: .month, for: selectedMonth) {
+                                    startDate = monthInterval.start
+                                    endDate = calendar.date(byAdding: .day, value: -1, to: monthInterval.end) ?? monthInterval.end
+                                }
+                            }
                             dateFilterMode = .range
                         }) {
                             let isSelected = dateFilterMode == .range
