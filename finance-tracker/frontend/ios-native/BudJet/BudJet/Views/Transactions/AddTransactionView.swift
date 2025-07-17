@@ -25,73 +25,72 @@ struct AddTransactionView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: ThemeManager.Spacing.lg) {
-                    // Type Selector
-                    typeSelector
-                    
-                    // Description Field
-                    VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
-                        Text("Descrizione")
-                            .font(ThemeManager.Typography.bodyMedium)
-                            .foregroundColor(ThemeManager.Colors.text)
+            ZStack {
+                // Background gradient
+                LinearGradient(
+                    colors: [ThemeManager.Colors.background, ThemeManager.Colors.surface],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: ThemeManager.Spacing.lg) {
+                        // Header section with icon
+                        headerSection
                         
-                        TextField("Descrizione della transazione", text: $description)
-                            .textFieldStyle(CustomTextFieldStyle())
-                            .onChange(of: description) { _ in
+                        // Type Selector
+                        modernTypeSelector
+                        
+                        // Main form in card
+                        VStack(spacing: ThemeManager.Spacing.lg) {
+                            // Description Field
+                            modernTextField(
+                                title: "Descrizione",
+                                placeholder: "Descrizione della transazione",
+                                text: $description,
+                                error: descriptionError,
+                                icon: "doc.text.fill"
+                            ) {
                                 if !descriptionError.isEmpty {
                                     descriptionError = ""
                                 }
                             }
-                        
-                        if !descriptionError.isEmpty {
-                            Text(descriptionError)
-                                .font(ThemeManager.Typography.caption)
-                                .foregroundColor(ThemeManager.Colors.error)
-                        }
-                    }
-                    
-                    // Amount Field
-                    VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
-                        Text("Importo (€)")
-                            .font(ThemeManager.Typography.bodyMedium)
-                            .foregroundColor(ThemeManager.Colors.text)
-                        
-                        TextField("0,00", text: $amount)
-                            .textFieldStyle(CustomTextFieldStyle())
-                            .keyboardType(.decimalPad)
-                            .onChange(of: amount) { _ in
+                            
+                            // Amount Field
+                            modernTextField(
+                                title: "Importo (€)",
+                                placeholder: "0,00",
+                                text: $amount,
+                                error: amountError,
+                                icon: "eurosign.circle.fill",
+                                keyboardType: .decimalPad
+                            ) {
                                 if !amountError.isEmpty {
                                     amountError = ""
                                 }
                             }
-                        
-                        if !amountError.isEmpty {
-                            Text(amountError)
-                                .font(ThemeManager.Typography.caption)
-                                .foregroundColor(ThemeManager.Colors.error)
+                            
+                            // Date Picker
+                            modernDatePicker
+                            
+                            // Category Selector
+                            modernCategorySelector
+                            
+                            // Tags
+                            modernTagsSection
                         }
-                    }
-                    
-                    // Date Picker
-                    VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
-                        Text("Data")
-                            .font(ThemeManager.Typography.bodyMedium)
-                            .foregroundColor(ThemeManager.Colors.text)
+                        .padding(ThemeManager.Spacing.lg)
+                        .background(ThemeManager.Colors.surface)
+                        .cornerRadius(ThemeManager.CornerRadius.xl)
+                        .shadow(color: ThemeManager.Colors.border.opacity(0.1), radius: 8, x: 0, y: 4)
                         
-                        DatePicker("", selection: $selectedDate, displayedComponents: .date)
-                            .datePickerStyle(CompactDatePickerStyle())
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        // Save Button
+                        modernSaveButton
                     }
-                    
-                    // Category Selector
-                    categorySelector
-                    
-                    // Tags
-                    tagsSection
+                    .padding(.horizontal, ThemeManager.Spacing.md)
+                    .padding(.vertical, ThemeManager.Spacing.lg)
                 }
-                .padding(.horizontal, ThemeManager.Spacing.md)
-                .padding(.vertical, ThemeManager.Spacing.lg)
             }
             .navigationTitle("Aggiungi Transazione")
             .navigationBarTitleDisplayMode(.inline)
@@ -100,17 +99,8 @@ struct AddTransactionView: View {
                     Button("Annulla") {
                         dismiss()
                     }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Salva") {
-                        Task {
-                            await saveTransaction()
-                        }
-                    }
-                    .disabled(!isFormValid || isLoading)
-                    .foregroundColor(isFormValid && !isLoading ? ThemeManager.Colors.primary : ThemeManager.Colors.textSecondary)
-                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeManager.Colors.textSecondary)
+                    .fontWeight(.medium)
                 }
             }
             .onAppear {
@@ -155,6 +145,242 @@ struct AddTransactionView: View {
         }
     }
     
+    // MARK: - Modern UI Components
+    private var headerSection: some View {
+        VStack(spacing: ThemeManager.Spacing.md) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [ThemeManager.Colors.primary, ThemeManager.Colors.primary.opacity(0.7)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 60, height: 60)
+                
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 30))
+                    .foregroundColor(.white)
+            }
+            
+            VStack(spacing: ThemeManager.Spacing.xs) {
+                Text("Nuova Transazione")
+                    .font(ThemeManager.Typography.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(ThemeManager.Colors.text)
+                
+                Text("Aggiungi una nuova entrata o spesa")
+                    .font(ThemeManager.Typography.body)
+                    .foregroundColor(ThemeManager.Colors.textSecondary)
+            }
+        }
+        .padding(.top, ThemeManager.Spacing.md)
+    }
+    
+    private var modernTypeSelector: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.md) {
+            Text("Tipo di Transazione")
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.semibold)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            HStack(spacing: ThemeManager.Spacing.sm) {
+                // Expense Button
+                Button(action: {
+                    selectedType = .expense
+                    updateCategorySelection()
+                }) {
+                    HStack(spacing: ThemeManager.Spacing.sm) {
+                        Image(systemName: "minus.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(selectedType == .expense ? .white : ThemeManager.Colors.expense)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Spesa")
+                                .font(ThemeManager.Typography.bodyMedium)
+                                .fontWeight(.semibold)
+                                .foregroundColor(selectedType == .expense ? .white : ThemeManager.Colors.text)
+                            
+                            Text("Denaro in uscita")
+                                .font(ThemeManager.Typography.caption)
+                                .foregroundColor(selectedType == .expense ? .white.opacity(0.8) : ThemeManager.Colors.textSecondary)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(ThemeManager.Spacing.md)
+                    .background(
+                        selectedType == .expense ? ThemeManager.Colors.expense : ThemeManager.Colors.surface
+                    )
+                    .cornerRadius(ThemeManager.CornerRadius.lg)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ThemeManager.CornerRadius.lg)
+                            .stroke(
+                                selectedType == .expense ? ThemeManager.Colors.expense : ThemeManager.Colors.border,
+                                lineWidth: 1
+                            )
+                    )
+                }
+                
+                // Income Button
+                Button(action: {
+                    selectedType = .income
+                    updateCategorySelection()
+                }) {
+                    HStack(spacing: ThemeManager.Spacing.sm) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(selectedType == .income ? .white : ThemeManager.Colors.income)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Entrata")
+                                .font(ThemeManager.Typography.bodyMedium)
+                                .fontWeight(.semibold)
+                                .foregroundColor(selectedType == .income ? .white : ThemeManager.Colors.text)
+                            
+                            Text("Denaro in entrata")
+                                .font(ThemeManager.Typography.caption)
+                                .foregroundColor(selectedType == .income ? .white.opacity(0.8) : ThemeManager.Colors.textSecondary)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(ThemeManager.Spacing.md)
+                    .background(
+                        selectedType == .income ? ThemeManager.Colors.income : ThemeManager.Colors.surface
+                    )
+                    .cornerRadius(ThemeManager.CornerRadius.lg)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ThemeManager.CornerRadius.lg)
+                            .stroke(
+                                selectedType == .income ? ThemeManager.Colors.income : ThemeManager.Colors.border,
+                                lineWidth: 1
+                            )
+                    )
+                }
+            }
+        }
+    }
+    
+    private func modernTextField(
+        title: String,
+        placeholder: String,
+        text: Binding<String>,
+        error: String,
+        icon: String,
+        keyboardType: UIKeyboardType = .default,
+        onChange: @escaping () -> Void = {}
+    ) -> some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            Text(title)
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.semibold)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            HStack(spacing: ThemeManager.Spacing.sm) {
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(ThemeManager.Colors.primary)
+                    .frame(width: 24)
+                
+                TextField(placeholder, text: text)
+                    .font(ThemeManager.Typography.body)
+                    .foregroundColor(ThemeManager.Colors.text)
+                    .keyboardType(keyboardType)
+                    .onChange(of: text.wrappedValue) { _ in
+                        onChange()
+                    }
+            }
+            .padding(ThemeManager.Spacing.md)
+            .background(ThemeManager.Colors.background)
+            .cornerRadius(ThemeManager.CornerRadius.md)
+            .overlay(
+                RoundedRectangle(cornerRadius: ThemeManager.CornerRadius.md)
+                    .stroke(
+                        error.isEmpty ? ThemeManager.Colors.border : ThemeManager.Colors.error,
+                        lineWidth: 1
+                    )
+            )
+            
+            if !error.isEmpty {
+                HStack(spacing: ThemeManager.Spacing.xs) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(ThemeManager.Colors.error)
+                    
+                    Text(error)
+                        .font(ThemeManager.Typography.caption)
+                        .foregroundColor(ThemeManager.Colors.error)
+                }
+            }
+        }
+    }
+    
+    private var modernDatePicker: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            Text("Data")
+                .font(ThemeManager.Typography.bodyMedium)
+                .fontWeight(.semibold)
+                .foregroundColor(ThemeManager.Colors.text)
+            
+            HStack(spacing: ThemeManager.Spacing.sm) {
+                Image(systemName: "calendar.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(ThemeManager.Colors.primary)
+                    .frame(width: 24)
+                
+                DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                    .datePickerStyle(CompactDatePickerStyle())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(ThemeManager.Spacing.md)
+            .background(ThemeManager.Colors.background)
+            .cornerRadius(ThemeManager.CornerRadius.md)
+            .overlay(
+                RoundedRectangle(cornerRadius: ThemeManager.CornerRadius.md)
+                    .stroke(ThemeManager.Colors.border, lineWidth: 1)
+            )
+        }
+    }
+    
+    private var modernSaveButton: some View {
+        Button(action: {
+            Task {
+                await saveTransaction()
+            }
+        }) {
+            HStack(spacing: ThemeManager.Spacing.sm) {
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.8)
+                } else {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.white)
+                }
+                
+                Text(isLoading ? "Salvando..." : "Salva Transazione")
+                    .font(ThemeManager.Typography.bodyMedium)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(ThemeManager.Spacing.md)
+            .background(
+                LinearGradient(
+                    colors: [ThemeManager.Colors.primary, ThemeManager.Colors.primary.opacity(0.8)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .cornerRadius(ThemeManager.CornerRadius.lg)
+            .shadow(color: ThemeManager.Colors.primary.opacity(0.3), radius: 8, x: 0, y: 4)
+        }
+        .disabled(isLoading)
+    }
+    
     private var typeSelector: some View {
         VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
             Text("Tipo")
@@ -195,6 +421,63 @@ struct AddTransactionView: View {
         }
     }
     
+    private var modernCategorySelector: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            HStack(spacing: ThemeManager.Spacing.sm) {
+                Image(systemName: "folder.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(ThemeManager.Colors.primary)
+                    .frame(width: 24)
+                
+                Text("Categoria")
+                    .font(ThemeManager.Typography.bodyMedium)
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeManager.Colors.text)
+            }
+            
+            if categories.isEmpty {
+                HStack(spacing: ThemeManager.Spacing.sm) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    
+                    Text("Caricamento categorie...")
+                        .font(ThemeManager.Typography.body)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                }
+                .padding(.vertical, ThemeManager.Spacing.md)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: ThemeManager.Spacing.sm) {
+                        ForEach(categories) { category in
+                            ModernCategoryChip(
+                                category: category,
+                                isSelected: selectedCategory?.id == category.id
+                            ) {
+                                selectedCategory = category
+                                if !categoryError.isEmpty {
+                                    categoryError = ""
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, ThemeManager.Spacing.xs)
+                }
+            }
+            
+            if !categoryError.isEmpty {
+                HStack(spacing: ThemeManager.Spacing.xs) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(ThemeManager.Colors.error)
+                    
+                    Text(categoryError)
+                        .font(ThemeManager.Typography.caption)
+                        .foregroundColor(ThemeManager.Colors.error)
+                }
+            }
+        }
+    }
+    
     private var categorySelector: some View {
         VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
             Text("Categoria")
@@ -229,6 +512,82 @@ struct AddTransactionView: View {
                 Text(categoryError)
                     .font(ThemeManager.Typography.caption)
                     .foregroundColor(ThemeManager.Colors.error)
+            }
+        }
+    }
+    
+    private var modernTagsSection: some View {
+        VStack(alignment: .leading, spacing: ThemeManager.Spacing.sm) {
+            HStack(spacing: ThemeManager.Spacing.sm) {
+                Image(systemName: "tag.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(ThemeManager.Colors.primary)
+                    .frame(width: 24)
+                
+                Text("Tag")
+                    .font(ThemeManager.Typography.bodyMedium)
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeManager.Colors.text)
+            }
+            
+            // Existing tags
+            if !tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: ThemeManager.Spacing.sm) {
+                        ForEach(tags, id: \.self) { tag in
+                            HStack(spacing: ThemeManager.Spacing.xs) {
+                                Text(tag)
+                                    .font(ThemeManager.Typography.caption)
+                                    .foregroundColor(ThemeManager.Colors.primary)
+                                
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        tags.removeAll { $0 == tag }
+                                    }
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                                }
+                            }
+                            .padding(.horizontal, ThemeManager.Spacing.sm)
+                            .padding(.vertical, ThemeManager.Spacing.xs)
+                            .background(ThemeManager.Colors.primary.opacity(0.1))
+                            .cornerRadius(ThemeManager.CornerRadius.md)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: ThemeManager.CornerRadius.md)
+                                    .stroke(ThemeManager.Colors.primary.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                    }
+                    .padding(.horizontal, ThemeManager.Spacing.xs)
+                }
+            }
+            
+            // Add new tag
+            HStack(spacing: ThemeManager.Spacing.sm) {
+                TextField("Aggiungi tag", text: $newTag)
+                    .font(ThemeManager.Typography.body)
+                    .foregroundColor(ThemeManager.Colors.text)
+                    .padding(.horizontal, ThemeManager.Spacing.sm)
+                    .padding(.vertical, ThemeManager.Spacing.xs)
+                    .background(ThemeManager.Colors.background)
+                    .cornerRadius(ThemeManager.CornerRadius.md)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ThemeManager.CornerRadius.md)
+                            .stroke(ThemeManager.Colors.border, lineWidth: 1)
+                    )
+                
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        addTag()
+                    }
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(ThemeManager.Colors.primary)
+                }
+                .disabled(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
     }
@@ -455,6 +814,181 @@ struct AddTransactionView: View {
             }
         }
     }
+    
+    // MARK: - Helper Functions
+    private func getCategoryIcon(_ iconName: String?) -> String {
+        guard let iconName = iconName else { return "questionmark.circle.fill" }
+        
+        switch iconName.lowercased() {
+        case "shopping-cart", "cart", "shopping":
+            return "cart.fill"
+        case "utensils", "food", "restaurant":
+            return "fork.knife"
+        case "car", "transport", "vehicle":
+            return "car.fill"
+        case "home", "house", "rent":
+            return "house.fill"
+        case "gamepad", "entertainment", "game":
+            return "gamecontroller.fill"
+        case "medical", "health", "hospital":
+            return "heart.fill"
+        case "graduation-cap", "education", "school":
+            return "graduationcap.fill"
+        case "credit-card", "finance", "card":
+            return "creditcard.fill"
+        case "gift", "present":
+            return "gift.fill"
+        case "plane", "travel", "flight":
+            return "airplane"
+        case "coffee", "drink", "cafe":
+            return "cup.and.saucer.fill"
+        case "music", "sound", "audio":
+            return "music.note"
+        case "tools", "work", "repair":
+            return "wrench.and.screwdriver.fill"
+        case "pets", "animal", "pet":
+            return "pawprint.fill"
+        case "book", "reading", "library":
+            return "book.fill"
+        case "camera", "photo", "picture":
+            return "camera.fill"
+        case "phone", "mobile", "cell":
+            return "phone.fill"
+        case "laptop", "computer", "tech":
+            return "laptopcomputer"
+        case "lightbulb", "electricity", "power":
+            return "lightbulb.fill"
+        case "leaf", "environment", "nature":
+            return "leaf.fill"
+        case "fitness", "gym", "sport":
+            return "figure.run"
+        case "clothing", "shirt", "fashion":
+            return "tshirt.fill"
+        case "beauty", "cosmetics", "makeup":
+            return "paintbrush.fill"
+        case "fuel", "gas", "petrol":
+            return "fuelpump.fill"
+        case "subscription", "recurring", "monthly":
+            return "repeat.circle.fill"
+        case "insurance", "protection", "safety":
+            return "shield.fill"
+        case "investment", "stocks", "portfolio":
+            return "chart.line.uptrend.xyaxis"
+        case "savings", "money", "bank":
+            return "banknote.fill"
+        default:
+            return "circle.fill"
+        }
+    }
+}
+
+struct ModernCategoryChip: View {
+    let category: Category
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: ThemeManager.Spacing.sm) {
+                ZStack {
+                    Circle()
+                        .fill(category.colorObject)
+                        .frame(width: 50, height: 50)
+                        .shadow(color: category.colorObject.opacity(0.3), radius: 4, x: 0, y: 2)
+                    
+                    Image(systemName: getCategoryIcon(category.icon))
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                
+                Text(category.name)
+                    .font(ThemeManager.Typography.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(isSelected ? ThemeManager.Colors.primary : ThemeManager.Colors.text)
+                    .lineLimit(1)
+            }
+            .padding(.vertical, ThemeManager.Spacing.sm)
+            .padding(.horizontal, ThemeManager.Spacing.sm)
+            .background(
+                isSelected ? ThemeManager.Colors.primary.opacity(0.1) : ThemeManager.Colors.background
+            )
+            .cornerRadius(ThemeManager.CornerRadius.lg)
+            .overlay(
+                RoundedRectangle(cornerRadius: ThemeManager.CornerRadius.lg)
+                    .stroke(
+                        isSelected ? ThemeManager.Colors.primary : ThemeManager.Colors.border,
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            )
+            .scaleEffect(isSelected ? 1.05 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: isSelected)
+        }
+    }
+    
+    private func getCategoryIcon(_ iconName: String?) -> String {
+        guard let iconName = iconName else { return "questionmark.circle.fill" }
+        
+        switch iconName.lowercased() {
+        case "shopping-cart", "cart", "shopping":
+            return "cart.fill"
+        case "utensils", "food", "restaurant":
+            return "fork.knife"
+        case "car", "transport", "vehicle":
+            return "car.fill"
+        case "home", "house", "rent":
+            return "house.fill"
+        case "gamepad", "entertainment", "game":
+            return "gamecontroller.fill"
+        case "medical", "health", "hospital":
+            return "heart.fill"
+        case "graduation-cap", "education", "school":
+            return "graduationcap.fill"
+        case "credit-card", "finance", "card":
+            return "creditcard.fill"
+        case "gift", "present":
+            return "gift.fill"
+        case "plane", "travel", "flight":
+            return "airplane"
+        case "coffee", "drink", "cafe":
+            return "cup.and.saucer.fill"
+        case "music", "sound", "audio":
+            return "music.note"
+        case "tools", "work", "repair":
+            return "wrench.and.screwdriver.fill"
+        case "pets", "animal", "pet":
+            return "pawprint.fill"
+        case "book", "reading", "library":
+            return "book.fill"
+        case "camera", "photo", "picture":
+            return "camera.fill"
+        case "phone", "mobile", "cell":
+            return "phone.fill"
+        case "laptop", "computer", "tech":
+            return "laptopcomputer"
+        case "lightbulb", "electricity", "power":
+            return "lightbulb.fill"
+        case "leaf", "environment", "nature":
+            return "leaf.fill"
+        case "fitness", "gym", "sport":
+            return "figure.run"
+        case "clothing", "shirt", "fashion":
+            return "tshirt.fill"
+        case "beauty", "cosmetics", "makeup":
+            return "paintbrush.fill"
+        case "fuel", "gas", "petrol":
+            return "fuelpump.fill"
+        case "subscription", "recurring", "monthly":
+            return "repeat.circle.fill"
+        case "insurance", "protection", "safety":
+            return "shield.fill"
+        case "investment", "stocks", "portfolio":
+            return "chart.line.uptrend.xyaxis"
+        case "savings", "money", "bank":
+            return "banknote.fill"
+        default:
+            return "circle.fill"
+        }
+    }
 }
 
 struct CategoryChip: View {
@@ -469,7 +1003,7 @@ struct CategoryChip: View {
                     .fill(category.colorObject)
                     .frame(width: 40, height: 40)
                     .overlay(
-                        Image(systemName: "questionmark.circle.fill")
+                        Image(systemName: getCategoryIcon(category.icon))
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                     )
@@ -492,6 +1026,71 @@ struct CategoryChip: View {
                         lineWidth: 2
                     )
             )
+        }
+    }
+    
+    private func getCategoryIcon(_ iconName: String?) -> String {
+        guard let iconName = iconName else { return "questionmark.circle.fill" }
+        
+        switch iconName.lowercased() {
+        case "shopping-cart", "cart", "shopping":
+            return "cart.fill"
+        case "utensils", "food", "restaurant":
+            return "fork.knife"
+        case "car", "transport", "vehicle":
+            return "car.fill"
+        case "home", "house", "rent":
+            return "house.fill"
+        case "gamepad", "entertainment", "game":
+            return "gamecontroller.fill"
+        case "medical", "health", "hospital":
+            return "heart.fill"
+        case "graduation-cap", "education", "school":
+            return "graduationcap.fill"
+        case "credit-card", "finance", "card":
+            return "creditcard.fill"
+        case "gift", "present":
+            return "gift.fill"
+        case "plane", "travel", "flight":
+            return "airplane"
+        case "coffee", "drink", "cafe":
+            return "cup.and.saucer.fill"
+        case "music", "sound", "audio":
+            return "music.note"
+        case "tools", "work", "repair":
+            return "wrench.and.screwdriver.fill"
+        case "pets", "animal", "pet":
+            return "pawprint.fill"
+        case "book", "reading", "library":
+            return "book.fill"
+        case "camera", "photo", "picture":
+            return "camera.fill"
+        case "phone", "mobile", "cell":
+            return "phone.fill"
+        case "laptop", "computer", "tech":
+            return "laptopcomputer"
+        case "lightbulb", "electricity", "power":
+            return "lightbulb.fill"
+        case "leaf", "environment", "nature":
+            return "leaf.fill"
+        case "fitness", "gym", "sport":
+            return "figure.run"
+        case "clothing", "shirt", "fashion":
+            return "tshirt.fill"
+        case "beauty", "cosmetics", "makeup":
+            return "paintbrush.fill"
+        case "fuel", "gas", "petrol":
+            return "fuelpump.fill"
+        case "subscription", "recurring", "monthly":
+            return "repeat.circle.fill"
+        case "insurance", "protection", "safety":
+            return "shield.fill"
+        case "investment", "stocks", "portfolio":
+            return "chart.line.uptrend.xyaxis"
+        case "savings", "money", "bank":
+            return "banknote.fill"
+        default:
+            return "circle.fill"
         }
     }
 }

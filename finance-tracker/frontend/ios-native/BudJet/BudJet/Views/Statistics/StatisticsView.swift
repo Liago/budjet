@@ -395,6 +395,25 @@ struct StatisticsView: View {
                 
                 Spacer()
                 
+                if !categoryStats.isEmpty && showingExpenses {
+                    NavigationLink(destination: BudgetView()) {
+                        HStack(spacing: ThemeManager.Spacing.xs) {
+                            Image(systemName: "chart.bar.doc.horizontal")
+                                .font(.system(size: 14))
+                                .foregroundColor(ThemeManager.Colors.primary)
+                            
+                            Text("Budget")
+                                .font(ThemeManager.Typography.footnote)
+                                .fontWeight(.medium)
+                                .foregroundColor(ThemeManager.Colors.primary)
+                        }
+                        .padding(.horizontal, ThemeManager.Spacing.sm)
+                        .padding(.vertical, ThemeManager.Spacing.xs)
+                        .background(ThemeManager.Colors.primary.opacity(0.1))
+                        .cornerRadius(ThemeManager.CornerRadius.sm)
+                    }
+                }
+                
                 if !categoryStats.isEmpty {
                     Text("Top \(min(categoryStats.count, 10))")
                         .font(ThemeManager.Typography.caption)
