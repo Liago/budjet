@@ -507,9 +507,19 @@ struct StatisticsView: View {
         }
         
         do {
-            print("📊 [DEBUG] Loading statistics data...")
-            let transactionsResponse = try await apiManager.getTransactions()
-            print("📊 [DEBUG] Loaded \(transactionsResponse.data.count) transactions")
+            let dateRange = getDateRangeFromPeriod(selectedPeriod)
+            let startDateString = formatDateForAPI(dateRange.startDate)
+            let endDateString = formatDateForAPI(dateRange.endDate)
+            
+            let transactionsResponse = try await apiManager.getTransactions(
+                limit: 1000, // Large limit to get all transactions for the period
+                page: 1,
+                type: nil,
+                categoryId: nil,
+                startDate: startDateString,
+                endDate: endDateString,
+                search: nil
+            )
             
             await MainActor.run {
                 transactions = transactionsResponse.data
@@ -518,7 +528,6 @@ struct StatisticsView: View {
                 isLoading = false
             }
         } catch {
-            print("❌ [ERROR] Error loading statistics: \(error)")
             await MainActor.run {
                 errorMessage = "Errore nel caricamento delle statistiche"
                 showError = true
@@ -614,6 +623,13 @@ struct StatisticsView: View {
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: dateRange.endDate)) ?? dateRange.endDate
         
         return transactionDate >= startOfDay && transactionDate < endOfDay
+    }
+    
+    private func formatDateForAPI(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone.current
+        return formatter.string(from: date)
     }
       
       private func formatCurrency(_ amount: Double) -> String {
