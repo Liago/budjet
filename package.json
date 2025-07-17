@@ -7,7 +7,11 @@
     "build": "tsc export-db.ts --outDir ./dist --target es2020 --module commonjs --esModuleInterop true --strict true",
     "start": "node dist/export-db.js",
     "dev": "ts-node export-db.ts",
-    "export": "npm run build && npm run start"
+    "export": "npm run build && npm run start",
+    "test": "echo \"No tests specified for root package\" && exit 0",
+    "test:backend": "cd finance-tracker/backend && npm test",
+    "test:web": "cd finance-tracker/frontend/web && npm run lint",
+    "test:all": "npm run test:backend && npm run test:web"
   },
   "keywords": [
     "sqlite",

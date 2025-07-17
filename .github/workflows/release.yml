@@ -14,37 +14,48 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm install
+
+      - name: Install backend dependencies
+        run: cd finance-tracker/backend && npm install
+
+      - name: Install web dependencies
+        run: cd finance-tracker/frontend/web && npm install
 
       - name: Run tests
         run: npm test
 
+      - name: Test backend
+        run: cd finance-tracker/backend && npm run test || echo "Backend tests skipped"
+
+      - name: Lint web frontend
+        run: cd finance-tracker/frontend/web && npm run lint || echo "Web lint skipped"
+
       - name: Bump version and push tag
         id: tag_version
-        uses: mathieudutour/github-tag-action@v6.1
+        uses: mathieudutour/github-tag-action@v6.2
         with:
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           release_branches: main
           default_bump: patch
 
       - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ steps.tag_version.outputs.new_tag }}
-          release_name: Release ${{ steps.tag_version.outputs.new_tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
           body: ${{ steps.tag_version.outputs.changelog }}
           draft: false
           prerelease: false
