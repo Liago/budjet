@@ -26,8 +26,10 @@ struct TransactionsView: View {
     @State private var dateFilterMode: DateFilterMode = .month
     @State private var startDate: Date = Date()
     @State private var endDate: Date = Date()
+    @State private var searchTask: Task<Void, Never>? = nil
+    @State private var filterHash: String = ""
     
-    enum DateFilterMode {
+    enum DateFilterMode: Equatable {
         case month
         case range
     }
@@ -139,7 +141,7 @@ struct TransactionsView: View {
                             .scaleEffect(1.2)
                         Spacer()
                     }
-                } else if filteredTransactions.isEmpty {
+                } else if transactions.isEmpty {
                     VStack(spacing: ThemeManager.Spacing.md) {
                         Spacer()
                         Image(systemName: "list.bullet")
@@ -150,7 +152,7 @@ struct TransactionsView: View {
                             .font(ThemeManager.Typography.body)
                             .foregroundColor(ThemeManager.Colors.textSecondary)
                         
-                        if !searchText.isEmpty || selectedType != nil {
+                        if !searchText.isEmpty || selectedType != nil || selectedCategory != nil || hasActiveFilters {
                             Text("Prova a cambiare i filtri di ricerca")
                                 .font(ThemeManager.Typography.footnote)
                                 .foregroundColor(ThemeManager.Colors.textSecondary)
@@ -300,6 +302,24 @@ struct TransactionsView: View {
                 await loadCategories()
             }
         }
+        .onChange(of: generateFilterHash()) { _ in
+            if searchText.isEmpty {
+                Task {
+                    await loadTransactions()
+                }
+            } else {
+                // Cancel previous search task
+                searchTask?.cancel()
+                
+                // Start new search task with delay
+                searchTask = Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                    if !Task.isCancelled {
+                        await loadTransactions()
+                    }
+                }
+            }
+        }
         .refreshable {
             await loadTransactions()
         }
@@ -322,52 +342,11 @@ struct TransactionsView: View {
     }
     
     private var filteredTransactions: [Transaction] {
-        var filtered = transactions
-        
-        if let type = selectedType {
-            filtered = filtered.filter { $0.type == type }
-        }
-        
-        if let category = selectedCategory {
-            filtered = filtered.filter { $0.category.id == category.id }
-        }
-        
-        // Date filter
-        let calendar = Calendar.current
-        
-        if dateFilterMode == .month {
-            let selectedMonthComponents = calendar.dateComponents([.year, .month], from: selectedMonth)
-            
-            filtered = filtered.filter { transaction in
-                guard let transactionDate = dateFormatter.date(from: transaction.date) else { return false }
-                let transactionComponents = calendar.dateComponents([.year, .month], from: transactionDate)
-                return transactionComponents.year == selectedMonthComponents.year &&
-                       transactionComponents.month == selectedMonthComponents.month
-            }
-        } else {
-            // Range filter
-            let startOfStartDate = calendar.startOfDay(for: startDate)
-            let endOfEndDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate))!
-            
-            filtered = filtered.filter { transaction in
-                guard let transactionDate = dateFormatter.date(from: transaction.date) else { return false }
-                let transactionDateStart = calendar.startOfDay(for: transactionDate)
-                return transactionDateStart >= startOfStartDate && transactionDateStart < endOfEndDate
-            }
-        }
-        
-        if !searchText.isEmpty {
-            filtered = filtered.filter { 
-                $0.description.localizedCaseInsensitiveContains(searchText) ||
-                $0.category.name.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-        
-        return filtered
+        return transactions
     }
     
     private var groupedTransactions: [TransactionGroup] {
-        let sorted = filteredTransactions.sorted { $0.date > $1.date }
+        let sorted = transactions.sorted { $0.date > $1.date }
         
         let grouped = Dictionary(grouping: sorted) { transaction in
             // Converti la stringa date in Date object
@@ -453,7 +432,15 @@ struct TransactionsView: View {
         
         do {
             print("📱 [DEBUG] Caricamento transazioni (pagina \(currentPage))...")
-            let response = try await apiManager.getTransactions(limit: 20, page: currentPage)
+            let response = try await apiManager.getTransactions(
+                limit: 20, 
+                page: currentPage,
+                type: selectedType,
+                categoryId: selectedCategory?.id,
+                startDate: getStartDateString(),
+                endDate: getEndDateString(),
+                search: searchText.isEmpty ? nil : searchText
+            )
             print("📱 [DEBUG] Transazioni caricate: \(response.data.count)")
             
             await MainActor.run {
@@ -478,7 +465,15 @@ struct TransactionsView: View {
         
         do {
             print("📱 [DEBUG] Caricamento transazioni aggiuntive (pagina \(currentPage))...")
-            let response = try await apiManager.getTransactions(limit: 20, page: currentPage)
+            let response = try await apiManager.getTransactions(
+                limit: 20, 
+                page: currentPage,
+                type: selectedType,
+                categoryId: selectedCategory?.id,
+                startDate: getStartDateString(),
+                endDate: getEndDateString(),
+                search: searchText.isEmpty ? nil : searchText
+            )
             print("📱 [DEBUG] Transazioni aggiuntive caricate: \(response.data.count)")
             
             await MainActor.run {
@@ -554,6 +549,44 @@ struct TransactionsView: View {
         } else {
             return "dal \(formatter.string(from: startDate)) al \(formatter.string(from: endDate))"
         }
+    }
+    
+    private func getStartDateString() -> String? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        if dateFilterMode == .month {
+            let calendar = Calendar.current
+            let startOfMonth = calendar.dateInterval(of: .month, for: selectedMonth)?.start ?? selectedMonth
+            return formatter.string(from: startOfMonth)
+        } else {
+            return formatter.string(from: startDate)
+        }
+    }
+    
+    private func getEndDateString() -> String? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        if dateFilterMode == .month {
+            let calendar = Calendar.current
+            let endOfMonth = calendar.dateInterval(of: .month, for: selectedMonth)?.end ?? selectedMonth
+            let lastDayOfMonth = calendar.date(byAdding: .day, value: -1, to: endOfMonth) ?? selectedMonth
+            return formatter.string(from: lastDayOfMonth)
+        } else {
+            return formatter.string(from: endDate)
+        }
+    }
+    
+    private func generateFilterHash() -> String {
+        let typeString = selectedType?.rawValue ?? "nil"
+        let categoryString = selectedCategory?.id ?? "nil"
+        let startDateString = getStartDateString() ?? "nil"
+        let endDateString = getEndDateString() ?? "nil"
+        let searchString = searchText.isEmpty ? "nil" : searchText
+        let modeString = dateFilterMode == .month ? "month" : "range"
+        
+        return "\(typeString)-\(categoryString)-\(startDateString)-\(endDateString)-\(searchString)-\(modeString)"
     }
 }
 

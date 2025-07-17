@@ -117,7 +117,7 @@ class APIManager: ObservableObject {
     
     // MARK: - Transactions
     
-    func getTransactions(limit: Int = 10, page: Int = 1, type: TransactionType? = nil) async throws -> TransactionResponse {
+    func getTransactions(limit: Int = 10, page: Int = 1, type: TransactionType? = nil, categoryId: String? = nil, startDate: String? = nil, endDate: String? = nil, search: String? = nil) async throws -> TransactionResponse {
         var urlComponents = URLComponents(string: "\(baseURL)/direct/transactions")!
         
         var queryItems: [URLQueryItem] = [
@@ -127,6 +127,22 @@ class APIManager: ObservableObject {
         
         if let type = type {
             queryItems.append(URLQueryItem(name: "type", value: type.rawValue))
+        }
+        
+        if let categoryId = categoryId {
+            queryItems.append(URLQueryItem(name: "categoryId", value: categoryId))
+        }
+        
+        if let startDate = startDate {
+            queryItems.append(URLQueryItem(name: "startDate", value: startDate))
+        }
+        
+        if let endDate = endDate {
+            queryItems.append(URLQueryItem(name: "endDate", value: endDate))
+        }
+        
+        if let search = search, !search.isEmpty {
+            queryItems.append(URLQueryItem(name: "search", value: search))
         }
         
         urlComponents.queryItems = queryItems

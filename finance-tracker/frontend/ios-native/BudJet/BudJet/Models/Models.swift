@@ -108,7 +108,7 @@ struct RegisterRequest: Codable {
 
 // MARK: - Transaction Models
 
-struct Tag: Codable, Identifiable {
+struct Tag: Codable, Identifiable, Equatable {
     let id: String
     let name: String
     let color: String?
@@ -116,7 +116,7 @@ struct Tag: Codable, Identifiable {
     let updatedAt: String?
 }
 
-enum TransactionType: String, Codable, CaseIterable {
+enum TransactionType: String, Codable, CaseIterable, Equatable {
     case income = "INCOME"
     case expense = "EXPENSE"
     
@@ -130,7 +130,7 @@ enum TransactionType: String, Codable, CaseIterable {
     }
 }
 
-struct Transaction: Codable, Identifiable {
+struct Transaction: Codable, Identifiable, Equatable {
     let id: String
     let amount: Double
     let description: String
@@ -244,7 +244,7 @@ struct UpdateTransactionRequest: Codable {
 
 // MARK: - Category Models
 
-struct Category: Codable, Identifiable {
+struct Category: Codable, Identifiable, Equatable {
     let id: String
     let name: String
     let icon: String?
@@ -257,13 +257,13 @@ struct Category: Codable, Identifiable {
     let _count: CategoryCount?
 }
 
-struct CategoryCount: Codable {
+struct CategoryCount: Codable, Equatable {
     let transactions: Int
 }
 
 // MARK: - Dashboard Models
 
-struct DashboardStats: Codable {
+struct DashboardStats: Codable, Equatable {
     let totalTransactions: Int
     let totalIncome: Double
     let totalExpenses: Double
@@ -272,14 +272,14 @@ struct DashboardStats: Codable {
     let timestamp: String
 }
 
-struct DatePeriod: Codable {
+struct DatePeriod: Codable, Equatable {
     let startDate: String
     let endDate: String
 }
 
 // MARK: - Date Filter Models
 
-enum DateFilterPeriod: String, CaseIterable {
+enum DateFilterPeriod: String, CaseIterable, Equatable {
     case current = "current"
     case previous = "previous"
     case custom = "custom"
