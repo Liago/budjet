@@ -30,17 +30,14 @@ struct DashboardView: View {
                             // New Dashboard Layout
                             if let stats = dashboardStats {
                                 VStack(spacing: ThemeManager.Spacing.lg) {
-                                    // Balance Card
-                                    NewBalanceCard(
+                                    // Sliding Stats Cards (Balance + Budget)
+                                    SlidingStatsCardsView(
                                         balance: stats.balance,
-                                        period: getCurrentMonthYear(),
-                                        changePercentage: 12.5 // This should be calculated
-                                    )
-                                    
-                                    // Income/Expense Cards
-                                    IncomeExpenseCards(
-                                        income: stats.totalIncome,
-                                        expenses: stats.totalExpenses
+                                        totalIncome: stats.totalIncome,
+                                        totalExpenses: stats.totalExpenses,
+                                        totalBudget: calculateTotalBudget(),
+                                        categories: categories,
+                                        period: getCurrentMonthYear()
                                     )
                                     
                                     // Spending by Category
