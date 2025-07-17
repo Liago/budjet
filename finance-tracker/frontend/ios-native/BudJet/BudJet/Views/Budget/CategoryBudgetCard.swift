@@ -5,6 +5,10 @@ struct CategoryBudgetCard: View {
     let spent: Double
     let period: String
     
+    private var isClickable: Bool {
+        return spent > 0
+    }
+    
     private var budget: Double {
         return category.budgetAmount
     }
@@ -149,9 +153,9 @@ struct CategoryBudgetCard: View {
                 .frame(height: 6)
             }
             
-            // Status message
-            if spent > 0 {
-                HStack {
+            // Status message o hint per click
+            HStack {
+                if spent > 0 {
                     Image(systemName: getStatusIcon())
                         .font(.system(size: 12))
                         .foregroundColor(statusColor)
@@ -160,9 +164,31 @@ struct CategoryBudgetCard: View {
                         .font(ThemeManager.Typography.caption)
                         .foregroundColor(statusColor)
                         .lineLimit(1)
+                } else {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 12))
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
                     
+                    Text("Nessuna spesa registrata")
+                        .font(ThemeManager.Typography.caption)
+                        .foregroundColor(ThemeManager.Colors.textSecondary)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+            }
+            
+            // Hint per click
+            if isClickable {
+                HStack {
+                    Spacer()
+                    Text("Tocca per vedere le transazioni")
+                        .font(ThemeManager.Typography.caption)
+                        .foregroundColor(ThemeManager.Colors.primary)
+                        .italic()
                     Spacer()
                 }
+                .padding(.top, ThemeManager.Spacing.xs)
             }
         }
         .padding(ThemeManager.Spacing.md)
