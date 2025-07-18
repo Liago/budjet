@@ -41,7 +41,6 @@ import {
   Alert,
   AlertTitle,
   Badge,
-  LinearProgress,
   Fade,
   Zoom,
 } from "@mui/material";
@@ -63,7 +62,6 @@ import {
   Receipt,
   Shop,
   LocalOffer,
-  CheckCircle,
   Timeline,
 } from "@mui/icons-material";
 import numeral from "numeral";
