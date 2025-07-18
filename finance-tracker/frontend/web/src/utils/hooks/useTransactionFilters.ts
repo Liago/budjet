@@ -23,10 +23,16 @@ interface UseTransactionFiltersResult {
 }
 
 const useTransactionFilters = (currentPage: number): UseTransactionFiltersResult => {
+  // Generate current month value as default
+  const getCurrentMonth = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+  };
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "INCOME" | "EXPENSE">("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterMonth, setFilterMonth] = useState<string>(getCurrentMonth());
   const [sortField, setSortField] = useState<"date" | "amount">("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [pageSize, setPageSize] = useState<number | 'all'>(10);
