@@ -5,14 +5,15 @@ export interface CsvExportTransaction {
   category: string;
   date: string;
   transaction: string;
-  note: string;
+  description: string;
+  tag: string;
 }
 
 /**
  * Converts transactions to CSV format as specified:
- * Type, Category, Date, Transaction, Note
- * "Expenses", "Grocery", "2025-03-25T00:00:00.000Z", "-30,50", "#fruttivendolo"
- * "Income", "Salary", "2025-03-17T00:00:00.000Z", "2133", "Stipendio"
+ * Type, Category, Date, Transaction, Description, Tag
+ * "Expenses", "Grocery", "2025-03-25T00:00:00.000Z", "-30,50", "Spesa al supermercato", "fruttivendolo"
+ * "Income", "Salary", "2025-03-17T00:00:00.000Z", "2133", "Stipendio mensile", ""
  */
 export const exportTransactionsToCSV = (
   transactions: Transaction[],
@@ -34,26 +35,26 @@ export const exportTransactionsToCSV = (
         ? `-${amount.toFixed(2).replace(".", ",")}`
         : amount.toFixed(2).replace(".", ",");
 
-    // Combine description and tags
-    const description = transaction.description || "";
-    const tags = transaction.tags && transaction.tags.length > 0
-      ? transaction.tags.map((tag) => `#${tag.name}`).join(" ")
+    // Separate description and tags
+    const description = transaction.description && transaction.description.trim() !== "" 
+      ? transaction.description.trim() 
       : "";
-    
-    // Create note field with both description and tags
-    const note = [description, tags].filter(Boolean).join(" ");
+    const tags = transaction.tags && transaction.tags.length > 0
+      ? transaction.tags.map((tag) => tag.name).join(" ")
+      : "";
 
     return {
       type,
       category: transaction.category.name,
       date: transaction.date,
       transaction: formattedAmount,
-      note,
+      description,
+      tag: tags,
     };
   });
 
   // Create CSV header
-  const headers = ["Type", "Category", "Date", "Transaction", "Note"];
+  const headers = ["Type", "Category", "Date", "Transaction", "Description", "Tag"];
 
   // Convert to CSV string
   const csvContent = [
@@ -64,7 +65,8 @@ export const exportTransactionsToCSV = (
         `"${row.category}"`,
         `"${row.date}"`,
         `"${row.transaction}"`,
-        `"${row.note}"`,
+        `"${row.description}"`,
+        `"${row.tag}"`,
       ].join(",")
     ),
   ].join("\n");
@@ -113,25 +115,25 @@ export const previewCSVContent = (transactions: Transaction[]): string => {
           ? `-${amount.toFixed(2).replace(".", ",")}`
           : amount.toFixed(2).replace(".", ",");
       
-      // Combine description and tags
-      const description = transaction.description || "";
-      const tags = transaction.tags && transaction.tags.length > 0
-        ? transaction.tags.map((tag) => `#${tag.name}`).join(" ")
+      // Separate description and tags
+      const description = transaction.description && transaction.description.trim() !== "" 
+        ? transaction.description.trim() 
         : "";
-      
-      // Create note field with both description and tags
-      const note = [description, tags].filter(Boolean).join(" ");
+      const tags = transaction.tags && transaction.tags.length > 0
+        ? transaction.tags.map((tag) => tag.name).join(" ")
+        : "";
 
       return {
         type,
         category: transaction.category.name,
         date: transaction.date,
         transaction: formattedAmount,
-        note,
+        description,
+        tag: tags,
       };
     });
 
-  const headers = ["Type", "Category", "Date", "Transaction", "Note"];
+  const headers = ["Type", "Category", "Date", "Transaction", "Description", "Tag"];
 
   const preview = [
     headers.join(","),
@@ -141,7 +143,8 @@ export const previewCSVContent = (transactions: Transaction[]): string => {
         `"${row.category}"`,
         `"${row.date}"`,
         `"${row.transaction}"`,
-        `"${row.note}"`,
+        `"${row.description}"`,
+        `"${row.tag}"`,
       ].join(",")
     ),
   ].join("\n");

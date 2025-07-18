@@ -61,7 +61,7 @@ export interface Transaction {
   date: string;
   type: TransactionType;
   category: Category;
-  tags: string[];
+  tags: Tag[];
   createdAt: string;
   updatedAt?: string;
 }

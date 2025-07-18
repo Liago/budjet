@@ -3311,15 +3311,26 @@ export class DirectController {
             }
           }
           
-          // If we still have extra columns, the last one might be note with hashtags
+          // If we still have extra columns, it might be description or tag fields
           if (values.length > headers.length) {
-            const noteIndex = headers.findIndex(h => h.toLowerCase() === 'note');
-            if (noteIndex !== -1 && noteIndex < values.length - 1) {
-              // Combine remaining values into note field
-              const additionalNotes = values.slice(noteIndex + 1).join(' ');
-              values[noteIndex] = (values[noteIndex] + ' ' + additionalNotes).trim();
+            // Check for description field
+            const descriptionIndex = headers.findIndex(h => h.toLowerCase() === 'description');
+            if (descriptionIndex !== -1 && descriptionIndex < values.length - 1) {
+              // Combine remaining values into description field
+              const additionalText = values.slice(descriptionIndex + 1).join(' ');
+              values[descriptionIndex] = (values[descriptionIndex] + ' ' + additionalText).trim();
               // Remove extra values
               values = values.slice(0, headers.length);
+            } else {
+              // Fallback to note field for backward compatibility
+              const noteIndex = headers.findIndex(h => h.toLowerCase() === 'note');
+              if (noteIndex !== -1 && noteIndex < values.length - 1) {
+                // Combine remaining values into note field
+                const additionalNotes = values.slice(noteIndex + 1).join(' ');
+                values[noteIndex] = (values[noteIndex] + ' ' + additionalNotes).trim();
+                // Remove extra values
+                values = values.slice(0, headers.length);
+              }
             }
           }
         }
@@ -3380,13 +3391,24 @@ export class DirectController {
           // Find category
           const categoryId = findCategoryId(record.Category);
 
-          // Extract tags from note and separate description
-          const note = record.Note || "";
-          const tags =
-            note.match(/#(\w+)/g)?.map((tag) => tag.substring(1)) || [];
+          // Extract description and tags from separate columns
+          let description = record.Description || "";
+          const tagString = record.Tag || "";
+          let tags = tagString.trim() 
+            ? tagString.split(" ").map(tag => tag.replace(/^#/, "")).filter(Boolean)
+            : [];
           
-          // Extract description (everything that's not a hashtag)
-          const description = note.replace(/#\w+/g, "").trim();
+          // Fallback to old format if new columns are empty but Note exists
+          if (!description && !tagString && record.Note) {
+            const note = record.Note || "";
+            const fallbackTags = note.match(/#(\w+)/g)?.map((tag) => tag.substring(1)) || [];
+            const fallbackDescription = note.replace(/#\w+/g, "").trim();
+            
+            tags.push(...fallbackTags);
+            if (fallbackDescription) {
+              description = fallbackDescription;
+            }
+          }
 
           // Create or connect tags
           const tagConnectOrCreate = tags.map((tagName: string) => ({
