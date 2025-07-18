@@ -3704,4 +3704,114 @@ export class DirectController {
       };
     }
   }
+
+  @Get("dashboard/forecast")
+  @ApiOperation({ summary: "Get forecast data for predictive analysis" })
+  @ApiResponse({
+    status: 200,
+    description: "Returns historical and forecast data for financial prediction",
+  })
+  async getForecastData(@Query("months") months?: string) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      const monthsValue = months ? parseInt(months) : 6; // Default to 6 months
+      const { addMonths, endOfMonth, format, startOfMonth, subMonths } = await import("date-fns");
+      
+      const now = new Date();
+      const historicalData = [];
+      let totalIncome = 0;
+      let totalExpense = 0;
+      let monthsWithData = 0;
+      let lastBalance = 0;
+
+      // Retrieve historical data for the last 'months' months
+      for (let i = monthsValue - 1; i >= 0; i--) {
+        const currentMonth = subMonths(now, i);
+        const startDate = startOfMonth(currentMonth);
+        const endDate = endOfMonth(currentMonth);
+
+        // Query for this specific month
+        const whereClause = {
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+        };
+
+        const [incomeTransactions, expenseTransactions] = await Promise.all([
+          prisma.transaction.findMany({
+            where: { ...whereClause, type: "INCOME" },
+            select: { amount: true },
+          }),
+          prisma.transaction.findMany({
+            where: { ...whereClause, type: "EXPENSE" },
+            select: { amount: true },
+          }),
+        ]);
+
+        const monthlyIncome = incomeTransactions.reduce(
+          (sum, tx) => sum + Number(tx.amount),
+          0
+        );
+        const monthlyExpense = expenseTransactions.reduce(
+          (sum, tx) => sum + Number(tx.amount),
+          0
+        );
+
+        const netValue = monthlyIncome - monthlyExpense;
+        lastBalance += netValue;
+
+        // Only count months with actual transactions
+        if (incomeTransactions.length > 0 || expenseTransactions.length > 0) {
+          totalIncome += monthlyIncome;
+          totalExpense += monthlyExpense;
+          monthsWithData++;
+        }
+
+        historicalData.push({
+          period: format(currentMonth, "yyyy-MM"),
+          value: Math.round(lastBalance * 100) / 100,
+          forecast: false,
+        });
+      }
+
+      // Calculate average monthly income and expenses
+      const averageIncome = monthsWithData > 0 ? totalIncome / monthsWithData : 0;
+      const averageExpense = monthsWithData > 0 ? totalExpense / monthsWithData : 0;
+      const averageNet = averageIncome - averageExpense;
+
+      // Generate forecast data for the next 'months' months
+      const forecastData = [];
+      let currentBalance = lastBalance;
+
+      for (let i = 1; i <= monthsValue; i++) {
+        const futureMonth = addMonths(now, i);
+        currentBalance += averageNet;
+
+        forecastData.push({
+          period: format(futureMonth, "yyyy-MM"),
+          value: Math.round(currentBalance * 100) / 100,
+          forecast: true,
+        });
+      }
+
+      await prisma.$disconnect();
+
+      return {
+        historicalData,
+        forecastData,
+        averageIncome: Math.round(averageIncome * 100) / 100,
+        averageExpense: Math.round(averageExpense * 100) / 100,
+      };
+    } catch (error) {
+      console.error("Error in getForecastData:", error);
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
 }
