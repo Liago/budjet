@@ -41,6 +41,9 @@ import {
   Alert,
   AlertTitle,
   Badge,
+  LinearProgress,
+  Fade,
+  Zoom,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
@@ -60,6 +63,8 @@ import {
   Receipt,
   Shop,
   LocalOffer,
+  CheckCircle,
+  Timeline,
 } from "@mui/icons-material";
 import numeral from "numeral";
 import { dashboardService } from "../../utils/apiServices";
@@ -67,6 +72,7 @@ import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 import BudgetModal from "../modals/BudgetModal";
 import SavingsGoalModal from "../modals/SavingsGoalModal";
+import { appliedSuggestionsUtils } from "../../utils/appliedSuggestions";
 
 // Tipi per le proiezioni di risparmio
 type SavingSuggestion = {
@@ -189,6 +195,20 @@ const SavingSuggestions: React.FC<{
     open: false,
     suggestedAmount: 0,
   });
+  
+  // Stato per le applicazioni
+  const [appliedSuggestions, setAppliedSuggestions] = useState<string[]>([]);
+  const [recentlyApplied, setRecentlyApplied] = useState<string | null>(null);
+
+  // Carica i suggerimenti applicati all'avvio
+  useEffect(() => {
+    const applied = appliedSuggestionsUtils.getAppliedSuggestions();
+    setAppliedSuggestions(applied.map(s => s.id));
+  }, []);
+
+  // Calcola le statistiche di progresso
+  const appliedStats = appliedSuggestionsUtils.getAppliedStats(suggestions.length);
+  const progressPercentage = appliedStats.percentage;
 
   // Funzione per gestire l'applicazione del suggerimento
   const handleApplySuggestion = (suggestion: SavingSuggestion) => {
@@ -205,6 +225,7 @@ const SavingSuggestions: React.FC<{
       case "subscription":
         // Naviga alla pagina dei pagamenti ricorrenti
         navigate("/recurring-payments");
+        markSuggestionAsApplied(suggestion, "Navigazione ai pagamenti ricorrenti");
         enqueueSnackbar("Controlla i tuoi abbonamenti e pagamenti ricorrenti", {
           variant: "info",
         });
@@ -221,6 +242,7 @@ const SavingSuggestions: React.FC<{
       case "debt_management":
         // Naviga alla pagina categorie per gestire debiti
         navigate("/categories");
+        markSuggestionAsApplied(suggestion, "Navigazione alla gestione categorie");
         enqueueSnackbar("Gestisci i tuoi budget per controllare i debiti", {
           variant: "info",
         });
@@ -229,10 +251,23 @@ const SavingSuggestions: React.FC<{
       default:
         // Azione generica - naviga alle categorie
         navigate("/categories");
+        markSuggestionAsApplied(suggestion, "Navigazione alle categorie");
         enqueueSnackbar("Gestisci le tue categorie di spesa", {
           variant: "info",
         });
     }
+  };
+
+  // Funzione per marcare un suggerimento come applicato
+  const markSuggestionAsApplied = (suggestion: SavingSuggestion, action: string) => {
+    appliedSuggestionsUtils.markAsApplied(suggestion.id, suggestion.type, suggestion.category, action);
+    setAppliedSuggestions(prev => [...prev, suggestion.id]);
+    setRecentlyApplied(suggestion.id);
+    
+    // Rimuovi l'animazione dopo 3 secondi
+    setTimeout(() => {
+      setRecentlyApplied(null);
+    }, 3000);
   };
 
   // Funzione per ottenere l'icona appropriata per il tipo di suggerimento
@@ -295,27 +330,103 @@ const SavingSuggestions: React.FC<{
 
   return (
     <>
+      {/* Progress Header */}
+      <Box sx={{ p: 2, pb: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+          <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: "bold" }}>
+            Progresso Suggerimenti
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Timeline sx={{ color: theme.palette.success.main }} />
+            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+              {appliedStats.appliedCount}/{appliedStats.totalCount} applicati
+            </Typography>
+          </Box>
+        </Box>
+        
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <LinearProgress
+            variant="determinate"
+            value={progressPercentage}
+            sx={{
+              flexGrow: 1,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: theme.palette.grey[200],
+              "& .MuiLinearProgress-bar": {
+                backgroundColor: theme.palette.success.main,
+                borderRadius: 4,
+              },
+            }}
+          />
+          <Typography variant="body2" sx={{ fontWeight: "bold", color: theme.palette.success.main }}>
+            {progressPercentage}%
+          </Typography>
+        </Box>
+        
+        {appliedStats.recentlyApplied.length > 0 && (
+          <Typography variant="caption" sx={{ color: theme.palette.text.secondary, mt: 1 }}>
+            {appliedStats.recentlyApplied.length} suggerimenti applicati nelle ultime 24 ore
+          </Typography>
+        )}
+      </Box>
+
       <List sx={{ width: "100%", p: 1 }}>
-        {suggestions.map((suggestion) => (
-        <Paper
-          key={suggestion.id}
-          elevation={1}
-          sx={{
-            mb: 2,
-            p: 0,
-            borderLeft: `6px solid ${suggestion.categoryColor}`,
-            transition: "transform 0.2s",
-            "&:hover": {
-              transform: "translateX(4px)",
-            },
-          }}
-        >
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMore />}
-              aria-controls={`suggestion-${suggestion.id}-content`}
-              id={`suggestion-${suggestion.id}-header`}
-            >
+        {suggestions.map((suggestion) => {
+          const isApplied = appliedSuggestions.includes(suggestion.id);
+          const isRecentlyApplied = recentlyApplied === suggestion.id;
+          
+          return (
+            <Zoom in={true} key={suggestion.id}>
+              <Paper
+                elevation={1}
+                sx={{
+                  mb: 2,
+                  p: 0,
+                  borderLeft: `6px solid ${isApplied ? "#4caf50" : suggestion.categoryColor}`,
+                  border: isApplied ? "2px solid #4caf50" : "1px solid transparent",
+                  transition: "all 0.3s ease",
+                  position: "relative",
+                  "&:hover": {
+                    transform: "translateX(4px)",
+                  },
+                  ...(isRecentlyApplied && {
+                    boxShadow: "0 0 20px rgba(76, 175, 80, 0.3)",
+                    transform: "translateX(4px) scale(1.02)",
+                  }),
+                }}
+              >
+                {/* Badge di completamento */}
+                {isApplied && (
+                  <Fade in={true}>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        zIndex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <CheckCircle sx={{ color: "#4caf50", fontSize: 24 }} />
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "#4caf50", fontWeight: "bold" }}
+                      >
+                        Applicato
+                      </Typography>
+                    </Box>
+                  </Fade>
+                )}
+                
+                <Accordion>
+                  <AccordionSummary
+                    expandIcon={<ExpandMore />}
+                    aria-controls={`suggestion-${suggestion.id}-content`}
+                    id={`suggestion-${suggestion.id}-header`}
+                  >
               <Grid container alignItems="center" spacing={1}>
                 <Grid item>
                   <Avatar
@@ -402,19 +513,31 @@ const SavingSuggestions: React.FC<{
                 )}
 
                 <Button
-                  variant="outlined"
-                  color="primary"
+                  variant={isApplied ? "contained" : "outlined"}
+                  color={isApplied ? "success" : "primary"}
                   size="small"
-                  sx={{ mt: 2 }}
-                  onClick={() => handleApplySuggestion(suggestion)}
+                  sx={{ 
+                    mt: 2,
+                    ...(isApplied && {
+                      cursor: "default",
+                      "&:hover": {
+                        backgroundColor: "#4caf50",
+                      },
+                    }),
+                  }}
+                  onClick={() => !isApplied && handleApplySuggestion(suggestion)}
+                  disabled={isApplied}
+                  startIcon={isApplied ? <CheckCircle /> : null}
                 >
-                  Applica questo suggerimento
+                  {isApplied ? "Configurazione Applicata" : "Applica questo suggerimento"}
                 </Button>
               </Box>
             </AccordionDetails>
-          </Accordion>
-        </Paper>
-        ))}
+                </Accordion>
+              </Paper>
+            </Zoom>
+          );
+        })}
       </List>
     
     {/* Budget Modal */}
@@ -425,6 +548,11 @@ const SavingSuggestions: React.FC<{
       potentialSaving={budgetModal.potentialSaving}
       onSuccess={() => {
         enqueueSnackbar("Budget aggiornato con successo!", { variant: "success" });
+        // Trova il suggerimento corrispondente e marcalo come applicato
+        const suggestion = suggestions.find(s => s.category === budgetModal.category && s.type === "spending_reduction");
+        if (suggestion) {
+          markSuggestionAsApplied(suggestion, "Budget aggiornato");
+        }
       }}
     />
     
@@ -435,6 +563,11 @@ const SavingSuggestions: React.FC<{
       suggestedAmount={savingsGoalModal.suggestedAmount}
       onSuccess={() => {
         enqueueSnackbar("Obiettivo di risparmio creato!", { variant: "success" });
+        // Trova il suggerimento corrispondente e marcalo come applicato
+        const suggestion = suggestions.find(s => s.type === "automation");
+        if (suggestion) {
+          markSuggestionAsApplied(suggestion, "Obiettivo di risparmio creato");
+        }
       }}
     />
   </>
@@ -561,13 +694,32 @@ const PredictiveAnalysis = () => {
         />
         <Tab
           label={
-            <Badge
-              badgeContent={savingsSuggestions?.suggestions.length || 0}
-              color="error"
-              sx={{ "& .MuiBadge-badge": { right: -12, top: -2 } }}
-            >
-              Suggerimenti per Risparmiare
-            </Badge>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Badge
+                badgeContent={savingsSuggestions?.suggestions.length || 0}
+                color="error"
+                sx={{ "& .MuiBadge-badge": { right: -12, top: -2 } }}
+              >
+                Suggerimenti per Risparmiare
+              </Badge>
+              {savingsSuggestions?.suggestions.length > 0 && (
+                <Badge
+                  badgeContent={`${appliedSuggestionsUtils.getAppliedStats(savingsSuggestions.suggestions.length).appliedCount}/${savingsSuggestions.suggestions.length}`}
+                  color="success"
+                  sx={{ 
+                    "& .MuiBadge-badge": { 
+                      right: -16, 
+                      top: -2,
+                      fontSize: "0.6rem",
+                      minWidth: "auto",
+                      padding: "0 4px",
+                    } 
+                  }}
+                >
+                  <CheckCircle sx={{ color: "success.main", fontSize: 16 }} />
+                </Badge>
+              )}
+            </Box>
           }
           icon={<Lightbulb />}
           iconPosition="start"
