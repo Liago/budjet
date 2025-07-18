@@ -17,6 +17,7 @@ import {
 import { format, differenceInDays, parseISO, addDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { savingsGoalsService } from "../../utils/apiServices";
+import { DeleteConfirmationModal, InputModal } from "../ui/confirmation-modal";
 
 // UI Components
 import { Button } from "../ui/button";
@@ -182,23 +183,55 @@ const SavingsGoals = () => {
     }
   };
 
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    goalId: string;
+    goalName: string;
+  }>({ open: false, goalId: "", goalName: "" });
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const handleDeleteGoal = async (id: string) => {
-    if (confirm("Sei sicuro di voler eliminare questo obiettivo?")) {
-      try {
-        await savingsGoalsService.delete(id);
-        await loadGoals(); // Ricarica gli obiettivi aggiornati
-        toast.success("Obiettivo di risparmio eliminato con successo!");
-      } catch (error) {
-        console.error("Error deleting savings goal:", error);
-        toast.error("Impossibile eliminare l'obiettivo di risparmio");
-      }
+    const goal = goals.find(g => g.id === id);
+    if (goal) {
+      setDeleteModal({
+        open: true,
+        goalId: id,
+        goalName: goal.name
+      });
     }
   };
 
-  const handleAddMoney = async (goal: SavingsGoal) => {
-    const amount = prompt("Quanto vuoi aggiungere ai risparmi? (€)");
-    if (!amount) return;
+  const handleConfirmDelete = async () => {
+    try {
+      setDeleteLoading(true);
+      await savingsGoalsService.delete(deleteModal.goalId);
+      await loadGoals(); // Ricarica gli obiettivi aggiornati
+      toast.success("Obiettivo di risparmio eliminato con successo!");
+      setDeleteModal({ open: false, goalId: "", goalName: "" });
+    } catch (error) {
+      console.error("Error deleting savings goal:", error);
+      toast.error("Impossibile eliminare l'obiettivo di risparmio");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
+  const [addMoneyModal, setAddMoneyModal] = useState<{
+    open: boolean;
+    goalId: string;
+    goalName: string;
+  }>({ open: false, goalId: "", goalName: "" });
+  const [addMoneyLoading, setAddMoneyLoading] = useState(false);
+
+  const handleAddMoney = async (goal: SavingsGoal) => {
+    setAddMoneyModal({
+      open: true,
+      goalId: goal.id,
+      goalName: goal.name
+    });
+  };
+
+  const handleConfirmAddMoney = async (amount: string) => {
     const amountNumber = parseFloat(amount);
     if (isNaN(amountNumber) || amountNumber <= 0) {
       toast.error("Inserisci un importo valido");
@@ -206,12 +239,16 @@ const SavingsGoals = () => {
     }
 
     try {
-      await savingsGoalsService.addAmount(goal.id, amountNumber);
+      setAddMoneyLoading(true);
+      await savingsGoalsService.addAmount(addMoneyModal.goalId, amountNumber);
       await loadGoals(); // Ricarica gli obiettivi aggiornati
-      toast.success(`€${amountNumber.toFixed(2)} aggiunti al tuo obiettivo!`);
+      toast.success(`Aggiunti €${amountNumber.toFixed(2)} all'obiettivo "${addMoneyModal.goalName}"!`);
+      setAddMoneyModal({ open: false, goalId: "", goalName: "" });
     } catch (error) {
       console.error("Error adding money to savings goal:", error);
-      toast.error("Impossibile aggiungere fondi all'obiettivo di risparmio");
+      toast.error("Impossibile aggiungere l'importo all'obiettivo");
+    } finally {
+      setAddMoneyLoading(false);
     }
   };
 
@@ -656,6 +693,37 @@ const SavingsGoals = () => {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        open={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, goalId: "", goalName: "" })}
+        onConfirm={handleConfirmDelete}
+        itemName={deleteModal.goalName}
+        itemType="obiettivo di risparmio"
+        loading={deleteLoading}
+        warning="Questa azione eliminerà l'obiettivo e tutto il progresso associato."
+      />
+
+      {/* Add Money Modal */}
+      <InputModal
+        open={addMoneyModal.open}
+        onClose={() => setAddMoneyModal({ open: false, goalId: "", goalName: "" })}
+        onConfirm={handleConfirmAddMoney}
+        title={`Aggiungi denaro a "${addMoneyModal.goalName}"`}
+        description="Inserisci l'importo da aggiungere al tuo obiettivo di risparmio"
+        label="Importo da aggiungere"
+        placeholder="0.00"
+        inputType="number"
+        validation={(value) => {
+          const num = parseFloat(value);
+          if (isNaN(num) || num <= 0) {
+            return "Inserisci un importo valido maggiore di 0";
+          }
+          return null;
+        }}
+        loading={addMoneyLoading}
+      />
     </div>
   );
 };

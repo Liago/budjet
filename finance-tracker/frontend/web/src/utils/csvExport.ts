@@ -17,10 +17,9 @@ export interface CsvExportTransaction {
 export const exportTransactionsToCSV = (
   transactions: Transaction[],
   filename?: string
-): void => {
+): { success: boolean; error?: string } => {
   if (transactions.length === 0) {
-    alert("Nessuna transazione selezionata per l'export");
-    return;
+    return { success: false, error: "Nessuna transazione selezionata per l'export" };
   }
 
   // Convert transactions to CSV format
@@ -89,6 +88,8 @@ export const exportTransactionsToCSV = (
     // Cleanup
     URL.revokeObjectURL(url);
   }
+  
+  return { success: true };
 };
 
 /**

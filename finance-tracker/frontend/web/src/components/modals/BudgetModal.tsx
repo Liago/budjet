@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  Alert,
-  CircularProgress,
-  InputAdornment,
-} from "@mui/material";
-import { useSnackbar } from "notistack";
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+// Note: Alert component not available, using custom styling
+import { Loader2, Euro, Info } from "lucide-react";
+import { toast } from "sonner";
 import { categoryService } from "../../utils/apiServices";
 
 interface BudgetModalProps {
@@ -35,7 +35,6 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
   const [budgetAmount, setBudgetAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     const findCategoryByName = async () => {
@@ -59,9 +58,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
         }
       } catch (error) {
         console.error("Error finding category:", error);
-        enqueueSnackbar("Errore nel caricamento della categoria", {
-          variant: "error",
-        });
+        toast.error("Errore nel caricamento della categoria");
       } finally {
         setLoading(false);
       }
@@ -76,11 +73,11 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
       setCategoryId(null);
       setLoading(false);
     }
-  }, [open, categoryName, suggestedAmount, potentialSaving, enqueueSnackbar]);
+  }, [open, categoryName, suggestedAmount, potentialSaving]);
 
   const handleSave = async () => {
     if (!categoryId || !budgetAmount || isNaN(Number(budgetAmount))) {
-      enqueueSnackbar("Inserisci un importo valido", { variant: "error" });
+      toast.error("Inserisci un importo valido");
       return;
     }
 
@@ -90,18 +87,15 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
         budget: Number(budgetAmount),
       });
       
-      enqueueSnackbar(
-        `Budget di €${budgetAmount} impostato per ${categoryName}`,
-        { variant: "success" }
+      toast.success(
+        `Budget di €${budgetAmount} impostato per ${categoryName}`
       );
       
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error updating budget:", error);
-      enqueueSnackbar("Errore nell'aggiornamento del budget", {
-        variant: "error",
-      });
+      toast.error("Errore nell'aggiornamento del budget");
     } finally {
       setLoading(false);
     }
@@ -114,53 +108,64 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        Imposta Budget per {categoryName}
-      </DialogTitle>
-      <DialogContent>
-        <Box sx={{ pt: 2 }}>
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Euro className="h-5 w-5" />
+            Imposta Budget per {categoryName}
+          </DialogTitle>
+          <DialogDescription>
+            Imposta il limite di spesa mensile per questa categoria
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
           {potentialSaving && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <Typography variant="body2">
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <Info className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <p className="text-sm text-blue-800">
                 Risparmio potenziale: €{potentialSaving.toFixed(2)} al mese
-              </Typography>
-            </Alert>
+              </p>
+            </div>
           )}
           
-          <TextField
-            label="Budget mensile"
-            type="number"
-            value={budgetAmount}
-            onChange={(e) => setBudgetAmount(e.target.value)}
-            fullWidth
-            variant="outlined"
-            InputProps={{
-              startAdornment: <InputAdornment position="start">€</InputAdornment>,
-            }}
-            helperText="Imposta il limite di spesa mensile per questa categoria"
-            disabled={loading}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="budget-amount">Budget mensile</Label>
+            <div className="relative">
+              <Euro className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="budget-amount"
+                type="number"
+                value={budgetAmount}
+                onChange={(e) => setBudgetAmount(e.target.value)}
+                className="pl-9"
+                placeholder="0.00"
+                disabled={loading}
+              />
+            </div>
+          </div>
           
           {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-              <CircularProgress size={24} />
-            </Box>
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
           )}
-        </Box>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={loading}>
+            Annulla
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={loading || !budgetAmount}
+          >
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Imposta Budget
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
-          Annulla
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={loading || !budgetAmount}
-        >
-          Imposta Budget
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

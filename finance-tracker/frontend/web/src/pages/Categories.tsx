@@ -19,6 +19,7 @@ import {
   useFormValidation,
 } from "../utils/hooks";
 import useCategorySpending from "../utils/hooks/useCategorySpending";
+import { DeleteConfirmationModal } from "../components/ui/confirmation-modal";
 
 // Import presentational components
 import CategoryFilter from "../components/categories/CategoryFilter";
@@ -135,13 +136,33 @@ const Categories = () => {
     }
   };
 
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    categoryId: string;
+    categoryName: string;
+  }>({ open: false, categoryId: "", categoryName: "" });
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this category?")) {
-      try {
-        await dispatch(deleteCategory(id));
-      } catch (error) {
-        console.error("Error deleting category:", error);
-      }
+    const category = categories.find(c => c.id === id);
+    if (category) {
+      setDeleteModal({
+        open: true,
+        categoryId: id,
+        categoryName: category.name
+      });
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setDeleteLoading(true);
+      await dispatch(deleteCategory(deleteModal.categoryId));
+      setDeleteModal({ open: false, categoryId: "", categoryName: "" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -203,6 +224,17 @@ const Categories = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        open={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, categoryId: "", categoryName: "" })}
+        onConfirm={handleConfirmDelete}
+        itemName={deleteModal.categoryName}
+        itemType="categoria"
+        loading={deleteLoading}
+        warning="Questa azione eliminerà la categoria e tutti i dati associati."
+      />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import {
   setCurrentTransaction,
   setPage,
   bulkUpdateTransactions,
+  bulkDeleteTransactions,
 } from "../store/slices/transactionSlice";
 import {
   PlusIcon,
@@ -38,6 +39,7 @@ import {
 import { format } from "date-fns";
 import CsvImporter from "../components/CsvImporter";
 import { toast } from "sonner";
+import { DeleteConfirmationModal } from "../components/ui/confirmation-modal";
 
 // Import shadcn components
 import { Button } from "@/components/ui/button";
@@ -140,6 +142,15 @@ const Transactions = () => {
   >([]);
   const [enableMultiSelect, setEnableMultiSelect] = useState(false);
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    transactionId: string;
+    description: string;
+  }>({ open: false, transactionId: "", description: "" });
+  const [deleteAllModal, setDeleteAllModal] = useState<{
+    open: boolean;
+    type: "all" | "manual";
+  }>({ open: false, type: "all" });
 
   // Fetch transactions with filters
   useEffect(() => {
@@ -204,97 +215,132 @@ const Transactions = () => {
 
   // Handle transaction deletion
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this transaction?")) {
-      setIsDeleting(true);
-      dispatch(deleteTransaction(id)).finally(() => {
-        setIsDeleting(false);
+    const transaction = transactions.find(t => t.id === id);
+    if (transaction) {
+      setDeleteModal({
+        open: true,
+        transactionId: id,
+        description: transaction.description
       });
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      
+      // Se è una cancellazione di selezione multipla
+      if (!deleteModal.transactionId && selectedTransactionIds.length > 0) {
+        await handleBulkDelete();
+      } else {
+        // Cancellazione singola
+        await dispatch(deleteTransaction(deleteModal.transactionId)).unwrap();
+      }
+      
+      setDeleteModal({ open: false, transactionId: "", description: "" });
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const result = await dispatch(bulkDeleteTransactions({ ids: selectedTransactionIds })).unwrap();
+      
+      toast.success(
+        `Eliminazione completata. Eliminate: ${result.deleted}, Fallite: ${result.failed}`
+      );
+
+      // Reset selezione
+      setSelectedTransactionIds([]);
+      setEnableMultiSelect(false);
+    } catch (error) {
+      console.error("Error in bulk delete:", error);
+      toast.error("Errore durante l'eliminazione delle transazioni");
     }
   };
 
   // Handle delete all transactions
   const handleDeleteAll = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete ALL transactions? This action cannot be undone."
-      )
-    ) {
+    setDeleteAllModal({ open: true, type: "all" });
+  };
+
+  const handleConfirmDeleteAll = async () => {
+    try {
       setIsDeleting(true);
-      dispatch(deleteAllTransactions())
-        .unwrap()
-        .then((result) => {
-          toast.success(
-            result.message || "Tutte le transazioni eliminate con successo"
-          );
-        })
-        .catch((error) => {
-          console.error("Error deleting all transactions:", error);
-          toast.error(
-            "Impossibile eliminare tutte le transazioni. Controlla la console per i dettagli."
-          );
-        })
-        .finally(() => {
-          setIsDeleting(false);
-        });
+      const result = await dispatch(deleteAllTransactions()).unwrap();
+      toast.success(
+        result.message || "Tutte le transazioni eliminate con successo"
+      );
+      setDeleteAllModal({ open: false, type: "all" });
+    } catch (error) {
+      console.error("Error deleting all transactions:", error);
+      toast.error(
+        "Impossibile eliminare tutte le transazioni. Controlla la console per i dettagli."
+      );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   // Handle manual delete all transactions
   const handleManualDeleteAll = async () => {
-    if (
-      window.confirm(
-        "Are you sure you want to manually delete ALL transactions? This action cannot be undone."
-      )
-    ) {
+    setDeleteAllModal({ open: true, type: "manual" });
+  };
+
+  const handleConfirmManualDeleteAll = async () => {
+    try {
       setIsDeleting(true);
 
-      try {
-        // Get the current list of transactions from state
-        const transactionsToDelete = [...transactions];
+      // Get the current list of transactions from state
+      const transactionsToDelete = [...transactions];
 
-        if (transactionsToDelete.length === 0) {
-          toast.info("Nessuna transazione da eliminare");
-          return;
-        }
-
-        const results = {
-          success: 0,
-          failed: 0,
-        };
-
-        // Delete each transaction one by one
-        for (const transaction of transactionsToDelete) {
-          try {
-            await dispatch(deleteTransaction(transaction.id)).unwrap();
-            results.success++;
-          } catch (error) {
-            console.error(
-              `Failed to delete transaction ${transaction.id}:`,
-              error
-            );
-            results.failed++;
-          }
-        }
-
-        toast.success(
-          `Eliminazione completata. Eliminate con successo: ${results.success}, Fallite: ${results.failed}`
-        );
-
-        // Refresh the transactions list
-        dispatch(
-          fetchTransactions({
-            page: 1,
-            limit: 10,
-          })
-        );
-      } catch (error) {
-        console.error("Error in manual deletion process:", error);
-        toast.error(
-          "Si è verificato un errore durante il processo di eliminazione manuale. Controlla la console per i dettagli."
-        );
-      } finally {
-        setIsDeleting(false);
+      if (transactionsToDelete.length === 0) {
+        toast.info("Nessuna transazione da eliminare");
+        return;
       }
+
+      const results = {
+        success: 0,
+        failed: 0,
+      };
+
+      // Delete each transaction one by one
+      for (const transaction of transactionsToDelete) {
+        try {
+          await dispatch(deleteTransaction(transaction.id)).unwrap();
+          results.success++;
+        } catch (error) {
+          console.error(
+            `Failed to delete transaction ${transaction.id}:`,
+            error
+          );
+          results.failed++;
+        }
+      }
+
+      toast.success(
+        `Eliminazione completata. Eliminate con successo: ${results.success}, Fallite: ${results.failed}`
+      );
+
+      // Refresh the transactions list
+      dispatch(
+        fetchTransactions({
+          page: 1,
+          limit: 10,
+        })
+      );
+      
+      setDeleteAllModal({ open: false, type: "all" });
+    } catch (error) {
+      console.error("Error in manual deletion process:", error);
+      toast.error(
+        "Si è verificato un errore durante il processo di eliminazione manuale. Controlla la console per i dettagli."
+      );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -436,6 +482,30 @@ const Transactions = () => {
                 <PlusIcon className="h-4 w-4 mr-2" /> Nuova
               </Button>
 
+              {/* Pulsanti per selezione multipla */}
+              {enableMultiSelect && selectedTransactionIds.length > 0 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkEdit(transactions.filter(t => selectedTransactionIds.includes(t.id)))}
+                  >
+                    <EditIcon className="h-4 w-4 mr-2" /> Modifica ({selectedTransactionIds.length})
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDeleteModal({
+                      open: true,
+                      transactionId: "",
+                      description: `${selectedTransactionIds.length} transazioni selezionate`
+                    })}
+                  >
+                    <TrashIcon className="h-4 w-4 mr-2" /> Elimina ({selectedTransactionIds.length})
+                  </Button>
+                </>
+              )}
+
               {/* Pulsante per importare CSV */}
               <Button
                 variant="outline"
@@ -559,6 +629,32 @@ const Transactions = () => {
         )}
         categories={categories}
         onBulkUpdate={handleBulkUpdate}
+      />
+
+      {/* Delete Single Transaction Modal */}
+      <DeleteConfirmationModal
+        open={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, transactionId: "", description: "" })}
+        onConfirm={handleConfirmDelete}
+        itemName={deleteModal.description}
+        itemType="transazione"
+        loading={isDeleting}
+        warning="Questa azione eliminerà la transazione in modo permanente."
+      />
+
+      {/* Delete All Transactions Modal */}
+      <DeleteConfirmationModal
+        open={deleteAllModal.open}
+        onClose={() => setDeleteAllModal({ open: false, type: "all" })}
+        onConfirm={deleteAllModal.type === "all" ? handleConfirmDeleteAll : handleConfirmManualDeleteAll}
+        itemName="tutte le transazioni"
+        itemType=""
+        loading={isDeleting}
+        warning={
+          deleteAllModal.type === "all" 
+            ? "Questa azione eliminerà TUTTE le transazioni in modo permanente. Non sarà possibile annullare questa operazione."
+            : "Questa azione eliminerà TUTTE le transazioni una per una. Non sarà possibile annullare questa operazione."
+        }
       />
     </div>
   );

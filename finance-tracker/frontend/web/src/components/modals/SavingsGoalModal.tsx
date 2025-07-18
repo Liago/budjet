@@ -1,22 +1,26 @@
 import React, { useState } from "react";
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  Alert,
-  CircularProgress,
-  InputAdornment,
-  FormControl,
-  InputLabel,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   Select,
-  MenuItem,
-} from "@mui/material";
-import { useSnackbar } from "notistack";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+// Note: Alert component not available, using custom styling
+import { Loader2, Target, Euro, Calendar, Info } from "lucide-react";
+import { toast } from "sonner";
 import { savingsGoalsService } from "../../utils/apiServices";
 
 interface SavingsGoalModalProps {
@@ -40,7 +44,6 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
     category: "emergency",
   });
   const [loading, setLoading] = useState(false);
-  const { enqueueSnackbar } = useSnackbar();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -48,12 +51,12 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
 
   const handleSave = async () => {
     if (!formData.name || !formData.targetAmount || !formData.targetDate) {
-      enqueueSnackbar("Compila tutti i campi obbligatori", { variant: "error" });
+      toast.error("Compila tutti i campi obbligatori");
       return;
     }
 
     if (isNaN(Number(formData.targetAmount))) {
-      enqueueSnackbar("Inserisci un importo valido", { variant: "error" });
+      toast.error("Inserisci un importo valido");
       return;
     }
 
@@ -67,9 +70,8 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
         category: formData.category,
       });
       
-      enqueueSnackbar(
-        `Obiettivo di risparmio "${formData.name}" creato con successo`,
-        { variant: "success" }
+      toast.success(
+        `Obiettivo di risparmio "${formData.name}" creato con successo`
       );
       
       onSuccess?.();
@@ -77,9 +79,7 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
       resetForm();
     } catch (error) {
       console.error("Error creating savings goal:", error);
-      enqueueSnackbar("Errore nella creazione dell'obiettivo", {
-        variant: "error",
-      });
+      toast.error("Errore nella creazione dell'obiettivo");
     } finally {
       setLoading(false);
     }
@@ -106,102 +106,125 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
   const minDateString = minDate.toISOString().split('T')[0];
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        Crea Obiettivo di Risparmio
-      </DialogTitle>
-      <DialogContent>
-        <Box sx={{ pt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Crea Obiettivo di Risparmio
+          </DialogTitle>
+          <DialogDescription>
+            Imposta un obiettivo di risparmio per raggiungere i tuoi traguardi finanziari
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
           {suggestedAmount && (
-            <Alert severity="info">
-              <Typography variant="body2">
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <Info className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <p className="text-sm text-blue-800">
                 Importo suggerito: €{suggestedAmount.toFixed(2)} al mese
-              </Typography>
-            </Alert>
+              </p>
+            </div>
           )}
           
-          <TextField
-            label="Nome obiettivo"
-            value={formData.name}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            fullWidth
-            variant="outlined"
-            placeholder="Es. Fondo emergenza"
-            disabled={loading}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="goal-name">Nome obiettivo</Label>
+            <Input
+              id="goal-name"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="Es. Fondo emergenza"
+              disabled={loading}
+            />
+          </div>
           
-          <TextField
-            label="Importo obiettivo"
-            type="number"
-            value={formData.targetAmount}
-            onChange={(e) => handleInputChange("targetAmount", e.target.value)}
-            fullWidth
-            variant="outlined"
-            InputProps={{
-              startAdornment: <InputAdornment position="start">€</InputAdornment>,
-            }}
-            disabled={loading}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="target-amount">Importo obiettivo</Label>
+            <div className="relative">
+              <Euro className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="target-amount"
+                type="number"
+                value={formData.targetAmount}
+                onChange={(e) => handleInputChange("targetAmount", e.target.value)}
+                className="pl-9"
+                placeholder="0.00"
+                disabled={loading}
+              />
+            </div>
+          </div>
           
-          <TextField
-            label="Data obiettivo"
-            type="date"
-            value={formData.targetDate}
-            onChange={(e) => handleInputChange("targetDate", e.target.value)}
-            fullWidth
-            variant="outlined"
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ min: minDateString }}
-            disabled={loading}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="target-date">Data obiettivo</Label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="target-date"
+                type="date"
+                value={formData.targetDate}
+                onChange={(e) => handleInputChange("targetDate", e.target.value)}
+                className="pl-9"
+                min={minDateString}
+                disabled={loading}
+              />
+            </div>
+          </div>
           
-          <FormControl fullWidth disabled={loading}>
-            <InputLabel>Categoria</InputLabel>
+          <div className="space-y-2">
+            <Label htmlFor="category">Categoria</Label>
             <Select
               value={formData.category}
-              onChange={(e) => handleInputChange("category", e.target.value)}
-              label="Categoria"
+              onValueChange={(value) => handleInputChange("category", value)}
+              disabled={loading}
             >
-              <MenuItem value="emergency">Fondo Emergenza</MenuItem>
-              <MenuItem value="vacation">Vacanze</MenuItem>
-              <MenuItem value="house">Casa</MenuItem>
-              <MenuItem value="car">Auto</MenuItem>
-              <MenuItem value="education">Educazione</MenuItem>
-              <MenuItem value="investment">Investimenti</MenuItem>
-              <MenuItem value="other">Altro</MenuItem>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona una categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="emergency">Fondo Emergenza</SelectItem>
+                <SelectItem value="vacation">Vacanze</SelectItem>
+                <SelectItem value="house">Casa</SelectItem>
+                <SelectItem value="car">Auto</SelectItem>
+                <SelectItem value="education">Educazione</SelectItem>
+                <SelectItem value="investment">Investimenti</SelectItem>
+                <SelectItem value="other">Altro</SelectItem>
+              </SelectContent>
             </Select>
-          </FormControl>
+          </div>
           
-          <TextField
-            label="Descrizione (opzionale)"
-            value={formData.description}
-            onChange={(e) => handleInputChange("description", e.target.value)}
-            fullWidth
-            multiline
-            rows={2}
-            variant="outlined"
-            disabled={loading}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrizione (opzionale)</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Aggiungi una descrizione per il tuo obiettivo..."
+              rows={2}
+              disabled={loading}
+            />
+          </div>
           
           {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-              <CircularProgress size={24} />
-            </Box>
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
           )}
-        </Box>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={loading}>
+            Annulla
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={loading || !formData.name || !formData.targetAmount || !formData.targetDate}
+          >
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Crea Obiettivo
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
-          Annulla
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={loading || !formData.name || !formData.targetAmount || !formData.targetDate}
-        >
-          Crea Obiettivo
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };
