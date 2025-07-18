@@ -121,7 +121,58 @@ struct SettingsView: View {
                         
                         Spacer()
                         
-                        Text("1.0.0")
+                        Text(VersionInfo.fullVersion)
+                            .font(ThemeManager.Typography.body)
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                    }
+                    .padding(.vertical, ThemeManager.Spacing.xs)
+                    
+                    HStack {
+                        Image(systemName: "hammer.circle.fill")
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                            .font(.title2)
+                        
+                        Text("Build")
+                            .font(ThemeManager.Typography.body)
+                            .foregroundColor(ThemeManager.Colors.text)
+                        
+                        Spacer()
+                        
+                        Text(VersionInfo.build)
+                            .font(ThemeManager.Typography.body)
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                    }
+                    .padding(.vertical, ThemeManager.Spacing.xs)
+                    
+                    HStack {
+                        Image(systemName: "calendar.circle.fill")
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                            .font(.title2)
+                        
+                        Text("Data Build")
+                            .font(ThemeManager.Typography.body)
+                            .foregroundColor(ThemeManager.Colors.text)
+                        
+                        Spacer()
+                        
+                        Text(formatBuildDate(VersionInfo.buildDate))
+                            .font(ThemeManager.Typography.body)
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                    }
+                    .padding(.vertical, ThemeManager.Spacing.xs)
+                    
+                    HStack {
+                        Image(systemName: "chevron.left.forwardslash.chevron.right")
+                            .foregroundColor(ThemeManager.Colors.textSecondary)
+                            .font(.title2)
+                        
+                        Text("Commit")
+                            .font(ThemeManager.Typography.body)
+                            .foregroundColor(ThemeManager.Colors.text)
+                        
+                        Spacer()
+                        
+                        Text(VersionInfo.gitHash)
                             .font(ThemeManager.Typography.body)
                             .foregroundColor(ThemeManager.Colors.textSecondary)
                     }
@@ -168,6 +219,18 @@ struct SettingsView: View {
         let components = name.components(separatedBy: " ")
         let initials = components.compactMap { $0.first }.map { String($0) }
         return initials.prefix(2).joined().uppercased()
+    }
+    
+    private func formatBuildDate(_ dateString: String) -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateStyle = .medium
+        displayFormatter.timeStyle = .short
+        
+        if let date = isoFormatter.date(from: dateString) {
+            return displayFormatter.string(from: date)
+        }
+        return dateString
     }
 }
 
