@@ -36,37 +36,42 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
   const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
+    const findCategoryByName = async () => {
+      try {
+        setLoading(true);
+        const categories = await categoryService.getAll();
+        const category = categories.find(
+          (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
+        );
+        if (category) {
+          setCategoryId(category.id);
+          // Use existing budget or suggested amount
+          if (category.budget) {
+            setBudgetAmount(category.budget.toString());
+          } else if (suggestedAmount) {
+            setBudgetAmount(suggestedAmount.toString());
+          }
+        }
+      } catch (error) {
+        console.error("Error finding category:", error);
+        enqueueSnackbar("Errore nel caricamento della categoria", {
+          variant: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (open && categoryName) {
       // Find the category ID by name
       findCategoryByName();
-    }
-    if (suggestedAmount) {
-      setBudgetAmount(suggestedAmount.toString());
-    }
-  }, [open, categoryName, suggestedAmount]);
-
-  const findCategoryByName = async () => {
-    try {
-      setLoading(true);
-      const categories = await categoryService.getCategories();
-      const category = categories.find(
-        (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
-      );
-      if (category) {
-        setCategoryId(category.id);
-        if (category.budget) {
-          setBudgetAmount(category.budget.toString());
-        }
-      }
-    } catch (error) {
-      console.error("Error finding category:", error);
-      enqueueSnackbar("Errore nel caricamento della categoria", {
-        variant: "error",
-      });
-    } finally {
+    } else if (!open) {
+      // Reset state when modal closes
+      setBudgetAmount("");
+      setCategoryId(null);
       setLoading(false);
     }
-  };
+  }, [open, categoryName, suggestedAmount, enqueueSnackbar]);
 
   const handleSave = async () => {
     if (!categoryId || !budgetAmount || isNaN(Number(budgetAmount))) {
@@ -76,7 +81,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
 
     try {
       setLoading(true);
-      await categoryService.updateCategory(categoryId, {
+      await categoryService.update(categoryId, {
         budget: Number(budgetAmount),
       });
       
