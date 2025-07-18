@@ -2,10 +2,15 @@ const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
   console.log('🔄 [Netlify Scheduled Function] Triggered at:', new Date().toISOString());
+  console.log('📊 [Netlify Scheduled Function] Environment variables:', {
+    URL: process.env.URL,
+    DEPLOY_PRIME_URL: process.env.DEPLOY_PRIME_URL,
+    NETLIFY_URL: process.env.NETLIFY_URL
+  });
   
   try {
     // Get the base URL from environment or use default
-    const baseUrl = process.env.URL || 'https://your-app.netlify.app';
+    const baseUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'https://budjet-finance-tracker.netlify.app';
     const apiUrl = `${baseUrl}/api/recurrent-payments/execute`;
     
     console.log('📞 [Netlify Scheduled Function] Calling API:', apiUrl);
