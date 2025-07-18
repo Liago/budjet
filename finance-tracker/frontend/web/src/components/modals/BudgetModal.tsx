@@ -20,6 +20,7 @@ interface BudgetModalProps {
   onClose: () => void;
   categoryName: string;
   suggestedAmount?: number;
+  potentialSaving?: number; // Amount to reduce from current budget
   onSuccess?: () => void;
 }
 
@@ -28,6 +29,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
   onClose,
   categoryName,
   suggestedAmount,
+  potentialSaving,
   onSuccess,
 }) => {
   const [budgetAmount, setBudgetAmount] = useState("");
@@ -45,8 +47,11 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
         );
         if (category) {
           setCategoryId(category.id);
-          // Use existing budget or suggested amount
-          if (category.budget) {
+          // Calculate suggested budget based on current budget and potential saving
+          if (category.budget && potentialSaving) {
+            const suggestedBudget = Math.max(0, category.budget - potentialSaving);
+            setBudgetAmount(suggestedBudget.toString());
+          } else if (category.budget) {
             setBudgetAmount(category.budget.toString());
           } else if (suggestedAmount) {
             setBudgetAmount(suggestedAmount.toString());
@@ -71,7 +76,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
       setCategoryId(null);
       setLoading(false);
     }
-  }, [open, categoryName, suggestedAmount, enqueueSnackbar]);
+  }, [open, categoryName, suggestedAmount, potentialSaving, enqueueSnackbar]);
 
   const handleSave = async () => {
     if (!categoryId || !budgetAmount || isNaN(Number(budgetAmount))) {
@@ -115,10 +120,10 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
       </DialogTitle>
       <DialogContent>
         <Box sx={{ pt: 2 }}>
-          {suggestedAmount && (
+          {potentialSaving && (
             <Alert severity="info" sx={{ mb: 2 }}>
               <Typography variant="body2">
-                Importo suggerito: €{suggestedAmount.toFixed(2)} al mese
+                Risparmio potenziale: €{potentialSaving.toFixed(2)} al mese
               </Typography>
             </Alert>
           )}

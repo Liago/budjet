@@ -183,7 +183,7 @@ const SavingSuggestions: React.FC<{
   const [budgetModal, setBudgetModal] = useState({
     open: false,
     category: "",
-    suggestedAmount: 0,
+    potentialSaving: 0,
   });
   const [savingsGoalModal, setSavingsGoalModal] = useState({
     open: false,
@@ -198,7 +198,7 @@ const SavingSuggestions: React.FC<{
         setBudgetModal({
           open: true,
           category: suggestion.category,
-          suggestedAmount: suggestion.potentialSaving,
+          potentialSaving: suggestion.potentialSaving,
         });
         break;
       
@@ -420,9 +420,9 @@ const SavingSuggestions: React.FC<{
     {/* Budget Modal */}
     <BudgetModal
       open={budgetModal.open}
-      onClose={() => setBudgetModal({ open: false, category: "", suggestedAmount: 0 })}
+      onClose={() => setBudgetModal({ open: false, category: "", potentialSaving: 0 })}
       categoryName={budgetModal.category}
-      suggestedAmount={budgetModal.suggestedAmount}
+      potentialSaving={budgetModal.potentialSaving}
       onSuccess={() => {
         enqueueSnackbar("Budget aggiornato con successo!", { variant: "success" });
       }}
