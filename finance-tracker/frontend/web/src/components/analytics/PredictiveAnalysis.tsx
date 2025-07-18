@@ -64,6 +64,9 @@ import {
 import numeral from "numeral";
 import { dashboardService } from "../../utils/apiServices";
 import { useSnackbar } from "notistack";
+import { useNavigate } from "react-router-dom";
+import BudgetModal from "../modals/BudgetModal";
+import SavingsGoalModal from "../modals/SavingsGoalModal";
 
 // Tipi per le proiezioni di risparmio
 type SavingSuggestion = {
@@ -173,6 +176,64 @@ const SavingSuggestions: React.FC<{
   loading: boolean;
 }> = ({ suggestions, loading }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
+  
+  // Stati per i modals
+  const [budgetModal, setBudgetModal] = useState({
+    open: false,
+    category: "",
+    suggestedAmount: 0,
+  });
+  const [savingsGoalModal, setSavingsGoalModal] = useState({
+    open: false,
+    suggestedAmount: 0,
+  });
+
+  // Funzione per gestire l'applicazione del suggerimento
+  const handleApplySuggestion = (suggestion: SavingSuggestion) => {
+    switch (suggestion.type) {
+      case "spending_reduction":
+        // Apri modal per impostare budget categoria
+        setBudgetModal({
+          open: true,
+          category: suggestion.category,
+          suggestedAmount: suggestion.potentialSaving,
+        });
+        break;
+      
+      case "subscription":
+        // Naviga alla pagina dei pagamenti ricorrenti
+        navigate("/recurring-payments");
+        enqueueSnackbar("Controlla i tuoi abbonamenti e pagamenti ricorrenti", {
+          variant: "info",
+        });
+        break;
+      
+      case "automation":
+        // Apri modal per creare obiettivo di risparmio
+        setSavingsGoalModal({
+          open: true,
+          suggestedAmount: suggestion.potentialSaving,
+        });
+        break;
+      
+      case "debt_management":
+        // Naviga alla pagina categorie per gestire debiti
+        navigate("/categories");
+        enqueueSnackbar("Gestisci i tuoi budget per controllare i debiti", {
+          variant: "info",
+        });
+        break;
+      
+      default:
+        // Azione generica - naviga alle categorie
+        navigate("/categories");
+        enqueueSnackbar("Gestisci le tue categorie di spesa", {
+          variant: "info",
+        });
+    }
+  };
 
   // Funzione per ottenere l'icona appropriata per il tipo di suggerimento
   const getSuggestionIcon = (type: string) => {
@@ -192,8 +253,9 @@ const SavingSuggestions: React.FC<{
 
   if (loading) {
     return (
-      <Box sx={{ p: 2 }}>
-        {[1, 2, 3].map((item) => (
+      <>
+        <Box sx={{ p: 2 }}>
+          {[1, 2, 3].map((item) => (
           <Box
             key={item}
             sx={{ mb: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}
@@ -215,8 +277,9 @@ const SavingSuggestions: React.FC<{
               <Skeleton variant="rectangular" width="20%" height={30} />
             </Box>
           </Box>
-        ))}
-      </Box>
+          ))}
+        </Box>
+      </>
     );
   }
 
@@ -231,8 +294,9 @@ const SavingSuggestions: React.FC<{
   }
 
   return (
-    <List sx={{ width: "100%", p: 1 }}>
-      {suggestions.map((suggestion) => (
+    <>
+      <List sx={{ width: "100%", p: 1 }}>
+        {suggestions.map((suggestion) => (
         <Paper
           key={suggestion.id}
           elevation={1}
@@ -342,6 +406,7 @@ const SavingSuggestions: React.FC<{
                   color="primary"
                   size="small"
                   sx={{ mt: 2 }}
+                  onClick={() => handleApplySuggestion(suggestion)}
                 >
                   Applica questo suggerimento
                 </Button>
@@ -349,8 +414,30 @@ const SavingSuggestions: React.FC<{
             </AccordionDetails>
           </Accordion>
         </Paper>
-      ))}
-    </List>
+        ))}
+      </List>
+    
+    {/* Budget Modal */}
+    <BudgetModal
+      open={budgetModal.open}
+      onClose={() => setBudgetModal({ open: false, category: "", suggestedAmount: 0 })}
+      categoryName={budgetModal.category}
+      suggestedAmount={budgetModal.suggestedAmount}
+      onSuccess={() => {
+        enqueueSnackbar("Budget aggiornato con successo!", { variant: "success" });
+      }}
+    />
+    
+    {/* Savings Goal Modal */}
+    <SavingsGoalModal
+      open={savingsGoalModal.open}
+      onClose={() => setSavingsGoalModal({ open: false, suggestedAmount: 0 })}
+      suggestedAmount={savingsGoalModal.suggestedAmount}
+      onSuccess={() => {
+        enqueueSnackbar("Obiettivo di risparmio creato!", { variant: "success" });
+      }}
+    />
+  </>
   );
 };
 
