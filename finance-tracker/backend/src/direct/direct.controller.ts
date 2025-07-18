@@ -3294,13 +3294,43 @@ export class DirectController {
         const line = lines[i].trim();
         if (!line) continue;
 
-        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+        let values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+        
+        // Handle case where CSV might have extra columns due to decimal separation
+        if (values.length > headers.length) {
+          // Check if we have a decimal separation issue
+          const transactionIndex = headers.findIndex(h => h.toLowerCase() === 'transaction');
+          if (transactionIndex !== -1 && transactionIndex < values.length - 1) {
+            // If next value is just digits, it might be decimal part
+            const nextValue = values[transactionIndex + 1];
+            if (/^\d+$/.test(nextValue)) {
+              // Combine transaction and decimal part
+              values[transactionIndex] = values[transactionIndex] + "." + nextValue;
+              // Remove the decimal part from the array
+              values.splice(transactionIndex + 1, 1);
+            }
+          }
+          
+          // If we still have extra columns, the last one might be note with hashtags
+          if (values.length > headers.length) {
+            const noteIndex = headers.findIndex(h => h.toLowerCase() === 'note');
+            if (noteIndex !== -1 && noteIndex < values.length - 1) {
+              // Combine remaining values into note field
+              const additionalNotes = values.slice(noteIndex + 1).join(' ');
+              values[noteIndex] = (values[noteIndex] + ' ' + additionalNotes).trim();
+              // Remove extra values
+              values = values.slice(0, headers.length);
+            }
+          }
+        }
+        
         const record: any = {};
 
         // Map values to headers
         headers.forEach((header, index) => {
           record[header] = values[index] || "";
         });
+
 
         try {
           if (!record.Type || !record.Transaction) {
@@ -3314,10 +3344,7 @@ export class DirectController {
             : "INCOME";
 
           // Process amount
-          const amountStr = record.Transaction.replace("−", "-").replace(
-            ",",
-            "."
-          );
+          const amountStr = record.Transaction.replace("−", "-").replace(",", ".");
           const amount = Math.abs(
             parseFloat(amountStr.replace(/[^\d.-]/g, ""))
           );
@@ -3353,10 +3380,13 @@ export class DirectController {
           // Find category
           const categoryId = findCategoryId(record.Category);
 
-          // Extract tags from note
+          // Extract tags from note and separate description
           const note = record.Note || "";
           const tags =
             note.match(/#(\w+)/g)?.map((tag) => tag.substring(1)) || [];
+          
+          // Extract description (everything that's not a hashtag)
+          const description = note.replace(/#\w+/g, "").trim();
 
           // Create or connect tags
           const tagConnectOrCreate = tags.map((tagName: string) => ({
@@ -3370,7 +3400,7 @@ export class DirectController {
               amount: Number(amount),
               date: date,
               description:
-                note.replace(/#\w+/g, "").trim() ||
+                description ||
                 `Imported ${type.toLowerCase()}`,
               categoryId: categoryId,
               userId: userId,

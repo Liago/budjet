@@ -34,11 +34,14 @@ export const exportTransactionsToCSV = (
         ? `-${amount.toFixed(2).replace(".", ",")}`
         : amount.toFixed(2).replace(".", ",");
 
-    // Format tags as note (concatenated with # prefix)
-    const note =
-      transaction.tags && transaction.tags.length > 0
-        ? transaction.tags.map((tag) => `#${tag.name}`).join(" ")
-        : transaction.description; // Fallback to description if no tags
+    // Combine description and tags
+    const description = transaction.description || "";
+    const tags = transaction.tags && transaction.tags.length > 0
+      ? transaction.tags.map((tag) => `#${tag.name}`).join(" ")
+      : "";
+    
+    // Create note field with both description and tags
+    const note = [description, tags].filter(Boolean).join(" ");
 
     return {
       type,
@@ -109,10 +112,15 @@ export const previewCSVContent = (transactions: Transaction[]): string => {
         transaction.type === "EXPENSE"
           ? `-${amount.toFixed(2).replace(".", ",")}`
           : amount.toFixed(2).replace(".", ",");
-      const note =
-        transaction.tags && transaction.tags.length > 0
-          ? transaction.tags.map((tag) => `#${tag.name}`).join(" ")
-          : transaction.description;
+      
+      // Combine description and tags
+      const description = transaction.description || "";
+      const tags = transaction.tags && transaction.tags.length > 0
+        ? transaction.tags.map((tag) => `#${tag.name}`).join(" ")
+        : "";
+      
+      // Create note field with both description and tags
+      const note = [description, tags].filter(Boolean).join(" ");
 
       return {
         type,
