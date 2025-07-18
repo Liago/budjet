@@ -3508,6 +3508,77 @@ export class DirectController {
     }
   }
 
+  // 🚀 BULK DELETE TRANSACTIONS - Direct endpoint compatible with Netlify Functions
+  @Post("transactions/bulk-delete")
+  @ApiOperation({ summary: "Delete multiple transactions at once" })
+  @ApiResponse({ status: 200, description: "Batch delete successful" })
+  async bulkDeleteTransactions(@Body() body: { ids: string[] }) {
+    try {
+      const { PrismaClient } = await import("@prisma/client");
+      const prisma = new PrismaClient();
+      await prisma.$connect();
+
+      if (!body.ids || !Array.isArray(body.ids) || body.ids.length === 0) {
+        throw new Error("No transaction IDs provided");
+      }
+
+      // Process each transaction deletion
+      const results = [];
+      for (const id of body.ids) {
+        try {
+          // Check if transaction exists
+          const existingTransaction = await prisma.transaction.findUnique({
+            where: { id },
+            select: { id: true, userId: true },
+          });
+
+          if (!existingTransaction) {
+            results.push({
+              id,
+              success: false,
+              error: "Transaction not found",
+            });
+            continue;
+          }
+
+          // Delete the transaction
+          await prisma.transaction.delete({
+            where: { id },
+          });
+
+          results.push({ id, success: true });
+        } catch (error) {
+          console.error(`Failed to delete transaction ${id}:`, error);
+          results.push({
+            id,
+            success: false,
+            error: error.message,
+          });
+        }
+      }
+
+      await prisma.$disconnect();
+
+      const successCount = results.filter((r) => r.success).length;
+      const failedCount = results.filter((r) => !r.success).length;
+
+      return {
+        success: true,
+        count: successCount,
+        message: `Deleted ${successCount} of ${body.ids.length} transactions`,
+        results,
+        deleted: successCount,
+        failed: failedCount,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
   // 🚨 DEBUG ENDPOINT - Analisi discrepanze calcolo spese luglio 2025
   @Get("debug/expense-analysis")
   async debugExpenseAnalysis(

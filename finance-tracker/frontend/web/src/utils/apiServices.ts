@@ -123,6 +123,15 @@ export const transactionService = {
       }
     ),
 
+  // Elimina multiple transazioni contemporaneamente
+  bulkDelete: (ids: string[]) =>
+    apiService.post<{ success: boolean; count: number; deleted: number; failed: number }>(
+      "/direct/transactions/bulk-delete",
+      {
+        ids,
+      }
+    ),
+
   importCsv: (payload: { csvData: string; defaultCategoryId?: string }) =>
     apiService.post<{
       success: boolean;

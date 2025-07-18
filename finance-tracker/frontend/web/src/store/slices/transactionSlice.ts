@@ -168,6 +168,26 @@ export const bulkUpdateTransactions = createAsyncThunk(
   }
 );
 
+// Bulk delete transactions
+export const bulkDeleteTransactions = createAsyncThunk(
+  "transactions/bulkDelete",
+  async (
+    { ids }: { ids: string[] },
+    { rejectWithValue, dispatch }
+  ) => {
+    try {
+      const result = await transactionService.bulkDelete(ids);
+      // After bulk delete, refresh transactions list
+      dispatch(fetchTransactions());
+      return result;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete transactions"
+      );
+    }
+  }
+);
+
 const transactionSlice = createSlice({
   name: "transactions",
   initialState,
@@ -323,6 +343,19 @@ const transactionSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(bulkUpdateTransactions.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Bulk delete transactions
+      .addCase(bulkDeleteTransactions.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(bulkDeleteTransactions.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(bulkDeleteTransactions.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

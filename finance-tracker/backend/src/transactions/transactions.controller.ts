@@ -231,4 +231,39 @@ export class TransactionsController {
       results,
     };
   }
+
+  @Post("bulk-delete")
+  @ApiOperation({ summary: "Delete multiple transactions at once" })
+  @ApiResponse({ status: 200, description: "Batch delete successful" })
+  async bulkDelete(
+    @Request() req,
+    @Body() body: { ids: string[] }
+  ) {
+    if (!body.ids || !Array.isArray(body.ids) || body.ids.length === 0) {
+      throw new BadRequestException("No transaction IDs provided");
+    }
+
+    // Call the service to delete transactions one by one
+    const results = [];
+    for (const id of body.ids) {
+      try {
+        await this.transactionsService.remove(id, req.user.id);
+        results.push({ id, success: true });
+      } catch (error) {
+        console.error(`Failed to delete transaction ${id}:`, error);
+        results.push({ id, success: false, error: error.message });
+      }
+    }
+
+    return {
+      success: true,
+      count: results.filter((r) => r.success).length,
+      message: `Deleted ${results.filter((r) => r.success).length} of ${
+        body.ids.length
+      } transactions`,
+      results,
+      deleted: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+    };
+  }
 }
